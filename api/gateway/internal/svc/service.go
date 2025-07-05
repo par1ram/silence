@@ -23,7 +23,7 @@ type ServiceContext struct {
 func NewServiceContext(cfg *config.Config, logger *zap.Logger) *ServiceContext {
 	// Создаем сервисы
 	healthService := services.NewHealthService("gateway", cfg.Version)
-	proxyService := services.NewProxyService(cfg.AuthURL, cfg.VPNCoreURL, cfg.DPIBypassURL, cfg.InternalAPIToken, logger)
+	proxyService := services.NewProxyService(cfg.AuthURL, cfg.VPNCoreURL, cfg.DPIBypassURL, cfg.AnalyticsURL, cfg.ServerManagerURL, cfg.InternalAPIToken, logger)
 
 	// Создаем rate limiter если включен
 	var rateLimiter *http.RateLimiter

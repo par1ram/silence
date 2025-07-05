@@ -69,6 +69,25 @@ func NewServer(port string, handlers *Handlers, logger *zap.Logger, jwtSecret st
 	mux.Handle("/api/v1/rate-limit/whitelist/remove", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.RateLimitWhitelistRemoveHandler))))
 	mux.Handle("/api/v1/rate-limit/stats", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.RateLimitStatsHandler))))
 
+	// Analytics маршруты (защищенные)
+	mux.Handle("/api/v1/analytics/metrics/connections", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/metrics/bypass-effectiveness", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/metrics/user-activity", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/metrics/server-load", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/metrics/errors", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/dashboards", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/dashboards/", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/alerts", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/alerts/", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/", rateLimitMiddleware(http.HandlerFunc(handlers.AnalyticsHandler))) // fallback для остальных analytics endpoint'ов
+
+	// Server Manager маршруты (защищенные)
+	mux.Handle("/api/v1/server-manager/servers", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
+	mux.Handle("/api/v1/server-manager/servers/", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
+	mux.Handle("/api/v1/server-manager/scaling/", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
+	mux.Handle("/api/v1/server-manager/backups/", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
+	mux.Handle("/api/v1/server-manager/", rateLimitMiddleware(http.HandlerFunc(handlers.ServerManagerHandler))) // fallback для остальных server-manager endpoint'ов
+
 	mux.Handle("/", rateLimitMiddleware(http.HandlerFunc(handlers.RootHandler)))
 
 	server := &http.Server{

@@ -17,6 +17,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - silence_network
 
   redis:
     image: redis:7-alpine
@@ -30,7 +32,217 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - silence_network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: silence_rabbitmq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - silence_network
+
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: silence_influxdb
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: adminpassword
+      DOCKER_INFLUXDB_INIT_ORG: silence
+      DOCKER_INFLUXDB_INIT_BUCKET: analytics
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: your-influxdb-token
+    ports:
+      - '8086:8086'
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    healthcheck:
+      test: ['CMD', 'influx', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - silence_network
+
+  auth:
+    build:
+      context: .
+      dockerfile: api/auth/Dockerfile
+    container_name: silence_auth
+    ports:
+      - '8081:8080'
+    environment:
+      - HTTP_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=silence_auth
+      - DB_SSLMODE=disable
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=your-jwt-secret-key
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - silence_network
+
+  gateway:
+    build:
+      context: .
+      dockerfile: api/gateway/Dockerfile
+    container_name: silence_gateway
+    ports:
+      - '8080:8080'
+    environment:
+      - HTTP_PORT=8080
+      - AUTH_SERVICE_URL=http://auth:8080
+      - ANALYTICS_SERVICE_URL=http://analytics:8080
+      - SERVER_MANAGER_SERVICE_URL=http://server-manager:8085
+      - DPI_BYPASS_SERVICE_URL=http://dpi-bypass:8080
+      - VPN_CORE_SERVICE_URL=http://vpn-core:8080
+    depends_on:
+      auth:
+        condition: service_started
+      analytics:
+        condition: service_started
+      server-manager:
+        condition: service_started
+    networks:
+      - silence_network
+
+  analytics:
+    build:
+      context: .
+      dockerfile: rpc/analytics/Dockerfile
+    container_name: silence_analytics
+    ports:
+      - '8082:8080'
+    environment:
+      - HTTP_PORT=8080
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=your-influxdb-token
+      - INFLUXDB_ORG=silence
+      - INFLUXDB_BUCKET=analytics
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - silence_network
+
+  server-manager:
+    build:
+      context: .
+      dockerfile: rpc/server-manager/Dockerfile
+    container_name: silence_server_manager
+    ports:
+      - '8085:8085'
+    environment:
+      - HTTP_PORT=8085
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=silence_server_manager
+      - DB_SSLMODE=disable
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DOCKER_API_VERSION=1.41
+      - DOCKER_TIMEOUT=30s
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - silence_network
+
+  dpi-bypass:
+    build:
+      context: .
+      dockerfile: rpc/dpi-bypass/Dockerfile
+    container_name: silence_dpi_bypass
+    ports:
+      - '8083:8080'
+    environment:
+      - HTTP_PORT=8080
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - silence_network
+
+  vpn-core:
+    build:
+      context: .
+      dockerfile: rpc/vpn-core/Dockerfile
+    container_name: silence_vpn_core
+    ports:
+      - '8084:8080'
+    environment:
+      - HTTP_PORT=8080
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=silence_vpn
+      - DB_SSLMODE=disable
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - silence_network
+
+  notifications:
+    build:
+      context: .
+      dockerfile: rpc/notifications/Dockerfile
+    container_name: silence_notifications
+    ports:
+      - '8086:8080'
+    environment:
+      - HTTP_PORT=8080
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
+      - RABBITMQ_EXCHANGE=notifications
+      - RABBITMQ_QUEUE=notifications_queue
+      - RABBITMQ_ROUTING_KEY=notifications.*
+      - RABBITMQ_CONSUMER_TAG=notifications_consumer
+      - RABBITMQ_PREFETCH_COUNT=10
+      - ANALYTICS_URL=http://analytics:8080
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      analytics:
+        condition: service_started
+    networks:
+      - silence_network
 
 volumes:
   postgres_data:
   redis_data:
+  rabbitmq_data:
+  influxdb_data:
+
+networks:
+  silence_network:
+    driver: bridge

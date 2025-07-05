@@ -114,6 +114,15 @@ func (h *Handlers) DPIHandler(w http.ResponseWriter, r *http.Request) {
 	h.proxyService.ProxyToDPIBypass(w, r)
 }
 
+func (h *Handlers) AnalyticsHandler(w http.ResponseWriter, r *http.Request) {
+	h.proxyService.ProxyToAnalytics(w, r)
+}
+
+// ServerManagerHandler обработчик для Server Manager сервиса
+func (h *Handlers) ServerManagerHandler(w http.ResponseWriter, r *http.Request) {
+	h.proxyService.ProxyToServerManager(w, r)
+}
+
 // ===== VPN + Bypass Connect =====
 
 func (h *Handlers) ConnectHandler(w http.ResponseWriter, r *http.Request) {

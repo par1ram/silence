@@ -10,23 +10,27 @@ import (
 
 // ProxyService сервис для проксирования запросов
 type ProxyService struct {
-	authProxy *AuthProxy
-	vpnProxy  *VPNProxy
-	dpiProxy  *DPIProxy
-	logger    *zap.Logger
+	authProxy          *AuthProxy
+	vpnProxy           *VPNProxy
+	dpiProxy           *DPIProxy
+	analyticsProxy     *AnalyticsProxy
+	serverManagerProxy *ServerManagerProxy
+	logger             *zap.Logger
 }
 
 // NewProxyService создает новый сервис проксирования
-func NewProxyService(authURL, vpnCoreURL, dpiBypassURL, internalToken string, logger *zap.Logger) *ProxyService {
+func NewProxyService(authURL, vpnCoreURL, dpiBypassURL, analyticsURL, serverManagerURL, internalToken string, logger *zap.Logger) *ProxyService {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
 
 	return &ProxyService{
-		authProxy: NewAuthProxy(authURL, internalToken, logger, client),
-		vpnProxy:  NewVPNProxy(vpnCoreURL, logger, client),
-		dpiProxy:  NewDPIProxy(dpiBypassURL, logger, client),
-		logger:    logger,
+		authProxy:          NewAuthProxy(authURL, internalToken, logger, client),
+		vpnProxy:           NewVPNProxy(vpnCoreURL, logger, client),
+		dpiProxy:           NewDPIProxy(dpiBypassURL, logger, client),
+		analyticsProxy:     NewAnalyticsProxy(analyticsURL, logger, client),
+		serverManagerProxy: NewServerManagerProxy(serverManagerURL, logger, client),
+		logger:             logger,
 	}
 }
 
@@ -43,6 +47,16 @@ func (p *ProxyService) ProxyToVPNCore(w http.ResponseWriter, r *http.Request) {
 // ProxyToDPIBypass проксирует запрос к DPI Bypass сервису
 func (p *ProxyService) ProxyToDPIBypass(w http.ResponseWriter, r *http.Request) {
 	p.dpiProxy.Proxy(w, r)
+}
+
+// ProxyToAnalytics проксирует запрос к Analytics сервису
+func (p *ProxyService) ProxyToAnalytics(w http.ResponseWriter, r *http.Request) {
+	p.analyticsProxy.Proxy(w, r)
+}
+
+// ProxyToServerManager проксирует запрос к Server Manager сервису
+func (p *ProxyService) ProxyToServerManager(w http.ResponseWriter, r *http.Request) {
+	p.serverManagerProxy.Proxy(w, r)
 }
 
 // HealthCheck проверяет доступность auth сервиса

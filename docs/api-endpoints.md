@@ -13,6 +13,15 @@ Client → Gateway (API Gateway) → Микросервисы
         │ Auth Service    │
         │ VPN Core        │
         │ DPI Bypass      │
+        │ Analytics       │
+        │ Notifications   │
+        └─────────────────┘
+                ↓
+        ┌─────────────────┐
+        │ InfluxDB        │
+        │ Redis           │
+        │ PostgreSQL      │
+        │ RabbitMQ        │
         └─────────────────┘
 ```
 
@@ -136,6 +145,82 @@ GET    /api/v1/dpi-bypass/bypass/{id}/stats
 ```
 
 **Описание**: Проксирование запросов к DPI Bypass сервису  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`
+
+### Проксирование к Analytics
+
+```
+GET    /api/v1/analytics/health
+GET    /api/v1/analytics/metrics/connections
+GET    /api/v1/analytics/metrics/bypass-effectiveness
+GET    /api/v1/analytics/metrics/user-activity
+GET    /api/v1/analytics/metrics/server-load
+GET    /api/v1/analytics/metrics/errors
+GET    /api/v1/analytics/dashboards
+POST   /api/v1/analytics/dashboards
+GET    /api/v1/analytics/dashboards/{id}
+PUT    /api/v1/analytics/dashboards/{id}
+DELETE /api/v1/analytics/dashboards/{id}
+GET    /api/v1/analytics/alerts
+POST   /api/v1/analytics/alerts
+GET    /api/v1/analytics/alerts/{id}
+PUT    /api/v1/analytics/alerts/{id}
+DELETE /api/v1/analytics/alerts/{id}
+```
+
+**Описание**: Проксирование запросов к Analytics сервису  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`
+
+### Проксирование к Notifications
+
+```
+GET    /api/v1/notifications/health
+POST   /api/v1/notifications/notifications
+```
+
+**Описание**: Проксирование запросов к Notifications сервису  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>` (для POST запросов)
+
+### Проксирование к Server Manager
+
+```
+# Управление серверами
+POST   /api/v1/server-manager/servers
+GET    /api/v1/server-manager/servers
+GET    /api/v1/server-manager/servers/{id}
+PUT    /api/v1/server-manager/servers/{id}
+DELETE /api/v1/server-manager/servers/{id}
+POST   /api/v1/server-manager/servers/{id}/start
+POST   /api/v1/server-manager/servers/{id}/stop
+POST   /api/v1/server-manager/servers/{id}/restart
+GET    /api/v1/server-manager/servers/{id}/stats
+GET    /api/v1/server-manager/servers/{id}/health
+
+# Масштабирование
+GET    /api/v1/server-manager/scaling/policies
+POST   /api/v1/server-manager/scaling/policies
+PUT    /api/v1/server-manager/scaling/policies/{id}
+DELETE /api/v1/server-manager/scaling/policies/{id}
+POST   /api/v1/server-manager/scaling/evaluate
+
+# Резервное копирование
+GET    /api/v1/server-manager/backups/configs
+POST   /api/v1/server-manager/backups/configs
+PUT    /api/v1/server-manager/backups/configs/{id}
+DELETE /api/v1/server-manager/backups/configs/{id}
+POST   /api/v1/server-manager/servers/{id}/backup
+POST   /api/v1/server-manager/servers/{id}/restore/{backup_id}
+
+# Обновления
+GET    /api/v1/server-manager/servers/{id}/update
+POST   /api/v1/server-manager/servers/{id}/update
+POST   /api/v1/server-manager/servers/{id}/update/cancel
+
+# Мониторинг
+GET    /api/v1/server-manager/health/all
+```
+
+**Описание**: Проксирование запросов к Server Manager сервису  
 **Заголовки**: `Authorization: Bearer <JWT_TOKEN>`
 
 ---
@@ -617,7 +702,1026 @@ GET /api/v1/bypass/{id}/stats
 
 ---
 
-## 5. VPN Core gRPC Service
+## 5. Server Manager Service
+
+**Базовый URL**: `http://localhost:8085`
+
+### Health Check
+
+```
+GET /health
+```
+
+**Описание**: Проверка состояния Server Manager сервиса  
+**Ответ**:
+
+```json
+{
+	"status": "ok",
+	"service": "server-manager",
+	"version": "1.0.0",
+	"timestamp": "2024-01-01T12:00:00Z"
+}
+```
+
+### Root
+
+```
+GET /
+```
+
+**Описание**: Информация о сервисе  
+**Ответ**:
+
+```json
+{
+	"message": "Silence Server Manager Service",
+	"version": "1.0.0"
+}
+```
+
+### Управление серверами
+
+#### Создание сервера
+
+```
+POST /api/v1/servers
+```
+
+**Описание**: Создание нового сервера  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`  
+**Тело запроса**:
+
+```json
+{
+	"name": "vpn-server-1",
+	"type": "vpn",
+	"region": "us-east-1",
+	"config": {
+		"environment": {
+			"VPN_PORT": "51820",
+			"JWT_SECRET": "secret"
+		},
+		"command": ["/app/vpn-core"]
+	}
+}
+```
+
+**Ответ**:
+
+```json
+{
+	"id": "server-123",
+	"name": "vpn-server-1",
+	"type": "vpn",
+	"status": "running",
+	"region": "us-east-1",
+	"ip": "192.168.1.100",
+	"port": 51820,
+	"cpu": 0.0,
+	"memory": 0.0,
+	"disk": 0.0,
+	"network": 0.0,
+	"created_at": "2024-01-01T12:00:00Z",
+	"updated_at": "2024-01-01T12:00:00Z"
+}
+```
+
+#### Получение списка серверов
+
+```
+GET /api/v1/servers?type=vpn&region=us-east-1&status=running
+```
+
+**Описание**: Получение списка серверов с фильтрами  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`  
+**Query параметры**:
+
+- `type` - тип сервера (vpn, dpi, gateway, analytics)
+- `region` - регион сервера
+- `status` - статус сервера (creating, running, stopped, error)
+
+**Ответ**:
+
+```json
+[
+	{
+		"id": "server-123",
+		"name": "vpn-server-1",
+		"type": "vpn",
+		"status": "running",
+		"region": "us-east-1",
+		"ip": "192.168.1.100",
+		"port": 51820,
+		"cpu": 0.25,
+		"memory": 0.15,
+		"disk": 0.05,
+		"network": 0.1,
+		"created_at": "2024-01-01T12:00:00Z",
+		"updated_at": "2024-01-01T12:00:00Z"
+	}
+]
+```
+
+#### Управление жизненным циклом
+
+```
+POST /api/v1/servers/{id}/start
+POST /api/v1/servers/{id}/stop
+POST /api/v1/servers/{id}/restart
+```
+
+**Описание**: Запуск, остановка и перезапуск сервера  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`
+
+#### Статистика сервера
+
+```
+GET /api/v1/servers/{id}/stats
+```
+
+**Описание**: Получение статистики сервера  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`  
+**Ответ**:
+
+```json
+{
+	"server_id": "server-123",
+	"cpu": 0.25,
+	"memory": 0.15,
+	"disk": 0.05,
+	"network": 0.1,
+	"connections": 150,
+	"timestamp": "2024-01-01T12:00:00Z"
+}
+```
+
+#### Здоровье сервера
+
+```
+GET /api/v1/servers/{id}/health
+```
+
+**Описание**: Получение информации о здоровье сервера  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`  
+**Ответ**:
+
+```json
+{
+	"server_id": "server-123",
+	"status": "healthy",
+	"message": "Server is running normally",
+	"timestamp": "2024-01-01T12:00:00Z"
+}
+```
+
+### Масштабирование
+
+#### Политики масштабирования
+
+```
+GET /api/v1/scaling/policies
+POST /api/v1/scaling/policies
+PUT /api/v1/scaling/policies/{id}
+DELETE /api/v1/scaling/policies/{id}
+```
+
+**Описание**: Управление политиками масштабирования  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`
+
+**Пример создания политики**:
+
+```json
+{
+	"name": "vpn-auto-scaling",
+	"min_servers": 2,
+	"max_servers": 10,
+	"cpu_threshold": 0.8,
+	"memory_threshold": 0.8,
+	"scale_up_cooldown": "300s",
+	"scale_down_cooldown": "600s",
+	"enabled": true
+}
+```
+
+#### Оценка масштабирования
+
+```
+POST /api/v1/scaling/evaluate
+```
+
+**Описание**: Запуск оценки необходимости масштабирования  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`
+
+### Резервное копирование
+
+#### Конфигурации резервного копирования
+
+```
+GET /api/v1/backups/configs
+POST /api/v1/backups/configs
+PUT /api/v1/backups/configs/{id}
+DELETE /api/v1/backups/configs/{id}
+```
+
+**Описание**: Управление конфигурациями резервного копирования  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`
+
+**Пример конфигурации**:
+
+```json
+{
+	"server_id": "server-123",
+	"schedule": "0 2 * * *",
+	"retention": 30,
+	"type": "full",
+	"destination": "s3://backups/silence/",
+	"enabled": true
+}
+```
+
+#### Создание и восстановление резервных копий
+
+```
+POST /api/v1/servers/{id}/backup
+POST /api/v1/servers/{id}/restore/{backup_id}
+```
+
+**Описание**: Создание и восстановление резервных копий  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`
+
+### Обновления
+
+#### Управление обновлениями
+
+```
+GET /api/v1/servers/{id}/update
+POST /api/v1/servers/{id}/update
+POST /api/v1/servers/{id}/update/cancel
+```
+
+**Описание**: Управление обновлениями серверов  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`
+
+**Пример запуска обновления**:
+
+```json
+{
+	"version": "1.1.0",
+	"force": false
+}
+```
+
+### Мониторинг
+
+#### Здоровье всех серверов
+
+```
+GET /api/v1/health/all
+```
+
+**Описание**: Получение информации о здоровье всех серверов  
+**Заголовки**: `Authorization: Bearer <JWT_TOKEN>`  
+**Ответ**:
+
+```json
+[
+	{
+		"server_id": "server-123",
+		"status": "healthy",
+		"message": "Server is running normally",
+		"timestamp": "2024-01-01T12:00:00Z"
+	},
+	{
+		"server_id": "server-456",
+		"status": "warning",
+		"message": "High CPU usage detected",
+		"timestamp": "2024-01-01T12:00:00Z"
+	}
+]
+```
+
+---
+
+## 6. Analytics Service
+
+**Базовый URL**: `http://localhost:8084`
+
+### Health Check
+
+```
+GET /health
+```
+
+**Описание**: Проверка состояния Analytics сервиса  
+**Ответ**:
+
+```json
+{
+	"status": "ok",
+	"service": "analytics",
+	"version": "1.0.0"
+}
+```
+
+### Метрики
+
+#### Метрики подключений
+
+```
+GET /metrics/connections
+```
+
+**Описание**: Получение метрик подключений VPN  
+**Параметры запроса**:
+
+- `start` (string) - Начальное время (RFC3339)
+- `end` (string) - Конечное время (RFC3339)
+- `user_id` (string) - ID пользователя (опционально)
+- `server_id` (string) - ID сервера (опционально)
+- `region` (string) - Регион (опционально)
+
+**Ответ**:
+
+```json
+{
+	"metrics": [
+		{
+			"name": "connection",
+			"type": "counter",
+			"value": 1.0,
+			"timestamp": "2024-01-01T12:00:00Z",
+			"user_id": "user-123",
+			"server_id": "server-456",
+			"protocol": "wireguard",
+			"bypass_type": "shadowsocks",
+			"region": "eu-west",
+			"duration": 5000,
+			"bytes_in": 1024,
+			"bytes_out": 2048
+		}
+	],
+	"total": 100,
+	"has_more": false
+}
+```
+
+#### Эффективность обхода DPI
+
+```
+GET /metrics/bypass-effectiveness
+```
+
+**Описание**: Получение метрик эффективности обхода DPI  
+**Параметры запроса**:
+
+- `start` (string) - Начальное время (RFC3339)
+- `end` (string) - Конечное время (RFC3339)
+- `bypass_type` (string) - Тип обхода (опционально)
+
+**Ответ**:
+
+```json
+{
+	"metrics": [
+		{
+			"name": "bypass_effectiveness",
+			"type": "gauge",
+			"value": 0.95,
+			"timestamp": "2024-01-01T12:00:00Z",
+			"bypass_type": "shadowsocks",
+			"success_rate": 0.95,
+			"latency": 50,
+			"throughput": 100.0,
+			"blocked_count": 5,
+			"total_attempts": 100
+		}
+	],
+	"total": 50,
+	"has_more": false
+}
+```
+
+#### Активность пользователей
+
+```
+GET /metrics/user-activity
+```
+
+**Описание**: Получение метрик активности пользователей  
+**Параметры запроса**:
+
+- `start` (string) - Начальное время (RFC3339)
+- `end` (string) - Конечное время (RFC3339)
+- `user_id` (string) - ID пользователя (опционально)
+
+**Ответ**:
+
+```json
+{
+	"metrics": [
+		{
+			"name": "user_activity",
+			"type": "counter",
+			"value": 1.0,
+			"timestamp": "2024-01-01T12:00:00Z",
+			"user_id": "user-123",
+			"session_count": 3,
+			"total_time": 120,
+			"data_usage": 512,
+			"login_count": 5
+		}
+	],
+	"total": 25,
+	"has_more": false
+}
+```
+
+#### Нагрузка серверов
+
+```
+GET /metrics/server-load
+```
+
+**Описание**: Получение метрик нагрузки серверов  
+**Параметры запроса**:
+
+- `start` (string) - Начальное время (RFC3339)
+- `end` (string) - Конечное время (RFC3339)
+- `server_id` (string) - ID сервера (опционально)
+- `region` (string) - Регион (опционально)
+
+**Ответ**:
+
+```json
+{
+	"metrics": [
+		{
+			"name": "server_load",
+			"type": "gauge",
+			"value": 0.75,
+			"timestamp": "2024-01-01T12:00:00Z",
+			"server_id": "server-456",
+			"region": "eu-west",
+			"cpu_usage": 75.0,
+			"memory_usage": 60.0,
+			"network_in": 50.0,
+			"network_out": 30.0,
+			"connections": 100
+		}
+	],
+	"total": 10,
+	"has_more": false
+}
+```
+
+#### Метрики ошибок
+
+```
+GET /metrics/errors
+```
+
+**Описание**: Получение метрик ошибок  
+**Параметры запроса**:
+
+- `start` (string) - Начальное время (RFC3339)
+- `end` (string) - Конечное время (RFC3339)
+- `error_type` (string) - Тип ошибки (опционально)
+- `service` (string) - Сервис (опционально)
+
+**Ответ**:
+
+```json
+{
+	"metrics": [
+		{
+			"name": "error",
+			"type": "counter",
+			"value": 1.0,
+			"timestamp": "2024-01-01T12:00:00Z",
+			"error_type": "connection_timeout",
+			"service": "vpn_core",
+			"user_id": "user-123",
+			"server_id": "server-456",
+			"status_code": 500,
+			"description": "Connection timeout error"
+		}
+	],
+	"total": 15,
+	"has_more": false
+}
+```
+
+### Дашборды
+
+#### Список дашбордов
+
+```
+GET /dashboards
+```
+
+**Описание**: Получение списка всех дашбордов  
+**Ответ**:
+
+```json
+[
+	{
+		"id": "dashboard-123",
+		"name": "VPN Overview",
+		"description": "Обзор VPN метрик",
+		"created_at": "2024-01-01T12:00:00Z",
+		"updated_at": "2024-01-01T12:00:00Z"
+	}
+]
+```
+
+#### Создание дашборда
+
+```
+POST /dashboards
+```
+
+**Описание**: Создание нового дашборда  
+**Тело запроса**:
+
+```json
+{
+	"name": "VPN Overview",
+	"description": "Обзор VPN метрик",
+	"widgets": [
+		{
+			"id": "widget-1",
+			"type": "chart",
+			"title": "Подключения",
+			"query": {
+				"time_range": {
+					"start": "2024-01-01T00:00:00Z",
+					"end": "2024-01-02T00:00:00Z"
+				},
+				"aggregation": "sum",
+				"group_by": ["region"]
+			},
+			"config": {
+				"chart_type": "line"
+			},
+			"position": {
+				"x": 0,
+				"y": 0,
+				"width": 6,
+				"height": 4
+			}
+		}
+	],
+	"layout": {
+		"columns": 12,
+		"rows": 8
+	}
+}
+```
+
+**Ответ**:
+
+```json
+{
+	"id": "dashboard-123",
+	"name": "VPN Overview",
+	"description": "Обзор VPN метрик",
+	"widgets": [...],
+	"layout": {...},
+	"created_at": "2024-01-01T12:00:00Z",
+	"updated_at": "2024-01-01T12:00:00Z"
+}
+```
+
+#### Получение дашборда
+
+```
+GET /dashboards/{id}
+```
+
+**Описание**: Получение дашборда по ID  
+**Ответ**: Аналогично созданию дашборда
+
+#### Обновление дашборда
+
+```
+PUT /dashboards/{id}
+```
+
+**Описание**: Обновление дашборда  
+**Тело запроса**: Аналогично созданию дашборда  
+**Ответ**: Аналогично созданию дашборда
+
+#### Удаление дашборда
+
+```
+DELETE /dashboards/{id}
+```
+
+**Описание**: Удаление дашборда  
+**Ответ**: `204 No Content`
+
+### Алерты
+
+#### Список алертов
+
+```
+GET /alerts
+```
+
+**Описание**: Получение списка всех алертов  
+**Ответ**:
+
+```json
+[
+	{
+		"id": "alert-123",
+		"name": "High Server Load",
+		"description": "Высокая нагрузка на сервер",
+		"condition": "cpu_usage > 90",
+		"severity": "high",
+		"status": "active",
+		"enabled": true,
+		"created_at": "2024-01-01T12:00:00Z",
+		"updated_at": "2024-01-01T12:00:00Z"
+	}
+]
+```
+
+#### Создание алерта
+
+```
+POST /alerts
+```
+
+**Описание**: Создание нового алерта  
+**Тело запроса**:
+
+```json
+{
+	"name": "High Server Load",
+	"description": "Высокая нагрузка на сервер",
+	"condition": "cpu_usage > 90",
+	"severity": "high",
+	"message": "CPU usage превышает 90%",
+	"enabled": true
+}
+```
+
+**Ответ**:
+
+```json
+{
+	"id": "alert-123",
+	"name": "High Server Load",
+	"description": "Высокая нагрузка на сервер",
+	"condition": "cpu_usage > 90",
+	"severity": "high",
+	"message": "CPU usage превышает 90%",
+	"status": "active",
+	"enabled": true,
+	"created_at": "2024-01-01T12:00:00Z",
+	"updated_at": "2024-01-01T12:00:00Z"
+}
+```
+
+#### Получение алерта
+
+```
+GET /alerts/{id}
+```
+
+**Описание**: Получение алерта по ID  
+**Ответ**: Аналогично созданию алерта
+
+#### Обновление алерта
+
+```
+PUT /alerts/{id}
+```
+
+**Описание**: Обновление алерта  
+**Тело запроса**: Аналогично созданию алерта  
+**Ответ**: Аналогично созданию алерта
+
+#### Удаление алерта
+
+```
+DELETE /alerts/{id}
+```
+
+**Описание**: Удаление алерта  
+**Ответ**: `204 No Content`
+
+#### История алертов
+
+```
+GET /alerts/{id}/history?limit=10
+```
+
+**Описание**: Получение истории срабатываний алерта  
+**Параметры запроса**:
+
+- `limit` (int) - Количество записей (по умолчанию 10)
+
+**Ответ**:
+
+```json
+[
+	{
+		"id": "alert-instance-456",
+		"rule_id": "alert-123",
+		"severity": "high",
+		"message": "CPU usage превышает 90%",
+		"status": "triggered",
+		"created_at": "2024-01-01T12:00:00Z",
+		"metric_value": 95.5,
+		"server_id": "server-456"
+	}
+]
+```
+
+#### Подтверждение алерта
+
+```
+POST /alerts/{id}/acknowledge
+```
+
+**Описание**: Подтверждение алерта  
+**Ответ**: `200 OK`
+
+#### Разрешение алерта
+
+```
+POST /alerts/{id}/resolve
+```
+
+**Описание**: Разрешение алерта  
+**Ответ**: `200 OK`
+
+---
+
+## 6. Notifications Service
+
+**Базовый URL**: `http://localhost:8086`
+
+### Health Check
+
+```
+GET /healthz
+```
+
+**Описание**: Проверка состояния Notifications сервиса  
+**Ответ**:
+
+```json
+"ok"
+```
+
+### Отправка уведомлений
+
+```
+POST /notifications
+```
+
+**Описание**: Отправка уведомления через один или несколько каналов  
+**Тело запроса**:
+
+```json
+{
+	"type": "alert",
+	"priority": "high",
+	"title": "Важное уведомление",
+	"message": "Текст уведомления",
+	"recipients": ["user@example.com", "+1234567890"],
+	"channels": ["email", "sms"],
+	"metadata": {
+		"source": "vpn-core",
+		"user_id": "123",
+		"server_id": "456"
+	}
+}
+```
+
+**Параметры**:
+
+- `type` (string) - Тип уведомления (alert, warning, info, system_alert, etc.)
+- `priority` (string) - Приоритет (low, normal, high, urgent)
+- `title` (string) - Заголовок уведомления
+- `message` (string) - Текст уведомления
+- `recipients` (array) - Список получателей (email, телефон, chat_id, etc.)
+- `channels` (array) - Каналы доставки (email, sms, push, telegram, slack, webhook)
+- `metadata` (object) - Дополнительные данные
+
+**Ответ**:
+
+```json
+"ok"
+```
+
+### Поддерживаемые типы уведомлений
+
+#### Системные уведомления
+
+- `system_alert` - Системные алерты
+- `server_down` - Сервер недоступен
+- `server_up` - Сервер восстановлен
+- `high_load` - Высокая нагрузка
+- `low_disk_space` - Недостаточно места на диске
+- `backup_failed` - Ошибка резервного копирования
+- `backup_success` - Успешное резервное копирование
+- `update_failed` - Ошибка обновления
+- `update_success` - Успешное обновление
+
+#### Пользовательские уведомления
+
+- `user_login` - Вход пользователя
+- `user_logout` - Выход пользователя
+- `user_registered` - Регистрация пользователя
+- `user_blocked` - Блокировка пользователя
+- `user_unblocked` - Разблокировка пользователя
+- `password_reset` - Сброс пароля
+- `subscription_expired` - Истечение подписки
+- `subscription_renewed` - Продление подписки
+
+#### VPN уведомления
+
+- `vpn_connected` - Подключение к VPN
+- `vpn_disconnected` - Отключение от VPN
+- `vpn_error` - Ошибка VPN
+- `bypass_blocked` - Блокировка обхода DPI
+- `bypass_success` - Успешный обход DPI
+
+#### Аналитика уведомления
+
+- `metrics_alert` - Алерт метрик
+- `anomaly_detected` - Обнаружена аномалия
+- `threshold_exceeded` - Превышен порог
+
+### Поддерживаемые каналы доставки
+
+#### Email
+
+- **Формат получателей**: `user@example.com`
+- **Описание**: Отправка по электронной почте
+
+#### SMS
+
+- **Формат получателей**: `+1234567890`
+- **Описание**: Отправка SMS сообщений
+
+#### Push
+
+- **Формат получателей**: `device_token_123`
+- **Описание**: Push уведомления для мобильных устройств
+
+#### Telegram
+
+- **Формат получателей**: `@username` или `chat_id`
+- **Описание**: Отправка через Telegram бота
+
+#### Slack
+
+- **Формат получателей**: `#channel` или `@username`
+- **Описание**: Отправка в Slack канал или пользователю
+
+#### Webhook
+
+- **Формат получателей**: `http://example.com/webhook`
+- **Описание**: HTTP POST запрос на указанный URL
+
+### Примеры использования
+
+#### Отправка email уведомления
+
+```bash
+curl -X POST http://localhost:8086/notifications \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "alert",
+    "priority": "high",
+    "title": "VPN подключение потеряно",
+    "message": "Соединение с VPN сервером было прервано",
+    "recipients": ["admin@silence.com"],
+    "channels": ["email"],
+    "metadata": {
+      "source": "vpn-core",
+      "server_id": "server-123"
+    }
+  }'
+```
+
+#### Отправка SMS уведомления
+
+```bash
+curl -X POST http://localhost:8086/notifications \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "warning",
+    "priority": "medium",
+    "title": "Высокая нагрузка",
+    "message": "Нагрузка на сервер превышает 80%",
+    "recipients": ["+1234567890"],
+    "channels": ["sms"],
+    "metadata": {
+      "source": "analytics",
+      "server_id": "server-456"
+    }
+  }'
+```
+
+#### Отправка через несколько каналов
+
+```bash
+curl -X POST http://localhost:8086/notifications \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "system_alert",
+    "priority": "urgent",
+    "title": "Критическая ошибка",
+    "message": "Обнаружена критическая ошибка в системе",
+    "recipients": ["admin@silence.com", "+1234567890", "@admin_user"],
+    "channels": ["email", "sms", "telegram"],
+    "metadata": {
+      "source": "system",
+      "error_code": "CRIT_001"
+    }
+  }'
+```
+
+#### Отправка в Slack
+
+```bash
+curl -X POST http://localhost:8086/notifications \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "info",
+    "priority": "normal",
+    "title": "Обновление системы",
+    "message": "Система будет обновлена в 02:00 UTC",
+    "recipients": ["#general"],
+    "channels": ["slack"],
+    "metadata": {
+      "source": "system",
+      "maintenance": true
+    }
+  }'
+```
+
+#### Отправка webhook уведомления
+
+```bash
+curl -X POST http://localhost:8086/notifications \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "webhook_test",
+    "priority": "low",
+    "title": "Тест интеграции",
+    "message": "Проверка webhook интеграции",
+    "recipients": ["http://example.com/webhook"],
+    "channels": ["webhook"],
+    "metadata": {
+      "source": "test",
+      "test_id": "webhook-001"
+    }
+  }'
+```
+
+### RabbitMQ интеграция
+
+Notifications сервис также поддерживает получение уведомлений через RabbitMQ:
+
+- **Exchange**: `notifications`
+- **Queue**: `notifications`
+- **Routing Key**: `notifications.*`
+- **Consumer Tag**: `notifications-consumer`
+
+#### Формат сообщения RabbitMQ
+
+```json
+{
+	"id": "event-123",
+	"type": "alert",
+	"priority": "high",
+	"title": "Уведомление из RabbitMQ",
+	"message": "Это уведомление получено через RabbitMQ",
+	"source": "vpn-core",
+	"recipients": ["user@example.com"],
+	"channels": ["email"],
+	"timestamp": "2024-01-01T12:00:00Z"
+}
+```
+
+### Интеграция с Analytics
+
+Notifications сервис автоматически отправляет метрики в Analytics сервис:
+
+- **Успешные доставки**: `POST /metrics/delivery`
+- **Ошибки доставки**: `POST /metrics/errors`
+
+---
+
+## 7. VPN Core gRPC Service
 
 **Порт**: `50051`
 
@@ -792,6 +1896,160 @@ curl -X POST "http://localhost:8080/api/v1/dpi-bypass/bypass/bypass-123/start" \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
 
+### Аналитика и мониторинг
+
+**Получение метрик подключений**
+
+```bash
+curl -X GET "http://localhost:8080/api/v1/analytics/metrics/connections?start=2024-01-01T00:00:00Z&end=2024-01-02T00:00:00Z" \
+  -H "Authorization: Bearer <JWT_TOKEN>"
+```
+
+**Получение метрик нагрузки серверов**
+
+```bash
+curl -X GET "http://localhost:8080/api/v1/analytics/metrics/server-load?start=2024-01-01T00:00:00Z&end=2024-01-02T00:00:00Z" \
+  -H "Authorization: Bearer <JWT_TOKEN>"
+```
+
+**Создание дашборда**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/analytics/dashboards \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
+  -d '{
+    "name": "VPN Overview",
+    "description": "Обзор VPN метрик",
+    "widgets": [
+      {
+        "id": "widget-1",
+        "type": "chart",
+        "title": "Подключения",
+        "query": {
+          "time_range": {
+            "start": "2024-01-01T00:00:00Z",
+            "end": "2024-01-02T00:00:00Z"
+          },
+          "aggregation": "sum",
+          "group_by": ["region"]
+        },
+        "config": {
+          "chart_type": "line"
+        },
+        "position": {
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 4
+        }
+      }
+    ],
+    "layout": {
+      "columns": 12,
+      "rows": 8
+    }
+  }'
+```
+
+**Создание алерта**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/analytics/alerts \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
+  -d '{
+    "name": "High Server Load",
+    "description": "Высокая нагрузка на сервер",
+    "condition": "cpu_usage > 90",
+    "severity": "high",
+    "message": "CPU usage превышает 90%",
+    "enabled": true
+  }'
+```
+
+**Получение списка дашбордов**
+
+```bash
+curl -X GET http://localhost:8080/api/v1/analytics/dashboards \
+  -H "Authorization: Bearer <JWT_TOKEN>"
+```
+
+**Получение списка алертов**
+
+```bash
+curl -X GET http://localhost:8080/api/v1/analytics/alerts \
+  -H "Authorization: Bearer <JWT_TOKEN>"
+```
+
+### Уведомления
+
+**Отправка email уведомления**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/notifications/notifications \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
+  -d '{
+    "type": "alert",
+    "priority": "high",
+    "title": "VPN подключение потеряно",
+    "message": "Соединение с VPN сервером было прервано",
+    "recipients": ["admin@silence.com"],
+    "channels": ["email"],
+    "metadata": {
+      "source": "vpn-core",
+      "server_id": "server-123"
+    }
+  }'
+```
+
+**Отправка SMS уведомления**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/notifications/notifications \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
+  -d '{
+    "type": "warning",
+    "priority": "medium",
+    "title": "Высокая нагрузка",
+    "message": "Нагрузка на сервер превышает 80%",
+    "recipients": ["+1234567890"],
+    "channels": ["sms"],
+    "metadata": {
+      "source": "analytics",
+      "server_id": "server-456"
+    }
+  }'
+```
+
+**Отправка через несколько каналов**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/notifications/notifications \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
+  -d '{
+    "type": "system_alert",
+    "priority": "urgent",
+    "title": "Критическая ошибка",
+    "message": "Обнаружена критическая ошибка в системе",
+    "recipients": ["admin@silence.com", "+1234567890", "@admin_user"],
+    "channels": ["email", "sms", "telegram"],
+    "metadata": {
+      "source": "system",
+      "error_code": "CRIT_001"
+    }
+  }'
+```
+
+**Проверка состояния notifications сервиса**
+
+```bash
+curl -X GET http://localhost:8080/api/v1/notifications/health
+```
+
 ---
 
 ## Мониторинг
@@ -804,6 +2062,8 @@ curl -X POST "http://localhost:8080/api/v1/dpi-bypass/bypass/bypass-123/start" \
 - Auth: `GET /health`
 - VPN Core: `GET /health`
 - DPI Bypass: `GET /health`
+- Analytics: `GET /health`
+- Notifications: `GET /healthz`
 
 ### Логирование
 
@@ -820,3 +2080,18 @@ VPN Core предоставляет детальную статистику ту
 
 - `GET /tunnels/stats` - Статистика туннеля
 - `GET /api/v1/bypass/{id}/stats` - Статистика bypass
+
+Analytics сервис предоставляет комплексные метрики и мониторинг:
+
+- `GET /api/v1/analytics/metrics/connections` - Метрики подключений
+- `GET /api/v1/analytics/metrics/bypass-effectiveness` - Эффективность обхода DPI
+- `GET /api/v1/analytics/metrics/user-activity` - Активность пользователей
+- `GET /api/v1/analytics/metrics/server-load` - Нагрузка серверов
+- `GET /api/v1/analytics/metrics/errors` - Метрики ошибок
+- `GET /api/v1/analytics/dashboards` - Управление дашбордами
+- `GET /api/v1/analytics/alerts` - Управление алертами
+
+Notifications сервис предоставляет API для отправки уведомлений:
+
+- `POST /api/v1/notifications/notifications` - Отправка уведомлений
+- `GET /api/v1/notifications/health` - Проверка состояния сервиса

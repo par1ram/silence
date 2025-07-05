@@ -1,0 +1,262 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: silence-vpn
+  labels:
+    name: silence-vpn
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: server-manager-sa
+  namespace: silence-vpn
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: server-manager-role
+rules:
+  - apiGroups: ['']
+    resources: ['pods', 'services', 'configmaps', 'secrets', 'events']
+    verbs: ['get', 'list', 'watch', 'create', 'update', 'patch', 'delete']
+  - apiGroups: ['apps']
+    resources: ['deployments', 'replicasets']
+    verbs: ['get', 'list', 'watch', 'create', 'update', 'patch', 'delete']
+  - apiGroups: ['networking.k8s.io']
+    resources: ['networkpolicies']
+    verbs: ['get', 'list', 'watch', 'create', 'update', 'patch', 'delete']
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: server-manager-binding
+subjects:
+  - kind: ServiceAccount
+    name: server-manager-sa
+    namespace: silence-vpn
+roleRef:
+  kind: ClusterRole
+  name: server-manager-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: server-manager-config
+  namespace: silence-vpn
+data:
+  ORCHESTRATOR_TYPE: 'kubernetes'
+  KUBERNETES_NAMESPACE: 'silence-vpn'
+  HTTP_PORT: '8085'
+  GRPC_PORT: '50055'
+  VERSION: '1.0.0'
+  HEALTH_CHECK_INTERVAL: '30s'
+  METRICS_INTERVAL: '60s'
+  ALERT_THRESHOLD: '0.8'
+  DEFAULT_REGION: 'us-east-1'
+  REGIONS: 'us-east-1,us-west-1,eu-west-1'
+  AUTO_SCALING: 'true'
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+  namespace: silence-vpn
+type: Opaque
+data:
+  username: cG9zdGdyZXM= # postgres
+  password: cGFzc3dvcmQ= # password
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server-manager
+  namespace: silence-vpn
+  labels:
+    app: server-manager
+    version: v1.0.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: server-manager
+  template:
+    metadata:
+      labels:
+        app: server-manager
+        version: v1.0.0
+    spec:
+      serviceAccountName: server-manager-sa
+      containers:
+        - name: server-manager
+          image: silence/server-manager:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8085
+              protocol: TCP
+            - name: grpc
+              containerPort: 50055
+              protocol: TCP
+          env:
+            - name: ORCHESTRATOR_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: server-manager-config
+                  key: ORCHESTRATOR_TYPE
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                configMapKeyRef:
+                  name: server-manager-config
+                  key: KUBERNETES_NAMESPACE
+            - name: HTTP_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: server-manager-config
+                  key: HTTP_PORT
+            - name: GRPC_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: server-manager-config
+                  key: GRPC_PORT
+            - name: VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: server-manager-config
+                  key: VERSION
+            - name: DB_HOST
+              value: 'postgres-service'
+            - name: DB_PORT
+              value: '5432'
+            - name: DB_NAME
+              value: 'silence_server_manager'
+            - name: DB_SSLMODE
+              value: 'disable'
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: password
+            - name: HEALTH_CHECK_INTERVAL
+              valueFrom:
+                configMapKeyRef:
+                  name: server-manager-config
+                  key: HEALTH_CHECK_INTERVAL
+            - name: METRICS_INTERVAL
+              valueFrom:
+                configMapKeyRef:
+                  name: server-manager-config
+                  key: METRICS_INTERVAL
+            - name: ALERT_THRESHOLD
+              valueFrom:
+                configMapKeyRef:
+                  name: server-manager-config
+                  key: ALERT_THRESHOLD
+            - name: DEFAULT_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: server-manager-config
+                  key: DEFAULT_REGION
+            - name: REGIONS
+              valueFrom:
+                configMapKeyRef:
+                  name: server-manager-config
+                  key: REGIONS
+            - name: AUTO_SCALING
+              valueFrom:
+                configMapKeyRef:
+                  name: server-manager-config
+                  key: AUTO_SCALING
+          resources:
+            requests:
+              memory: '128Mi'
+              cpu: '100m'
+            limits:
+              memory: '256Mi'
+              cpu: '200m'
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-manager-service
+  namespace: silence-vpn
+  labels:
+    app: server-manager
+spec:
+  selector:
+    app: server-manager
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+    - name: grpc
+      port: 50055
+      targetPort: grpc
+      protocol: TCP
+  type: LoadBalancer
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: server-manager-network-policy
+  namespace: silence-vpn
+spec:
+  podSelector:
+    matchLabels:
+      app: server-manager
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: silence-vpn
+      ports:
+        - protocol: TCP
+          port: 8085
+        - protocol: TCP
+          port: 50055
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: silence-vpn
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53

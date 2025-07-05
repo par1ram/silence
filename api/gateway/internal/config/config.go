@@ -13,6 +13,8 @@ type Config struct {
 	AuthURL          string
 	VPNCoreURL       string
 	DPIBypassURL     string
+	AnalyticsURL     string
+	ServerManagerURL string
 	JWTSecret        string
 	InternalAPIToken string
 
@@ -32,6 +34,8 @@ func Load() *Config {
 		AuthURL:          getEnv("AUTH_URL", "http://localhost:8081"),
 		VPNCoreURL:       getEnv("VPN_CORE_URL", "http://localhost:8082"),
 		DPIBypassURL:     getEnv("DPI_BYPASS_URL", "http://localhost:8083"),
+		AnalyticsURL:     getEnv("ANALYTICS_URL", "http://localhost:8084"),
+		ServerManagerURL: getEnv("SERVER_MANAGER_URL", "http://localhost:8085"),
 		JWTSecret:        getEnv("JWT_SECRET", "your-secret-key"),
 		InternalAPIToken: getEnv("INTERNAL_API_TOKEN", "super-secret-internal-token"),
 
