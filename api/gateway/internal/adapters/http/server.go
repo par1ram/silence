@@ -41,6 +41,21 @@ func NewServer(port string, handlers *Handlers, logger *zap.Logger, jwtSecret st
 	mux.Handle("/api/v1/vpn/peers/remove", NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler)))
 	mux.HandleFunc("/api/v1/vpn/", handlers.VPNHandler) // fallback для остальных VPN endpoint'ов
 
+	// DPI Bypass маршруты (защищенные)
+	mux.HandleFunc("/api/v1/dpi-bypass/bypass", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.DPIHandler)).ServeHTTP(w, r)
+			return
+		}
+		// Для других методов — старое поведение
+		NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.DPIHandler)).ServeHTTP(w, r)
+	})
+	mux.Handle("/api/v1/dpi-bypass/bypass/", NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.DPIHandler)))
+	mux.HandleFunc("/api/v1/dpi-bypass/", handlers.DPIHandler) // fallback для остальных DPI Bypass endpoint'ов
+
+	// Интеграция VPN + обфускация (защищенный)
+	mux.Handle("/api/v1/connect", NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ConnectHandler)))
+
 	mux.HandleFunc("/", handlers.RootHandler)
 
 	server := &http.Server{

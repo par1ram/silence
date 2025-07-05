@@ -40,7 +40,7 @@ func (a *AuthService) Register(ctx context.Context, req *domain.RegisterRequest)
 	// Проверяем, существует ли пользователь
 	existingUser, _ := a.userRepo.GetByEmail(ctx, req.Email)
 	if existingUser != nil {
-		return nil, fmt.Errorf("user with email %s already exists", req.Email)
+		return nil, domain.ErrUserAlreadyExists
 	}
 
 	// Хешируем пароль
@@ -82,12 +82,12 @@ func (a *AuthService) Login(ctx context.Context, req *domain.LoginRequest) (*dom
 	// Получаем пользователя по email
 	user, err := a.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
-		return nil, fmt.Errorf("invalid credentials")
+		return nil, domain.ErrInvalidCredentials
 	}
 
 	// Проверяем пароль
 	if !a.passwordHasher.Verify(req.Password, user.Password) {
-		return nil, fmt.Errorf("invalid credentials")
+		return nil, domain.ErrInvalidCredentials
 	}
 
 	// Генерируем токен

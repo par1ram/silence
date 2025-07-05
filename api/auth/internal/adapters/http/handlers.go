@@ -39,7 +39,12 @@ func (h *Handlers) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := h.authService.Register(r.Context(), &req)
 	if err != nil {
-		h.logger.Error("failed to register user", zap.Error(err))
+		// Проверяем тип ошибки для определения уровня логирования
+		if domain.IsUserAlreadyExists(err) {
+			h.logger.Warn("attempt to register existing user", zap.String("email", req.Email), zap.String("error", err.Error()))
+		} else {
+			h.logger.Error("failed to register user", zap.Error(err))
+		}
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -69,7 +74,12 @@ func (h *Handlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := h.authService.Login(r.Context(), &req)
 	if err != nil {
-		h.logger.Error("failed to login user", zap.Error(err))
+		// Проверяем тип ошибки для определения уровня логирования
+		if domain.IsInvalidCredentials(err) {
+			h.logger.Warn("invalid login attempt", zap.String("email", req.Email), zap.String("error", err.Error()))
+		} else {
+			h.logger.Error("failed to login user", zap.Error(err))
+		}
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}

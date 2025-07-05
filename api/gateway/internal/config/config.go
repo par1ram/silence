@@ -7,23 +7,25 @@ import (
 
 // Config конфигурация приложения
 type Config struct {
-	HTTPPort   string
-	LogLevel   string
-	Version    string
-	AuthURL    string
-	VPNCoreURL string
-	JWTSecret  string
+	HTTPPort     string
+	LogLevel     string
+	Version      string
+	AuthURL      string
+	VPNCoreURL   string
+	DPIBypassURL string
+	JWTSecret    string
 }
 
 // Load загружает конфигурацию из переменных окружения
 func Load() *Config {
 	return &Config{
-		HTTPPort:   getEnv("HTTP_PORT", ":8080"),
-		LogLevel:   getEnv("LOG_LEVEL", "info"),
-		Version:    getEnv("VERSION", "1.0.0"),
-		AuthURL:    getEnv("AUTH_URL", "http://localhost:8081"),
-		VPNCoreURL: getEnv("VPN_CORE_URL", "http://localhost:8082"),
-		JWTSecret:  getEnv("JWT_SECRET", "your-secret-key"),
+		HTTPPort:     getEnv("HTTP_PORT", ":8080"),
+		LogLevel:     getEnv("LOG_LEVEL", "info"),
+		Version:      getEnv("VERSION", "1.0.0"),
+		AuthURL:      getEnv("AUTH_URL", "http://localhost:8081"),
+		VPNCoreURL:   getEnv("VPN_CORE_URL", "http://localhost:8082"),
+		DPIBypassURL: getEnv("DPI_BYPASS_URL", "http://localhost:8083"),
+		JWTSecret:    getEnv("JWT_SECRET", "your-secret-key"),
 	}
 }
 

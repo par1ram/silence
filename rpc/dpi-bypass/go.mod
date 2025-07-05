@@ -1,12 +1,12 @@
 module github.com/par1ram/silence/rpc/dpi-bypass
 
-go 1.21
+go 1.23
 
 require (
-	google.golang.org/grpc v1.57.0
-	google.golang.org/protobuf v1.31.0
-	github.com/shadowsocks/go-shadowsocks2 v0.1.5
 	github.com/par1ram/silence/shared v0.0.0
+	go.uber.org/zap v1.26.0
 )
+
+require go.uber.org/multierr v1.10.0 // indirect
 
 replace github.com/par1ram/silence/shared => ../../shared

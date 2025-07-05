@@ -21,7 +21,7 @@ type ServiceContext struct {
 func NewServiceContext(cfg *config.Config, logger *zap.Logger) *ServiceContext {
 	// Создаем сервисы
 	healthService := services.NewHealthService("gateway", cfg.Version)
-	proxyService := services.NewProxyService(cfg.AuthURL, cfg.VPNCoreURL, logger)
+	proxyService := services.NewProxyService(cfg.AuthURL, cfg.VPNCoreURL, cfg.DPIBypassURL, logger)
 
 	// Создаем HTTP обработчики
 	handlers := http.NewHandlers(healthService, proxyService, logger)

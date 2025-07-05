@@ -1,6 +1,6 @@
 module github.com/par1ram/silence/rpc/server-manager
 
-go 1.21
+go 1.23
 
 require (
 	google.golang.org/grpc v1.57.0
