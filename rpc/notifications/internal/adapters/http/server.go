@@ -33,7 +33,9 @@ func (s *Server) Start() error {
 
 func (s *Server) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("ok"))
+	if _, err := w.Write([]byte("ok")); err != nil {
+		log.Printf("[http] healthz write error: %v", err)
+	}
 }
 
 func (s *Server) handleNotifications(w http.ResponseWriter, r *http.Request) {
@@ -49,12 +51,16 @@ func (s *Server) handleNotifications(w http.ResponseWriter, r *http.Request) {
 	var req domain.Notification
 	if err := json.Unmarshal(body, &req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("invalid json"))
+		if _, err := w.Write([]byte("invalid json")); err != nil {
+			log.Printf("[http] invalid json write error: %v", err)
+		}
 		return
 	}
 	if req.Type == "" || len(req.Recipients) == 0 || len(req.Channels) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("missing required fields: type, recipients, channels"))
+		if _, err := w.Write([]byte("missing required fields: type, recipients, channels")); err != nil {
+			log.Printf("[http] missing fields write error: %v", err)
+		}
 		return
 	}
 	if req.ID == "" {
@@ -67,9 +73,13 @@ func (s *Server) handleNotifications(w http.ResponseWriter, r *http.Request) {
 	if err := s.Dispatcher.Dispatch(ctx, &req); err != nil {
 		log.Printf("[http] dispatch error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("dispatch error"))
+		if _, err := w.Write([]byte("dispatch error")); err != nil {
+			log.Printf("[http] dispatch error write error: %v", err)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("ok"))
+	if _, err := w.Write([]byte("ok")); err != nil {
+		log.Printf("[http] accepted write error: %v", err)
+	}
 }

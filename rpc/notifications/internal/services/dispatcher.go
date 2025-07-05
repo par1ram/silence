@@ -48,11 +48,17 @@ func (d *DispatcherService) Dispatch(ctx context.Context, notification *domain.N
 				if err != nil {
 					log.Printf("[dispatcher] email send error: %v", err)
 					if d.Analytics != nil {
-						d.Analytics.RecordNotificationError(ctx, notification, channel, err)
+						errAnalytics := d.Analytics.RecordNotificationError(ctx, notification, channel, err)
+						if errAnalytics != nil {
+							log.Printf("[dispatcher] analytics RecordNotificationError: %v", errAnalytics)
+						}
 					}
 				} else {
 					if d.Analytics != nil {
-						d.Analytics.RecordNotificationDelivery(ctx, notification, channel)
+						errAnalytics := d.Analytics.RecordNotificationDelivery(ctx, notification, channel)
+						if errAnalytics != nil {
+							log.Printf("[dispatcher] analytics RecordNotificationDelivery: %v", errAnalytics)
+						}
 					}
 				}
 			}
@@ -62,11 +68,17 @@ func (d *DispatcherService) Dispatch(ctx context.Context, notification *domain.N
 				if err != nil {
 					log.Printf("[dispatcher] sms send error: %v", err)
 					if d.Analytics != nil {
-						d.Analytics.RecordNotificationError(ctx, notification, channel, err)
+						errAnalytics := d.Analytics.RecordNotificationError(ctx, notification, channel, err)
+						if errAnalytics != nil {
+							log.Printf("[dispatcher] analytics RecordNotificationError: %v", errAnalytics)
+						}
 					}
 				} else {
 					if d.Analytics != nil {
-						d.Analytics.RecordNotificationDelivery(ctx, notification, channel)
+						errAnalytics := d.Analytics.RecordNotificationDelivery(ctx, notification, channel)
+						if errAnalytics != nil {
+							log.Printf("[dispatcher] analytics RecordNotificationDelivery: %v", errAnalytics)
+						}
 					}
 				}
 			}
@@ -76,11 +88,17 @@ func (d *DispatcherService) Dispatch(ctx context.Context, notification *domain.N
 				if err != nil {
 					log.Printf("[dispatcher] telegram send error: %v", err)
 					if d.Analytics != nil {
-						d.Analytics.RecordNotificationError(ctx, notification, channel, err)
+						errAnalytics := d.Analytics.RecordNotificationError(ctx, notification, channel, err)
+						if errAnalytics != nil {
+							log.Printf("[dispatcher] analytics RecordNotificationError: %v", errAnalytics)
+						}
 					}
 				} else {
 					if d.Analytics != nil {
-						d.Analytics.RecordNotificationDelivery(ctx, notification, channel)
+						errAnalytics := d.Analytics.RecordNotificationDelivery(ctx, notification, channel)
+						if errAnalytics != nil {
+							log.Printf("[dispatcher] analytics RecordNotificationDelivery: %v", errAnalytics)
+						}
 					}
 				}
 			}
@@ -90,11 +108,17 @@ func (d *DispatcherService) Dispatch(ctx context.Context, notification *domain.N
 				if err != nil {
 					log.Printf("[dispatcher] push send error: %v", err)
 					if d.Analytics != nil {
-						d.Analytics.RecordNotificationError(ctx, notification, channel, err)
+						errAnalytics := d.Analytics.RecordNotificationError(ctx, notification, channel, err)
+						if errAnalytics != nil {
+							log.Printf("[dispatcher] analytics RecordNotificationError: %v", errAnalytics)
+						}
 					}
 				} else {
 					if d.Analytics != nil {
-						d.Analytics.RecordNotificationDelivery(ctx, notification, channel)
+						errAnalytics := d.Analytics.RecordNotificationDelivery(ctx, notification, channel)
+						if errAnalytics != nil {
+							log.Printf("[dispatcher] analytics RecordNotificationDelivery: %v", errAnalytics)
+						}
 					}
 				}
 			}
@@ -104,11 +128,17 @@ func (d *DispatcherService) Dispatch(ctx context.Context, notification *domain.N
 				if err != nil {
 					log.Printf("[dispatcher] webhook send error: %v", err)
 					if d.Analytics != nil {
-						d.Analytics.RecordNotificationError(ctx, notification, channel, err)
+						errAnalytics := d.Analytics.RecordNotificationError(ctx, notification, channel, err)
+						if errAnalytics != nil {
+							log.Printf("[dispatcher] analytics RecordNotificationError: %v", errAnalytics)
+						}
 					}
 				} else {
 					if d.Analytics != nil {
-						d.Analytics.RecordNotificationDelivery(ctx, notification, channel)
+						errAnalytics := d.Analytics.RecordNotificationDelivery(ctx, notification, channel)
+						if errAnalytics != nil {
+							log.Printf("[dispatcher] analytics RecordNotificationDelivery: %v", errAnalytics)
+						}
 					}
 				}
 			}
@@ -118,11 +148,17 @@ func (d *DispatcherService) Dispatch(ctx context.Context, notification *domain.N
 				if err != nil {
 					log.Printf("[dispatcher] slack send error: %v", err)
 					if d.Analytics != nil {
-						d.Analytics.RecordNotificationError(ctx, notification, channel, err)
+						errAnalytics := d.Analytics.RecordNotificationError(ctx, notification, channel, err)
+						if errAnalytics != nil {
+							log.Printf("[dispatcher] analytics RecordNotificationError: %v", errAnalytics)
+						}
 					}
 				} else {
 					if d.Analytics != nil {
-						d.Analytics.RecordNotificationDelivery(ctx, notification, channel)
+						errAnalytics := d.Analytics.RecordNotificationDelivery(ctx, notification, channel)
+						if errAnalytics != nil {
+							log.Printf("[dispatcher] analytics RecordNotificationDelivery: %v", errAnalytics)
+						}
 					}
 				}
 			}

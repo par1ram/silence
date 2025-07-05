@@ -188,10 +188,14 @@ func (r *RabbitMQAdapter) ConsumeEvents(ctx context.Context, handler func(*domai
 				if err := r.processMessage(msg, handler); err != nil {
 					log.Printf("Error processing message: %v", err)
 					// Отклоняем сообщение и помещаем в очередь повторов
-					msg.Nack(false, true)
+					if err := msg.Nack(false, true); err != nil {
+						log.Printf("[rabbitmq] nack error: %v", err)
+					}
 				} else {
 					// Подтверждаем обработку
-					msg.Ack(false)
+					if err := msg.Ack(false); err != nil {
+						log.Printf("[rabbitmq] ack error: %v", err)
+					}
 				}
 			}
 		}

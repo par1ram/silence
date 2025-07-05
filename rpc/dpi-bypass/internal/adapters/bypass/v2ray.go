@@ -65,13 +65,16 @@ func (v *V2RayAdapter) Start(config *domain.BypassConfig) error {
 		}
 
 		listener, err = tls.Listen("tcp", fmt.Sprintf(":%d", config.LocalPort), tlsConfig)
+		if err != nil {
+			cancel()
+			return fmt.Errorf("failed to create TLS listener: %w", err)
+		}
 	} else {
 		listener, err = net.Listen("tcp", fmt.Sprintf(":%d", config.LocalPort))
-	}
-
-	if err != nil {
-		cancel()
-		return fmt.Errorf("failed to create listener: %w", err)
+		if err != nil {
+			cancel()
+			return fmt.Errorf("failed to create TCP listener: %w", err)
+		}
 	}
 
 	conn := &v2rayConnection{

@@ -30,7 +30,9 @@ func (h *Handlers) AddPeerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(peer)
+	if err := json.NewEncoder(w).Encode(peer); err != nil {
+		h.logger.Error("failed to encode peer response", zap.Error(err))
+	}
 }
 
 // GetPeerHandler получает пира по ID
@@ -56,7 +58,9 @@ func (h *Handlers) GetPeerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(peer)
+	if err := json.NewEncoder(w).Encode(peer); err != nil {
+		h.logger.Error("failed to encode peer response", zap.Error(err))
+	}
 }
 
 // ListPeersHandler возвращает список пиров туннеля
@@ -80,9 +84,11 @@ func (h *Handlers) ListPeersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"peers": peers,
-	})
+	}); err != nil {
+		h.logger.Error("failed to encode peers response", zap.Error(err))
+	}
 }
 
 // RemovePeerHandler удаляет пира из туннеля
@@ -108,7 +114,9 @@ func (h *Handlers) RemovePeerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": true,
-	})
+	}); err != nil {
+		h.logger.Error("failed to encode remove peer response", zap.Error(err))
+	}
 }

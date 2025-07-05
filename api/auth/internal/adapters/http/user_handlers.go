@@ -27,21 +27,18 @@ func NewUserHandlers(userService ports.UserService, logger *zap.Logger) *UserHan
 
 // CreateUserHandler создает нового пользователя
 func (h *UserHandlers) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+	if !h.validateMethod(w, r, http.MethodPost) {
 		return
 	}
 
 	var req domain.CreateUserRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.logger.Error("failed to decode create user request", zap.Error(err))
-		http.Error(w, "Неверный формат данных", http.StatusBadRequest)
+	if !h.decodeRequest(w, r, &req) {
 		return
 	}
 
 	// Валидация
 	if req.Email == "" || req.Password == "" {
-		http.Error(w, "Email и пароль обязательны", http.StatusBadRequest)
+		h.writeError(w, "Email и пароль обязательны", http.StatusBadRequest)
 		return
 	}
 
@@ -52,117 +49,220 @@ func (h *UserHandlers) CreateUserHandler(w http.ResponseWriter, r *http.Request)
 	user, err := h.userService.CreateUser(r.Context(), &req)
 	if err != nil {
 		h.logger.Error("failed to create user", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(user); err != nil {
-		h.logger.Error("failed to encode create user response", zap.Error(err))
-	}
+	h.writeJSON(w, user, http.StatusCreated)
 }
 
 // GetUserHandler получает пользователя по ID
 func (h *UserHandlers) GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+	if !h.validateMethod(w, r, http.MethodGet) {
 		return
 	}
 
-	// Извлекаем ID из URL
-	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(pathParts) < 2 {
-		http.Error(w, "ID пользователя обязателен", http.StatusBadRequest)
+	id := h.extractID(w, r)
+	if id == "" {
 		return
 	}
-	id := pathParts[len(pathParts)-1]
 
 	user, err := h.userService.GetUser(r.Context(), id)
 	if err != nil {
 		h.logger.Error("failed to get user", zap.String("id", id), zap.Error(err))
-		http.Error(w, err.Error(), http.StatusNotFound)
+		h.writeError(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(user); err != nil {
-		h.logger.Error("failed to encode get user response", zap.Error(err))
-	}
+	h.writeJSON(w, user, http.StatusOK)
 }
 
 // UpdateUserHandler обновляет пользователя
 func (h *UserHandlers) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut {
-		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+	if !h.validateMethod(w, r, http.MethodPut) {
 		return
 	}
 
-	// Извлекаем ID из URL
-	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(pathParts) < 2 {
-		http.Error(w, "ID пользователя обязателен", http.StatusBadRequest)
+	id := h.extractID(w, r)
+	if id == "" {
 		return
 	}
-	id := pathParts[len(pathParts)-1]
 
 	var req domain.UpdateUserRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.logger.Error("failed to decode update user request", zap.Error(err))
-		http.Error(w, "Неверный формат данных", http.StatusBadRequest)
+	if !h.decodeRequest(w, r, &req) {
 		return
 	}
 
 	user, err := h.userService.UpdateUser(r.Context(), id, &req)
 	if err != nil {
 		h.logger.Error("failed to update user", zap.String("id", id), zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(user); err != nil {
-		h.logger.Error("failed to encode update user response", zap.Error(err))
-	}
+	h.writeJSON(w, user, http.StatusOK)
 }
 
 // DeleteUserHandler удаляет пользователя
 func (h *UserHandlers) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+	if !h.validateMethod(w, r, http.MethodDelete) {
 		return
 	}
 
-	// Извлекаем ID из URL
-	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(pathParts) < 2 {
-		http.Error(w, "ID пользователя обязателен", http.StatusBadRequest)
+	id := h.extractID(w, r)
+	if id == "" {
 		return
 	}
-	id := pathParts[len(pathParts)-1]
 
 	err := h.userService.DeleteUser(r.Context(), id)
 	if err != nil {
 		h.logger.Error("failed to delete user", zap.String("id", id), zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]string{"message": "Пользователь успешно удален"}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		h.logger.Error("failed to encode delete user response", zap.Error(err))
-	}
+	h.writeJSON(w, map[string]string{"message": "Пользователь успешно удален"}, http.StatusOK)
 }
 
 // ListUsersHandler получает список пользователей
 func (h *UserHandlers) ListUsersHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+	if !h.validateMethod(w, r, http.MethodGet) {
 		return
 	}
 
-	// Парсим параметры запроса
+	filter := h.buildUserFilter(r)
+	response, err := h.userService.ListUsers(r.Context(), filter)
+	if err != nil {
+		h.logger.Error("failed to list users", zap.Error(err))
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.writeJSON(w, response, http.StatusOK)
+}
+
+// BlockUserHandler блокирует пользователя
+func (h *UserHandlers) BlockUserHandler(w http.ResponseWriter, r *http.Request) {
+	if !h.validateMethod(w, r, http.MethodPost) {
+		return
+	}
+
+	id := h.extractID(w, r)
+	if id == "" {
+		return
+	}
+
+	err := h.userService.BlockUser(r.Context(), id)
+	if err != nil {
+		h.logger.Error("failed to block user", zap.String("id", id), zap.Error(err))
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.writeJSON(w, map[string]string{"message": "Пользователь заблокирован"}, http.StatusOK)
+}
+
+// UnblockUserHandler разблокирует пользователя
+func (h *UserHandlers) UnblockUserHandler(w http.ResponseWriter, r *http.Request) {
+	if !h.validateMethod(w, r, http.MethodPost) {
+		return
+	}
+
+	id := h.extractID(w, r)
+	if id == "" {
+		return
+	}
+
+	err := h.userService.UnblockUser(r.Context(), id)
+	if err != nil {
+		h.logger.Error("failed to unblock user", zap.String("id", id), zap.Error(err))
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.writeJSON(w, map[string]string{"message": "Пользователь разблокирован"}, http.StatusOK)
+}
+
+// ChangeUserRoleHandler изменяет роль пользователя
+func (h *UserHandlers) ChangeUserRoleHandler(w http.ResponseWriter, r *http.Request) {
+	if !h.validateMethod(w, r, http.MethodPost) {
+		return
+	}
+
+	id := h.extractID(w, r)
+	if id == "" {
+		return
+	}
+
+	var req struct {
+		Role domain.UserRole `json:"role"`
+	}
+	if !h.decodeRequest(w, r, &req) {
+		return
+	}
+
+	if req.Role == "" {
+		h.writeError(w, "Роль обязательна", http.StatusBadRequest)
+		return
+	}
+
+	err := h.userService.ChangeUserRole(r.Context(), id, req.Role)
+	if err != nil {
+		h.logger.Error("failed to change user role", zap.String("id", id), zap.Error(err))
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.writeJSON(w, map[string]string{"message": "Роль пользователя изменена"}, http.StatusOK)
+}
+
+// Утилиты для обработки HTTP запросов
+
+// validateMethod проверяет метод HTTP запроса
+func (h *UserHandlers) validateMethod(w http.ResponseWriter, r *http.Request, method string) bool {
+	if r.Method != method {
+		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+		return false
+	}
+	return true
+}
+
+// extractID извлекает ID из URL
+func (h *UserHandlers) extractID(w http.ResponseWriter, r *http.Request) string {
+	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(pathParts) < 2 {
+		h.writeError(w, "ID пользователя обязателен", http.StatusBadRequest)
+		return ""
+	}
+	return pathParts[len(pathParts)-1]
+}
+
+// decodeRequest декодирует JSON из тела запроса
+func (h *UserHandlers) decodeRequest(w http.ResponseWriter, r *http.Request, v interface{}) bool {
+	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
+		h.logger.Error("failed to decode request", zap.Error(err))
+		h.writeError(w, "Неверный формат данных", http.StatusBadRequest)
+		return false
+	}
+	return true
+}
+
+// writeJSON записывает JSON ответ
+func (h *UserHandlers) writeJSON(w http.ResponseWriter, data interface{}, status int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		h.logger.Error("failed to encode response", zap.Error(err))
+	}
+}
+
+// writeError записывает ошибку
+func (h *UserHandlers) writeError(w http.ResponseWriter, message string, status int) {
+	http.Error(w, message, status)
+}
+
+// buildUserFilter создает фильтр для списка пользователей
+func (h *UserHandlers) buildUserFilter(r *http.Request) *domain.UserFilter {
 	limitStr := r.URL.Query().Get("limit")
 	if limitStr == "" {
 		limitStr = "10"
@@ -185,7 +285,6 @@ func (h *UserHandlers) ListUsersHandler(w http.ResponseWriter, r *http.Request) 
 		offset = 0
 	}
 
-	// Создаем фильтр
 	filter := &domain.UserFilter{
 		Limit:  limit,
 		Offset: offset,
@@ -205,116 +304,5 @@ func (h *UserHandlers) ListUsersHandler(w http.ResponseWriter, r *http.Request) 
 		filter.Email = &email
 	}
 
-	response, err := h.userService.ListUsers(r.Context(), filter)
-	if err != nil {
-		h.logger.Error("failed to list users", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		h.logger.Error("failed to encode list users response", zap.Error(err))
-	}
-}
-
-// BlockUserHandler блокирует пользователя
-func (h *UserHandlers) BlockUserHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Извлекаем ID из URL
-	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(pathParts) < 2 {
-		http.Error(w, "ID пользователя обязателен", http.StatusBadRequest)
-		return
-	}
-	id := pathParts[len(pathParts)-1]
-
-	err := h.userService.BlockUser(r.Context(), id)
-	if err != nil {
-		h.logger.Error("failed to block user", zap.String("id", id), zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]string{"message": "Пользователь заблокирован"}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		h.logger.Error("failed to encode block user response", zap.Error(err))
-	}
-}
-
-// UnblockUserHandler разблокирует пользователя
-func (h *UserHandlers) UnblockUserHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Извлекаем ID из URL
-	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(pathParts) < 2 {
-		http.Error(w, "ID пользователя обязателен", http.StatusBadRequest)
-		return
-	}
-	id := pathParts[len(pathParts)-1]
-
-	err := h.userService.UnblockUser(r.Context(), id)
-	if err != nil {
-		h.logger.Error("failed to unblock user", zap.String("id", id), zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]string{"message": "Пользователь разблокирован"}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		h.logger.Error("failed to encode unblock user response", zap.Error(err))
-	}
-}
-
-// ChangeUserRoleHandler изменяет роль пользователя
-func (h *UserHandlers) ChangeUserRoleHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Извлекаем ID из URL
-	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(pathParts) < 2 {
-		http.Error(w, "ID пользователя обязателен", http.StatusBadRequest)
-		return
-	}
-	id := pathParts[len(pathParts)-1]
-
-	var req struct {
-		Role domain.UserRole `json:"role"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.logger.Error("failed to decode change role request", zap.Error(err))
-		http.Error(w, "Неверный формат данных", http.StatusBadRequest)
-		return
-	}
-
-	if req.Role == "" {
-		http.Error(w, "Роль обязательна", http.StatusBadRequest)
-		return
-	}
-
-	err := h.userService.ChangeUserRole(r.Context(), id, req.Role)
-	if err != nil {
-		h.logger.Error("failed to change user role", zap.String("id", id), zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]string{"message": "Роль пользователя изменена"}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		h.logger.Error("failed to encode change role response", zap.Error(err))
-	}
+	return filter
 }

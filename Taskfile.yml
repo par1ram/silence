@@ -226,3 +226,43 @@ tasks:
       - echo "  task deps         - Установка зависимостей"
       - echo "  task docker:up    - Запуск Docker контейнеров"
       - echo "  task help         - Эта справка"
+  lint:auth:
+    desc: Линтинг Auth
+    dir: api/auth
+    cmds: [golangci-lint run]
+
+  lint:vpn-core:
+    desc: Линтинг VPN Core
+    dir: rpc/vpn-core
+    cmds: [golangci-lint run]
+
+  lint:dpi-bypass:
+    desc: Линтинг DPI Bypass
+    dir: rpc/dpi-bypass
+    cmds: [golangci-lint run]
+
+  lint:server-manager:
+    desc: Линтинг Server Manager
+    dir: rpc/server-manager
+    cmds: [golangci-lint run]
+
+  lint:analytics:
+    desc: Линтинг Analytics
+    dir: rpc/analytics
+    cmds: [golangci-lint run]
+
+  lint:notifications:
+    desc: Линтинг Notifications
+    dir: rpc/notifications
+    cmds: [golangci-lint run]
+
+  lint:
+    desc: Линтинг всех сервисов
+    parallel: true
+    cmds:
+      - task: lint:auth
+      - task: lint:vpn-core
+      - task: lint:dpi-bypass
+      - task: lint:server-manager
+      - task: lint:analytics
+      - task: lint:notifications

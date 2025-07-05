@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
 
@@ -18,18 +17,18 @@ type Server struct {
 
 // NewServer создает новый HTTP сервер
 func NewServer(port string, handlers *Handlers, logger *zap.Logger) *Server {
-	router := mux.NewRouter()
+	mux := http.NewServeMux()
 
 	// Регистрируем маршруты
-	handlers.RegisterRoutes(router)
+	handlers.RegisterRoutes(mux)
 
-	// Добавляем middleware
-	router.Use(LoggingMiddleware(logger))
-	router.Use(CORSMiddleware())
+	// Оборачиваем ServeMux в middleware
+	handler := LoggingMiddleware(logger)(mux)
+	handler = CORSMiddleware()(handler)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", port),
-		Handler:      router,
+		Handler:      handler,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,

@@ -170,9 +170,6 @@ func (p *PostgresRepository) Delete(ctx context.Context, id string) error {
 func (p *PostgresRepository) List(ctx context.Context, filter *domain.UserFilter) ([]*domain.User, int, error) {
 	// Строим базовый запрос
 	baseQuery := `FROM users WHERE 1=1`
-	countQuery := `SELECT COUNT(*) ` + baseQuery
-	selectQuery := `SELECT id, email, password, role, status, created_at, updated_at ` + baseQuery
-
 	var args []interface{}
 	argIndex := 1
 
@@ -194,6 +191,9 @@ func (p *PostgresRepository) List(ctx context.Context, filter *domain.UserFilter
 		args = append(args, "%"+*filter.Email+"%")
 		argIndex++
 	}
+
+	countQuery := `SELECT COUNT(*) ` + baseQuery
+	selectQuery := `SELECT id, email, password, role, status, created_at, updated_at ` + baseQuery
 
 	// Получаем общее количество
 	var total int

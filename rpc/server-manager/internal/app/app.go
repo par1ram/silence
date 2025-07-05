@@ -136,7 +136,11 @@ func (a *App) ShutdownTimeout() time.Duration {
 func Run() {
 	// Создаем логгер
 	logger := logger.NewLogger("server-manager")
-	defer logger.Sync()
+	defer func() {
+		if err := logger.Sync(); err != nil {
+			logger.Error("failed to sync logger", zap.Error(err))
+		}
+	}()
 
 	// Создаем приложение
 	app, err := New(logger)

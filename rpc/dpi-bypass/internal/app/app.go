@@ -46,7 +46,11 @@ const defaultShutdownTimeout = 30 // секунд
 func Run() {
 	cfg := config.Load()
 	logger := logger.NewLogger("dpi-bypass")
-	defer logger.Sync()
+	defer func() {
+		if err := logger.Sync(); err != nil {
+			logger.Error("failed to sync logger", zap.Error(err))
+		}
+	}()
 
 	app := NewApp(cfg, logger)
 

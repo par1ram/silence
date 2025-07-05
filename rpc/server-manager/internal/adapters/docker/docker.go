@@ -68,7 +68,7 @@ func (d *DockerAdapter) CreateContainer(ctx context.Context, name, image string,
 
 // StartContainer запускает контейнер
 func (d *DockerAdapter) StartContainer(ctx context.Context, containerID string) error {
-	err := d.client.ContainerStart(ctx, containerID, types.ContainerStartOptions{})
+	err := d.client.ContainerStart(ctx, containerID, container.StartOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to start container: %w", err)
 	}
@@ -100,7 +100,7 @@ func (d *DockerAdapter) StopContainer(ctx context.Context, containerID string, t
 
 // RemoveContainer удаляет контейнер
 func (d *DockerAdapter) RemoveContainer(ctx context.Context, containerID string, force bool) error {
-	err := d.client.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{
+	err := d.client.ContainerRemove(ctx, containerID, container.RemoveOptions{
 		Force: force,
 	})
 	if err != nil {
@@ -153,7 +153,7 @@ func (d *DockerAdapter) GetContainerHealth(ctx context.Context, containerID stri
 
 // ListContainers получает список контейнеров
 func (d *DockerAdapter) ListContainers(ctx context.Context) ([]types.Container, error) {
-	containers, err := d.client.ContainerList(ctx, types.ContainerListOptions{All: true})
+	containers, err := d.client.ContainerList(ctx, container.ListOptions{All: true})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}

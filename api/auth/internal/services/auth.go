@@ -123,6 +123,8 @@ func (a *AuthService) ValidateToken(token string) (*domain.Claims, error) {
 // generateID генерирует уникальный ID
 func generateID() string {
 	bytes := make([]byte, 16)
-	rand.Read(bytes)
+	if _, err := rand.Read(bytes); err != nil {
+		panic("failed to generate random bytes for ID: " + err.Error())
+	}
 	return hex.EncodeToString(bytes)
 }

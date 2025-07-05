@@ -3,7 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -81,7 +81,7 @@ func (m *Migrator) runMigration(filename, filepath string) error {
 	}
 
 	// Читаем содержимое файла миграции
-	content, err := ioutil.ReadFile(filepath)
+	content, err := os.ReadFile(filepath)
 	if err != nil {
 		return fmt.Errorf("failed to read migration file: %w", err)
 	}

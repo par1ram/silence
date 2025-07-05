@@ -127,7 +127,6 @@ func (r *PostgresRepository) List(ctx context.Context, filters map[string]interf
 	if status, ok := filters["status"].(domain.ServerStatus); ok {
 		query += fmt.Sprintf(" AND status = $%d", argIndex)
 		args = append(args, status)
-		argIndex++
 	}
 
 	query += " ORDER BY created_at DESC"
