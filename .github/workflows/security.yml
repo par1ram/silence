@@ -1,0 +1,152 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Запуск каждое воскресенье в 2:00 UTC
+    - cron: '0 2 * * 0'
+
+jobs:
+  # Сканирование зависимостей
+  dependency-check:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Install dependencies
+        run: go work sync
+
+      - name: Run govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      - name: Run gosec
+        uses: securecodewarrior/github-action-gosec@master
+        with:
+          args: '-fmt sarif -out results.sarif ./...'
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: results.sarif
+
+  # Сканирование Docker образов
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ghcr.io/${{ github.repository }}/auth:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Сканирование секретов в коде
+  secret-scan:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          args: --only-verified --format sarif --output-file trufflehog-results.sarif
+
+      - name: Upload TruffleHog scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trufflehog-results.sarif'
+
+  # Проверка лицензий
+  license-check:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Install dependencies
+        run: go work sync
+
+      - name: Check licenses
+        run: |
+          go install github.com/google/go-licenses@latest
+          go-licenses check ./...
+
+  # Анализ размера кода
+  code-size:
+    name: Code Size Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Install dependencies
+        run: go work sync
+
+      - name: Analyze code size
+        run: |
+          echo "=== Code Size Analysis ==="
+          echo "Lines of code per service:"
+
+          for service in auth gateway vpn-core dpi-bypass server-manager analytics notifications; do
+            if [ "$service" = "auth" ] || [ "$service" = "gateway" ]; then
+              path="api/$service"
+            else
+              path="rpc/$service"
+            fi
+            
+            if [ -d "$path" ]; then
+              lines=$(find "$path" -name "*.go" -exec wc -l {} + | tail -1 | awk '{print $1}')
+              echo "$service: $lines lines"
+            fi
+          done
+
+          echo ""
+          echo "Total Go files:"
+          find . -name "*.go" | wc -l
+
+          echo ""
+          echo "Total lines of Go code:"
+          find . -name "*.go" -exec wc -l {} + | tail -1 | awk '{print $1}'
