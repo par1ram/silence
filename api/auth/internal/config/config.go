@@ -8,31 +8,33 @@ import (
 
 // Config конфигурация auth сервиса
 type Config struct {
-	HTTPPort     string
-	LogLevel     string
-	Version      string
-	DBHost       string
-	DBPort       string
-	DBUser       string
-	DBPassword   string
-	DBName       string
-	JWTSecret    string
-	JWTExpiresIn time.Duration
+	HTTPPort         string
+	LogLevel         string
+	Version          string
+	DBHost           string
+	DBPort           string
+	DBUser           string
+	DBPassword       string
+	DBName           string
+	JWTSecret        string
+	JWTExpiresIn     time.Duration
+	InternalAPIToken string
 }
 
 // Load загружает конфигурацию из переменных окружения
 func Load() *Config {
 	return &Config{
-		HTTPPort:     getEnv("HTTP_PORT", ":8081"),
-		LogLevel:     getEnv("LOG_LEVEL", "info"),
-		Version:      getEnv("VERSION", "1.0.0"),
-		DBHost:       getEnv("DB_HOST", "127.0.0.1"),
-		DBPort:       getEnv("DB_PORT", "5432"),
-		DBUser:       getEnv("DB_USER", "pariram"),
-		DBPassword:   getEnv("DB_PASSWORD", "password"),
-		DBName:       getEnv("DB_NAME", "silence_auth"),
-		JWTSecret:    getEnv("JWT_SECRET", "your-secret-key"),
-		JWTExpiresIn: time.Duration(getEnvInt("JWT_EXPIRES_IN_HOURS", 24)) * time.Hour,
+		HTTPPort:         getEnv("HTTP_PORT", ":8081"),
+		LogLevel:         getEnv("LOG_LEVEL", "info"),
+		Version:          getEnv("VERSION", "1.0.0"),
+		DBHost:           getEnv("DB_HOST", "127.0.0.1"),
+		DBPort:           getEnv("DB_PORT", "5432"),
+		DBUser:           getEnv("DB_USER", "pariram"),
+		DBPassword:       getEnv("DB_PASSWORD", "password"),
+		DBName:           getEnv("DB_NAME", "silence_auth"),
+		JWTSecret:        getEnv("JWT_SECRET", "your-secret-key"),
+		JWTExpiresIn:     time.Duration(getEnvInt("JWT_EXPIRES_IN_HOURS", 24)) * time.Hour,
+		InternalAPIToken: getEnv("INTERNAL_API_TOKEN", "super-secret-internal-token"),
 	}
 }
 

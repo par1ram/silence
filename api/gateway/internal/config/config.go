@@ -7,25 +7,39 @@ import (
 
 // Config конфигурация приложения
 type Config struct {
-	HTTPPort     string
-	LogLevel     string
-	Version      string
-	AuthURL      string
-	VPNCoreURL   string
-	DPIBypassURL string
-	JWTSecret    string
+	HTTPPort         string
+	LogLevel         string
+	Version          string
+	AuthURL          string
+	VPNCoreURL       string
+	DPIBypassURL     string
+	JWTSecret        string
+	InternalAPIToken string
+
+	// Rate Limiting настройки
+	RateLimitEnabled bool
+	RateLimitRPS     int // requests per second
+	RateLimitBurst   int // burst size
+	RateLimitWindow  int // window size in seconds
 }
 
 // Load загружает конфигурацию из переменных окружения
 func Load() *Config {
 	return &Config{
-		HTTPPort:     getEnv("HTTP_PORT", ":8080"),
-		LogLevel:     getEnv("LOG_LEVEL", "info"),
-		Version:      getEnv("VERSION", "1.0.0"),
-		AuthURL:      getEnv("AUTH_URL", "http://localhost:8081"),
-		VPNCoreURL:   getEnv("VPN_CORE_URL", "http://localhost:8082"),
-		DPIBypassURL: getEnv("DPI_BYPASS_URL", "http://localhost:8083"),
-		JWTSecret:    getEnv("JWT_SECRET", "your-secret-key"),
+		HTTPPort:         getEnv("HTTP_PORT", ":8080"),
+		LogLevel:         getEnv("LOG_LEVEL", "info"),
+		Version:          getEnv("VERSION", "1.0.0"),
+		AuthURL:          getEnv("AUTH_URL", "http://localhost:8081"),
+		VPNCoreURL:       getEnv("VPN_CORE_URL", "http://localhost:8082"),
+		DPIBypassURL:     getEnv("DPI_BYPASS_URL", "http://localhost:8083"),
+		JWTSecret:        getEnv("JWT_SECRET", "your-secret-key"),
+		InternalAPIToken: getEnv("INTERNAL_API_TOKEN", "super-secret-internal-token"),
+
+		// Rate Limiting настройки
+		RateLimitEnabled: getEnvBool("RATE_LIMIT_ENABLED", true),
+		RateLimitRPS:     getEnvInt("RATE_LIMIT_RPS", 100),
+		RateLimitBurst:   getEnvInt("RATE_LIMIT_BURST", 200),
+		RateLimitWindow:  getEnvInt("RATE_LIMIT_WINDOW", 60),
 	}
 }
 
@@ -42,6 +56,19 @@ func getEnvInt(key string, defaultValue int) int {
 	if value := os.Getenv(key); value != "" {
 		if intValue, err := strconv.Atoi(value); err == nil {
 			return intValue
+		}
+	}
+	return defaultValue
+}
+
+// getEnvBool получает булево значение переменной окружения
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		switch value {
+		case "true", "1", "yes", "on":
+			return true
+		case "false", "0", "no", "off":
+			return false
 		}
 	}
 	return defaultValue

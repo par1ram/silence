@@ -28,6 +28,7 @@ func (t *TokenService) GenerateToken(user *domain.User) (string, error) {
 	claims := &domain.Claims{
 		UserID: user.ID,
 		Email:  user.Email,
+		Role:   user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(t.expiresIn)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

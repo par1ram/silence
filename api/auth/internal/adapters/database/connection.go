@@ -32,7 +32,7 @@ func NewConnection(cfg *config.Config, logger *zap.Logger) (*Connection, error) 
 			logger.Warn("failed to ping database, retrying...",
 				zap.Int("attempt", i+1),
 				zap.Int("max_retries", maxRetries),
-				zap.Error(err))
+				zap.String("error", err.Error()))
 
 			if i == maxRetries-1 {
 				return nil, fmt.Errorf("failed to ping database after %d attempts: %w", maxRetries, err)

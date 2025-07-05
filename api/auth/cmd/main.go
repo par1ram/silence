@@ -40,12 +40,14 @@ func main() {
 	passwordHasher := services.NewPasswordService()
 	tokenGenerator := services.NewTokenService(cfg.JWTSecret, cfg.JWTExpiresIn)
 	authService := services.NewAuthService(userRepo, passwordHasher, tokenGenerator, logger)
+	userService := services.NewUserService(userRepo, passwordHasher)
 
 	// Создаем HTTP обработчики
 	handlers := http.NewHandlers(authService, logger)
+	userHandlers := http.NewUserHandlers(userService, logger)
 
 	// Создаем HTTP сервер
-	httpServer := http.NewServer(cfg.HTTPPort, handlers, logger)
+	httpServer := http.NewServer(cfg.HTTPPort, handlers, userHandlers, cfg, logger)
 
 	// Создаем приложение
 	application := app.New(container)

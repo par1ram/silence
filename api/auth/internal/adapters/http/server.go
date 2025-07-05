@@ -4,24 +4,38 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/par1ram/silence/api/auth/internal/config"
 	"go.uber.org/zap"
 )
 
 // Server HTTP сервер для auth сервиса
 type Server struct {
-	server   *http.Server
-	handlers *Handlers
-	logger   *zap.Logger
+	server       *http.Server
+	handlers     *Handlers
+	userHandlers *UserHandlers
+	logger       *zap.Logger
 }
 
 // NewServer создает новый HTTP сервер
-func NewServer(port string, handlers *Handlers, logger *zap.Logger) *Server {
+func NewServer(port string, handlers *Handlers, userHandlers *UserHandlers, cfg *config.Config, logger *zap.Logger) *Server {
 	mux := http.NewServeMux()
 
-	// Регистрируем маршруты
+	// Регистрируем маршруты аутентификации
 	mux.HandleFunc("/register", handlers.RegisterHandler)
 	mux.HandleFunc("/login", handlers.LoginHandler)
 	mux.HandleFunc("/health", handlers.HealthHandler)
+
+	// Мидлварь для внутренних сервисов
+	internalMW := InternalTokenMiddleware(cfg.InternalAPIToken)
+
+	mux.Handle("/users", internalMW(http.HandlerFunc(userHandlers.ListUsersHandler)))
+	mux.Handle("/users/", internalMW(http.HandlerFunc(userHandlers.GetUserHandler)))
+	mux.Handle("/users/create", internalMW(http.HandlerFunc(userHandlers.CreateUserHandler)))
+	mux.Handle("/users/update/", internalMW(http.HandlerFunc(userHandlers.UpdateUserHandler)))
+	mux.Handle("/users/delete/", internalMW(http.HandlerFunc(userHandlers.DeleteUserHandler)))
+	mux.Handle("/users/block/", internalMW(http.HandlerFunc(userHandlers.BlockUserHandler)))
+	mux.Handle("/users/unblock/", internalMW(http.HandlerFunc(userHandlers.UnblockUserHandler)))
+	mux.Handle("/users/role/", internalMW(http.HandlerFunc(userHandlers.ChangeUserRoleHandler)))
 
 	server := &http.Server{
 		Addr:    port,
@@ -29,9 +43,10 @@ func NewServer(port string, handlers *Handlers, logger *zap.Logger) *Server {
 	}
 
 	return &Server{
-		server:   server,
-		handlers: handlers,
-		logger:   logger,
+		server:       server,
+		handlers:     handlers,
+		userHandlers: userHandlers,
+		logger:       logger,
 	}
 }
 

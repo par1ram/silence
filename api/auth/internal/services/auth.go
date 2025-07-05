@@ -54,6 +54,8 @@ func (a *AuthService) Register(ctx context.Context, req *domain.RegisterRequest)
 		ID:        generateID(),
 		Email:     req.Email,
 		Password:  hashedPassword,
+		Role:      domain.RoleUser, // По умолчанию обычный пользователь
+		Status:    domain.StatusActive,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -83,6 +85,15 @@ func (a *AuthService) Login(ctx context.Context, req *domain.LoginRequest) (*dom
 	user, err := a.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		return nil, domain.ErrInvalidCredentials
+	}
+
+	// Проверяем статус пользователя
+	if user.Status == domain.StatusBlocked {
+		return nil, fmt.Errorf("user account is blocked")
+	}
+
+	if user.Status == domain.StatusInactive {
+		return nil, fmt.Errorf("user account is inactive")
 	}
 
 	// Проверяем пароль

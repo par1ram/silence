@@ -9,9 +9,10 @@ import (
 	"go.uber.org/zap"
 )
 
-// ConnectRequest запрос на создание VPN-соединения с обфускацией
+// ===== Типы запросов/ответов =====
+
 type ConnectRequest struct {
-	BypassMethod string `json:"bypass_method"` // shadowsocks, v2ray, obfs4, custom
+	BypassMethod string `json:"bypass_method"`
 	BypassConfig struct {
 		LocalPort  int    `json:"local_port"`
 		RemoteHost string `json:"remote_host"`
@@ -27,7 +28,6 @@ type ConnectRequest struct {
 	} `json:"vpn_config"`
 }
 
-// ConnectResponse ответ с информацией о созданном соединении
 type ConnectResponse struct {
 	BypassID   string    `json:"bypass_id"`
 	BypassPort int       `json:"bypass_port"`
@@ -36,80 +36,98 @@ type ConnectResponse struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
-// Handlers HTTP обработчики
+type RateLimitWhitelistRequest struct {
+	IP string `json:"ip"`
+}
+
+type RateLimitWhitelistResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+	IP      string `json:"ip,omitempty"`
+}
+
+type RateLimitStatsResponse struct {
+	TotalRequests       int64   `json:"total_requests"`
+	BlockedRequests     int64   `json:"blocked_requests"`
+	WhitelistedRequests int64   `json:"whitelisted_requests"`
+	BlockRatePercent    float64 `json:"block_rate_percent"`
+}
+
+// ===== Handlers =====
+
 type Handlers struct {
 	healthService ports.HealthService
 	proxyService  ports.ProxyService
+	rateLimiter   *RateLimiter
 	logger        *zap.Logger
 }
 
-// NewHandlers создает новые HTTP обработчики
-func NewHandlers(healthService ports.HealthService, proxyService ports.ProxyService, logger *zap.Logger) *Handlers {
+func NewHandlers(healthService ports.HealthService, proxyService ports.ProxyService, rateLimiter *RateLimiter, logger *zap.Logger) *Handlers {
 	return &Handlers{
 		healthService: healthService,
 		proxyService:  proxyService,
+		rateLimiter:   rateLimiter,
 		logger:        logger,
 	}
 }
 
-// HealthHandler обработчик для health check
-func (h *Handlers) HealthHandler(w http.ResponseWriter, r *http.Request) {
-	health := h.healthService.GetHealth()
+// ===== Вспомогательные методы =====
 
+func writeJSON(w http.ResponseWriter, status int, v interface{}, logger *zap.Logger, logMsg string) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(health); err != nil {
-		h.logger.Error("failed to encode health response", zap.Error(err))
+	w.WriteHeader(status)
+	if err := json.NewEncoder(w).Encode(v); err != nil && logger != nil {
+		logger.Error(logMsg, zap.Error(err))
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
-// RootHandler обработчик для корневого пути
+func writeError(w http.ResponseWriter, status int, msg string) {
+	http.Error(w, msg, status)
+}
+
+// ===== Health =====
+
+func (h *Handlers) HealthHandler(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, h.healthService.GetHealth(), h.logger, "failed to encode health response")
+}
+
 func (h *Handlers) RootHandler(w http.ResponseWriter, r *http.Request) {
-	response := map[string]interface{}{
+	resp := map[string]interface{}{
 		"message": "Silence VPN Gateway Service",
 		"version": "1.0.0",
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		h.logger.Error("failed to encode root response", zap.Error(err))
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	writeJSON(w, http.StatusOK, resp, h.logger, "failed to encode root response")
 }
 
-// AuthHandler проксирует запросы к auth сервису
+// ===== Прокси =====
+
 func (h *Handlers) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	h.proxyService.ProxyToAuth(w, r)
 }
 
-// VPNHandler проксирует запросы к VPN Core сервису
 func (h *Handlers) VPNHandler(w http.ResponseWriter, r *http.Request) {
 	h.proxyService.ProxyToVPNCore(w, r)
 }
 
-// DPIHandler проксирует запросы к DPI Bypass сервису
 func (h *Handlers) DPIHandler(w http.ResponseWriter, r *http.Request) {
 	h.proxyService.ProxyToDPIBypass(w, r)
 }
 
-// ConnectHandler создает VPN-соединение с обфускацией
+// ===== VPN + Bypass Connect =====
+
 func (h *Handlers) ConnectHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	var req ConnectRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	// Создаем bypass-конфигурацию
 	bypassReq := map[string]interface{}{
 		"name":        "vpn-bypass-" + time.Now().Format("20060102150405"),
 		"method":      req.BypassMethod,
@@ -119,37 +137,32 @@ func (h *Handlers) ConnectHandler(w http.ResponseWriter, r *http.Request) {
 		"password":    req.BypassConfig.Password,
 		"encryption":  req.BypassConfig.Encryption,
 	}
-
 	bypassResp, err := h.proxyService.CreateBypass(r.Context(), bypassReq)
 	if err != nil {
 		h.logger.Error("failed to create bypass", zap.Error(err))
-		http.Error(w, "Failed to create bypass", http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Failed to create bypass")
 		return
 	}
 
-	// Запускаем bypass
 	if err := h.proxyService.StartBypass(r.Context(), bypassResp["id"].(string)); err != nil {
 		h.logger.Error("failed to start bypass", zap.Error(err))
-		http.Error(w, "Failed to start bypass", http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Failed to start bypass")
 		return
 	}
 
-	// Создаем VPN-туннель
 	vpnReq := map[string]interface{}{
 		"name":          req.VPNConfig.Name,
 		"listen_port":   req.VPNConfig.ListenPort,
 		"mtu":           req.VPNConfig.MTU,
 		"auto_recovery": req.VPNConfig.AutoRecovery,
 	}
-
 	vpnResp, err := h.proxyService.CreateVPNTunnel(r.Context(), vpnReq)
 	if err != nil {
 		h.logger.Error("failed to create VPN tunnel", zap.Error(err))
-		http.Error(w, "Failed to create VPN tunnel", http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Failed to create VPN tunnel")
 		return
 	}
 
-	// Формируем ответ
 	response := ConnectResponse{
 		BypassID:   bypassResp["id"].(string),
 		BypassPort: req.BypassConfig.LocalPort,
@@ -157,11 +170,66 @@ func (h *Handlers) ConnectHandler(w http.ResponseWriter, r *http.Request) {
 		Status:     "connected",
 		CreatedAt:  time.Now(),
 	}
+	writeJSON(w, http.StatusCreated, response, h.logger, "failed to encode connect response")
+}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		h.logger.Error("failed to encode response", zap.Error(err))
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+// ===== Rate Limiting API =====
+
+func (h *Handlers) RateLimitWhitelistAddHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
 	}
+	var req RateLimitWhitelistRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if req.IP == "" {
+		writeError(w, http.StatusBadRequest, "IP address is required")
+		return
+	}
+	h.rateLimiter.AddToWhitelist(req.IP)
+	resp := RateLimitWhitelistResponse{Success: true, Message: "IP added to whitelist successfully", IP: req.IP}
+	writeJSON(w, http.StatusOK, resp, h.logger, "failed to encode whitelist response")
+}
+
+func (h *Handlers) RateLimitWhitelistRemoveHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	var req RateLimitWhitelistRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if req.IP == "" {
+		writeError(w, http.StatusBadRequest, "IP address is required")
+		return
+	}
+	h.rateLimiter.RemoveFromWhitelist(req.IP)
+	resp := RateLimitWhitelistResponse{Success: true, Message: "IP removed from whitelist successfully", IP: req.IP}
+	writeJSON(w, http.StatusOK, resp, h.logger, "failed to encode whitelist response")
+}
+
+func (h *Handlers) RateLimitStatsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	h.rateLimiter.statsMu.RLock()
+	stats := h.rateLimiter.stats
+	h.rateLimiter.statsMu.RUnlock()
+	var blockRate float64
+	if stats.requests > 0 {
+		blockRate = float64(stats.blocked) / float64(stats.requests) * 100
+	}
+	resp := RateLimitStatsResponse{
+		TotalRequests:       stats.requests,
+		BlockedRequests:     stats.blocked,
+		WhitelistedRequests: stats.whitelisted,
+		BlockRatePercent:    blockRate,
+	}
+	writeJSON(w, http.StatusOK, resp, h.logger, "failed to encode stats response")
 }

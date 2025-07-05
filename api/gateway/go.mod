@@ -1,6 +1,8 @@
 module github.com/par1ram/silence/api/gateway
 
-go 1.23
+go 1.23.0
+
+toolchain go1.23.2
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.0.0
@@ -8,6 +10,9 @@ require (
 	go.uber.org/zap v1.26.0
 )
 
-require go.uber.org/multierr v1.10.0 // indirect
+require (
+	go.uber.org/multierr v1.10.0 // indirect
+	golang.org/x/time v0.12.0 // indirect
+)
 
 replace github.com/par1ram/silence/shared => ../../shared
