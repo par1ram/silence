@@ -1,0 +1,14 @@
+go 1.23.0
+
+toolchain go1.23.2
+
+use (
+	./api/auth
+	./api/gateway
+	./rpc/analytics
+	./rpc/dpi-bypass
+	./rpc/notifications
+	./rpc/server-manager
+	./rpc/vpn-core
+	./shared
+)

@@ -1,0 +1,233 @@
+syntax = "proto3";
+
+package vpn;
+
+option go_package = "github.com/par1ram/silence/rpc/vpn-core/api/proto";
+
+import "google/protobuf/timestamp.proto";
+
+// VPN Core Service
+service VpnCoreService {
+  // Health check
+  rpc Health(HealthRequest) returns (HealthResponse);
+  
+  // Tunnel management
+  rpc CreateTunnel(CreateTunnelRequest) returns (Tunnel);
+  rpc GetTunnel(GetTunnelRequest) returns (Tunnel);
+  rpc ListTunnels(ListTunnelsRequest) returns (ListTunnelsResponse);
+  rpc DeleteTunnel(DeleteTunnelRequest) returns (DeleteTunnelResponse);
+  rpc StartTunnel(StartTunnelRequest) returns (StartTunnelResponse);
+  rpc StopTunnel(StopTunnelRequest) returns (StopTunnelResponse);
+  rpc GetTunnelStats(GetTunnelStatsRequest) returns (TunnelStats);
+  
+  // Новые методы для мониторинга и восстановления
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+  rpc EnableAutoRecovery(EnableAutoRecoveryRequest) returns (EnableAutoRecoveryResponse);
+  rpc DisableAutoRecovery(DisableAutoRecoveryRequest) returns (DisableAutoRecoveryResponse);
+  rpc RecoverTunnel(RecoverTunnelRequest) returns (RecoverTunnelResponse);
+  
+  // Peer management
+  rpc AddPeer(AddPeerRequest) returns (Peer);
+  rpc GetPeer(GetPeerRequest) returns (Peer);
+  rpc ListPeers(ListPeersRequest) returns (ListPeersResponse);
+  rpc RemovePeer(RemovePeerRequest) returns (RemovePeerResponse);
+}
+
+// Health
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string version = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+// Tunnel
+message Tunnel {
+  string id = 1;
+  string name = 2;
+  string interface = 3;
+  TunnelStatus status = 4;
+  string public_key = 5;
+  string private_key = 6;
+  int32 listen_port = 7;
+  int32 mtu = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+  // Новые поля для мониторинга
+  google.protobuf.Timestamp last_health_check = 11;
+  string health_status = 12;
+  bool auto_recovery = 13;
+  int32 recovery_attempts = 14;
+}
+
+enum TunnelStatus {
+  TUNNEL_STATUS_UNSPECIFIED = 0;
+  TUNNEL_STATUS_INACTIVE = 1;
+  TUNNEL_STATUS_ACTIVE = 2;
+  TUNNEL_STATUS_ERROR = 3;
+  TUNNEL_STATUS_RECOVERING = 4;
+}
+
+message CreateTunnelRequest {
+  string name = 1;
+  int32 listen_port = 2;
+  int32 mtu = 3;
+  bool auto_recovery = 4;
+}
+
+message GetTunnelRequest {
+  string id = 1;
+}
+
+message ListTunnelsRequest {}
+
+message ListTunnelsResponse {
+  repeated Tunnel tunnels = 1;
+}
+
+message DeleteTunnelRequest {
+  string id = 1;
+}
+
+message DeleteTunnelResponse {
+  bool success = 1;
+}
+
+message StartTunnelRequest {
+  string id = 1;
+}
+
+message StartTunnelResponse {
+  bool success = 1;
+}
+
+message StopTunnelRequest {
+  string id = 1;
+}
+
+message StopTunnelResponse {
+  bool success = 1;
+}
+
+message GetTunnelStatsRequest {
+  string id = 1;
+}
+
+message TunnelStats {
+  string tunnel_id = 1;
+  int64 bytes_rx = 2;
+  int64 bytes_tx = 3;
+  int32 peers_count = 4;
+  int32 active_peers = 5;
+  google.protobuf.Timestamp last_updated = 6;
+  // Новые поля для детальной статистики
+  int64 uptime = 7;
+  int32 error_count = 8;
+  int32 recovery_count = 9;
+}
+
+// Новые сообщения для мониторинга и восстановления
+message HealthCheckRequest {
+  string tunnel_id = 1;
+}
+
+message HealthCheckResponse {
+  string tunnel_id = 1;
+  string status = 2;
+  google.protobuf.Timestamp last_check = 3;
+  repeated PeerHealth peers_health = 4;
+  int64 uptime = 5;
+  int32 error_count = 6;
+}
+
+message PeerHealth {
+  string peer_id = 1;
+  PeerStatus status = 2;
+  google.protobuf.Timestamp last_handshake = 3;
+  int64 latency = 4;
+  double packet_loss = 5;
+  double connection_quality = 6;
+}
+
+message EnableAutoRecoveryRequest {
+  string tunnel_id = 1;
+}
+
+message EnableAutoRecoveryResponse {
+  bool success = 1;
+}
+
+message DisableAutoRecoveryRequest {
+  string tunnel_id = 1;
+}
+
+message DisableAutoRecoveryResponse {
+  bool success = 1;
+}
+
+message RecoverTunnelRequest {
+  string tunnel_id = 1;
+}
+
+message RecoverTunnelResponse {
+  bool success = 1;
+}
+
+// Peer
+message Peer {
+  string id = 1;
+  string tunnel_id = 2;
+  string name = 3;
+  string public_key = 4;
+  string allowed_ips = 5;
+  string endpoint = 6;
+  int32 keepalive = 7;
+  PeerStatus status = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+  // Новые поля для мониторинга
+  google.protobuf.Timestamp last_seen = 11;
+  double connection_quality = 12;
+  int64 latency = 13;
+  double packet_loss = 14;
+}
+
+enum PeerStatus {
+  PEER_STATUS_UNSPECIFIED = 0;
+  PEER_STATUS_INACTIVE = 1;
+  PEER_STATUS_ACTIVE = 2;
+  PEER_STATUS_ERROR = 3;
+  PEER_STATUS_OFFLINE = 4;
+}
+
+message AddPeerRequest {
+  string tunnel_id = 1;
+  string name = 2;
+  string public_key = 3;
+  string allowed_ips = 4;
+  string endpoint = 5;
+  int32 keepalive = 6;
+}
+
+message GetPeerRequest {
+  string tunnel_id = 1;
+  string peer_id = 2;
+}
+
+message ListPeersRequest {
+  string tunnel_id = 1;
+}
+
+message ListPeersResponse {
+  repeated Peer peers = 1;
+}
+
+message RemovePeerRequest {
+  string tunnel_id = 1;
+  string peer_id = 2;
+}
+
+message RemovePeerResponse {
+  bool success = 1;
+} 
