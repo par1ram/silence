@@ -1,0 +1,15 @@
+internal/services/tunnel_test.go:1: : # github.com/par1ram/silence/rpc/vpn-core/internal/services_test [github.com/par1ram/silence/rpc/vpn-core/internal/services.test]
+internal/services/tunnel_test.go:26:19: cannot use services.NewTunnelService(logger) (value of type ports.TunnelManager) as *services.TunnelService value in assignment: need type assertion
+internal/services/tunnel_test.go:26:45: not enough arguments in call to services.NewTunnelService
+	have (*zap.Logger)
+	want (ports.KeyGenerator, ports.WireGuardManager, *zap.Logger)
+internal/services/tunnel_test.go:36:6: unknown field Description in struct literal of type domain.CreateTunnelRequest
+internal/services/tunnel_test.go:37:6: unknown field Type in struct literal of type domain.CreateTunnelRequest
+internal/services/tunnel_test.go:37:26: undefined: domain.TunnelTypeWireGuard
+internal/services/tunnel_test.go:47:19: tunnel.Description undefined (type *domain.Tunnel has no field or method Description)
+internal/services/tunnel_test.go:47:49: request.Description undefined (type *domain.CreateTunnelRequest has no field or method Description)
+internal/services/tunnel_test.go:48:19: tunnel.Type undefined (type *domain.Tunnel has no field or method Type)
+internal/services/tunnel_test.go:48:42: request.Type undefined (type *domain.CreateTunnelRequest has no field or method Type)
+internal/services/tunnel_test.go:59:6: unknown field Description in struct literal of type domain.CreateTunnelRequest
+internal/services/tunnel_test.go:59:6: too many errors (typecheck)
+package services_test

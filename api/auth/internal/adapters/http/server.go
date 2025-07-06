@@ -66,3 +66,8 @@ func (s *Server) Stop(ctx context.Context) error {
 func (s *Server) Name() string {
 	return "auth-http"
 }
+
+// GetHandler возвращает HTTP handler для тестирования
+func (s *Server) GetHandler() http.Handler {
+	return s.server.Handler
+}

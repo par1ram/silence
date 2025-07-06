@@ -1,0 +1,4 @@
+internal/adapters/http/handlers_test.go:1: : # github.com/par1ram/silence/api/auth/internal/adapters/http_test [github.com/par1ram/silence/api/auth/internal/adapters/http.test]
+internal/adapters/http/handlers_test.go:26:16: undefined: MockAuthService
+internal/adapters/http/handlers_test.go:33:17: undefined: NewMockAuthService (typecheck)
+package http_test

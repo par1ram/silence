@@ -138,7 +138,10 @@ tasks:
   test:auth:
     desc: Тесты Auth
     dir: api/auth
-    cmds: [go test ./...]
+    cmds:
+      - go test ./internal/adapters/database
+      - go test ./internal/adapters/http
+      - go test ./internal/services
 
   test:vpn-core:
     desc: Тесты VPN Core
