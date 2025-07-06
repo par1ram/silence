@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM golang:1.23-alpine AS builder
 WORKDIR /app
+RUN apk add --no-cache git
 COPY . .
 RUN go mod download
 RUN go build -o analytics rpc/analytics/cmd/main.go
@@ -10,5 +11,6 @@ WORKDIR /app
 RUN mkdir -p /app/etc
 COPY --from=builder /app/analytics /app/analytics
 COPY rpc/analytics/etc/config.env /app/etc/config.env
+COPY rpc/analytics/etc/analytics.yaml /app/etc/analytics.yaml
 EXPOSE 8080
 CMD ["/app/analytics"] 

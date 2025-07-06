@@ -1,0 +1,29 @@
+
+  __    _   ___  
+ / /\  | | | |_) 
+/_/--\ |_| |_| \_ v1.62.0, built with Go go1.24.4
+
+watching .
+watching bin
+watching cmd
+watching etc
+watching internal
+watching internal/adapters
+watching internal/adapters/database
+watching internal/adapters/database/migrations
+watching internal/adapters/docker
+watching internal/adapters/http
+watching internal/adapters/kubernetes
+watching internal/app
+watching internal/config
+watching internal/domain
+watching internal/handler
+watching internal/logic
+watching internal/ports
+watching internal/services
+watching internal/services/mocks
+watching internal/svc
+watching internal/types
+!exclude tmp
+building...
+running...

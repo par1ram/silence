@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -29,6 +31,29 @@ type App struct {
 	shutdownTimeout time.Duration
 }
 
+// resolveMigrationsDir возвращает абсолютный путь к миграциям
+func resolveMigrationsDir(logger *zap.Logger) string {
+	migrationsDir := os.Getenv("MIGRATIONS_DIR")
+	if migrationsDir == "" {
+		execPath, err := os.Executable()
+		if err != nil {
+			logger.Fatal("failed to get executable path", zap.Error(err))
+		}
+		migrationsDir = filepath.Join(filepath.Dir(execPath), "internal", "adapters", "database", "migrations")
+		if _, err := os.Stat(migrationsDir); os.IsNotExist(err) {
+			altPath := filepath.Join("rpc", "server-manager", "internal", "adapters", "database", "migrations")
+			if _, err := os.Stat(altPath); err == nil {
+				logger.Info("Миграции не найдены рядом с бинарём, использую путь из исходников", zap.String("altPath", altPath))
+				migrationsDir = altPath
+			} else {
+				logger.Fatal("Миграции не найдены ни рядом с бинарём, ни в исходниках", zap.String("tried1", migrationsDir), zap.String("tried2", altPath))
+			}
+		}
+	}
+	logger.Info("Используется путь к миграциям", zap.String("migrationsDir", migrationsDir))
+	return migrationsDir
+}
+
 // New создает новое приложение Server Manager
 func New(logger *zap.Logger) (*App, error) {
 	cfg := config.Load()
@@ -47,6 +72,14 @@ func New(logger *zap.Logger) (*App, error) {
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
+
+	// === АВТОМАТИЧЕСКИЕ МИГРАЦИИ ===
+	migrationsDir := resolveMigrationsDir(logger)
+	migrator := database.NewMigrator(db, logger)
+	if err := migrator.RunMigrations(migrationsDir); err != nil {
+		return nil, fmt.Errorf("failed to run migrations: %w", err)
+	}
+	// === END ===
 
 	// Создаем Docker адаптер
 	dockerAdapter, err := docker.NewDockerAdapter(
@@ -137,7 +170,7 @@ func Run() {
 	// Создаем логгер
 	logger := logger.NewLogger("server-manager")
 	defer func() {
-		if err := logger.Sync(); err != nil {
+		if err := logger.Sync(); err != nil && !strings.Contains(err.Error(), "inappropriate ioctl for device") {
 			logger.Error("failed to sync logger", zap.Error(err))
 		}
 	}()

@@ -38,7 +38,6 @@ func (h *Handlers) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/v1/scaling/evaluate", h.EvaluateScaling)
 	mux.HandleFunc("/api/v1/backups/configs", h.BackupConfigsHandler)
 	mux.HandleFunc("/api/v1/backups/configs/", h.BackupConfigByIDHandler)
-	mux.HandleFunc("/api/v1/servers/", h.ServerActionsHandler)
 	mux.HandleFunc("/api/v1/health/all", h.GetAllServersHealth)
 }
 

@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"net/http"
+	"os"
 
 	"go.uber.org/zap"
 )
@@ -18,6 +19,21 @@ type Server struct {
 func NewServer(port string, handlers *Handlers, logger *zap.Logger, jwtSecret string, rateLimiter *RateLimiter) *Server {
 	mux := http.NewServeMux()
 
+	// Получаем CORS параметры из env
+	allowedOrigins := os.Getenv("CORS_ALLOWED_ORIGINS")
+	if allowedOrigins == "" {
+		allowedOrigins = "*"
+	}
+	allowedMethods := os.Getenv("CORS_ALLOWED_METHODS")
+	if allowedMethods == "" {
+		allowedMethods = "GET,POST,PUT,DELETE,OPTIONS"
+	}
+	allowedHeaders := os.Getenv("CORS_ALLOWED_HEADERS")
+	if allowedHeaders == "" {
+		allowedHeaders = "Content-Type,Authorization"
+	}
+	corsMiddleware := NewCORSMiddleware(allowedOrigins, allowedMethods, allowedHeaders)
+
 	// Создаем middleware цепочку
 	var rateLimitMiddleware func(http.Handler) http.Handler
 	if rateLimiter != nil {
@@ -26,69 +42,57 @@ func NewServer(port string, handlers *Handlers, logger *zap.Logger, jwtSecret st
 		rateLimitMiddleware = func(next http.Handler) http.Handler { return next }
 	}
 
+	// Оборачиваем все маршруты через CORS
+	wrap := func(h http.Handler) http.Handler {
+		return corsMiddleware(rateLimitMiddleware(h))
+	}
+
 	// Регистрируем маршруты
-	mux.Handle("/health", rateLimitMiddleware(http.HandlerFunc(handlers.HealthHandler)))
-
-	// Auth маршруты
-	mux.Handle("/api/v1/auth/register", rateLimitMiddleware(http.HandlerFunc(handlers.AuthHandler)))
-	mux.Handle("/api/v1/auth/login", rateLimitMiddleware(http.HandlerFunc(handlers.AuthHandler)))
-	// Защищённые маршруты через middleware
-	mux.Handle("/api/v1/auth/me", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AuthHandler))))
-	mux.Handle("/api/v1/auth/", rateLimitMiddleware(http.HandlerFunc(handlers.AuthHandler))) // fallback для остальных auth endpoint'ов
-
-	// VPN Core маршруты (защищенные)
-	mux.Handle("/api/v1/vpn/tunnels", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
-	mux.Handle("/api/v1/vpn/tunnels/list", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
-	mux.Handle("/api/v1/vpn/tunnels/get", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
-	mux.Handle("/api/v1/vpn/tunnels/start", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
-	mux.Handle("/api/v1/vpn/tunnels/stop", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
-	mux.Handle("/api/v1/vpn/tunnels/stats", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
-	mux.Handle("/api/v1/vpn/peers/add", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
-	mux.Handle("/api/v1/vpn/peers/get", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
-	mux.Handle("/api/v1/vpn/peers/list", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
-	mux.Handle("/api/v1/vpn/peers/remove", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
-	mux.Handle("/api/v1/vpn/", rateLimitMiddleware(http.HandlerFunc(handlers.VPNHandler))) // fallback для остальных VPN endpoint'ов
-
-	// DPI Bypass маршруты (защищенные)
-	mux.Handle("/api/v1/dpi-bypass/bypass", rateLimitMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/health", wrap(http.HandlerFunc(handlers.HealthHandler)))
+	mux.Handle("/api/v1/auth/register", wrap(http.HandlerFunc(handlers.AuthHandler)))
+	mux.Handle("/api/v1/auth/login", wrap(http.HandlerFunc(handlers.AuthHandler)))
+	mux.Handle("/api/v1/auth/me", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AuthHandler))))
+	mux.Handle("/api/v1/auth/", wrap(http.HandlerFunc(handlers.AuthHandler)))
+	mux.Handle("/api/v1/vpn/tunnels", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
+	mux.Handle("/api/v1/vpn/tunnels/list", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
+	mux.Handle("/api/v1/vpn/tunnels/get", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
+	mux.Handle("/api/v1/vpn/tunnels/start", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
+	mux.Handle("/api/v1/vpn/tunnels/stop", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
+	mux.Handle("/api/v1/vpn/tunnels/stats", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
+	mux.Handle("/api/v1/vpn/peers/add", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
+	mux.Handle("/api/v1/vpn/peers/get", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
+	mux.Handle("/api/v1/vpn/peers/list", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
+	mux.Handle("/api/v1/vpn/peers/remove", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.VPNHandler))))
+	mux.Handle("/api/v1/vpn/", wrap(http.HandlerFunc(handlers.VPNHandler)))
+	mux.Handle("/api/v1/dpi-bypass/bypass", wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.DPIHandler)).ServeHTTP(w, r)
 			return
 		}
-		// Для других методов — старое поведение
 		NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.DPIHandler)).ServeHTTP(w, r)
 	})))
-	mux.Handle("/api/v1/dpi-bypass/bypass/", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.DPIHandler))))
-	mux.Handle("/api/v1/dpi-bypass/", rateLimitMiddleware(http.HandlerFunc(handlers.DPIHandler))) // fallback для остальных DPI Bypass endpoint'ов
-
-	// Интеграция VPN + обфускация (защищенный)
-	mux.Handle("/api/v1/connect", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ConnectHandler))))
-
-	// Rate Limiting управление (только для админов, защищено auth middleware)
-	mux.Handle("/api/v1/rate-limit/whitelist/add", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.RateLimitWhitelistAddHandler))))
-	mux.Handle("/api/v1/rate-limit/whitelist/remove", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.RateLimitWhitelistRemoveHandler))))
-	mux.Handle("/api/v1/rate-limit/stats", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.RateLimitStatsHandler))))
-
-	// Analytics маршруты (защищенные)
-	mux.Handle("/api/v1/analytics/metrics/connections", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
-	mux.Handle("/api/v1/analytics/metrics/bypass-effectiveness", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
-	mux.Handle("/api/v1/analytics/metrics/user-activity", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
-	mux.Handle("/api/v1/analytics/metrics/server-load", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
-	mux.Handle("/api/v1/analytics/metrics/errors", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
-	mux.Handle("/api/v1/analytics/dashboards", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
-	mux.Handle("/api/v1/analytics/dashboards/", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
-	mux.Handle("/api/v1/analytics/alerts", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
-	mux.Handle("/api/v1/analytics/alerts/", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
-	mux.Handle("/api/v1/analytics/", rateLimitMiddleware(http.HandlerFunc(handlers.AnalyticsHandler))) // fallback для остальных analytics endpoint'ов
-
-	// Server Manager маршруты (защищенные)
-	mux.Handle("/api/v1/server-manager/servers", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
-	mux.Handle("/api/v1/server-manager/servers/", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
-	mux.Handle("/api/v1/server-manager/scaling/", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
-	mux.Handle("/api/v1/server-manager/backups/", rateLimitMiddleware(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
-	mux.Handle("/api/v1/server-manager/", rateLimitMiddleware(http.HandlerFunc(handlers.ServerManagerHandler))) // fallback для остальных server-manager endpoint'ов
-
-	mux.Handle("/", rateLimitMiddleware(http.HandlerFunc(handlers.RootHandler)))
+	mux.Handle("/api/v1/dpi-bypass/bypass/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.DPIHandler))))
+	mux.Handle("/api/v1/dpi-bypass/", wrap(http.HandlerFunc(handlers.DPIHandler)))
+	mux.Handle("/api/v1/connect", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ConnectHandler))))
+	mux.Handle("/api/v1/rate-limit/whitelist/add", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.RateLimitWhitelistAddHandler))))
+	mux.Handle("/api/v1/rate-limit/whitelist/remove", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.RateLimitWhitelistRemoveHandler))))
+	mux.Handle("/api/v1/rate-limit/stats", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.RateLimitStatsHandler))))
+	mux.Handle("/api/v1/analytics/metrics/connections", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/metrics/bypass-effectiveness", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/metrics/user-activity", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/metrics/server-load", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/metrics/errors", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/dashboards", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/dashboards/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/alerts", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/alerts/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.AnalyticsHandler))))
+	mux.Handle("/api/v1/analytics/", wrap(http.HandlerFunc(handlers.AnalyticsHandler)))
+	mux.Handle("/api/v1/server-manager/servers", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
+	mux.Handle("/api/v1/server-manager/servers/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
+	mux.Handle("/api/v1/server-manager/scaling/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
+	mux.Handle("/api/v1/server-manager/backups/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
+	mux.Handle("/api/v1/server-manager/", wrap(http.HandlerFunc(handlers.ServerManagerHandler)))
+	mux.Handle("/", wrap(http.HandlerFunc(handlers.RootHandler)))
 
 	server := &http.Server{
 		Addr:    port,

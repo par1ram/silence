@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/par1ram/silence/shared/container"
@@ -73,4 +74,9 @@ func (a *App) Run() {
 	}
 
 	a.logger.Info("application stopped gracefully")
+
+	// Чистый sync logger без лишнего шума
+	if err := a.logger.Sync(); err != nil && !strings.Contains(err.Error(), "inappropriate ioctl for device") {
+		a.logger.Error("failed to sync logger", zap.Error(err))
+	}
 }

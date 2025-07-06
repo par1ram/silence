@@ -2,16 +2,17 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15
     container_name: silence_postgres
     environment:
-      POSTGRES_DB: silence_auth
-      POSTGRES_USER: postgres
+      POSTGRES_USER: pariram
       POSTGRES_PASSWORD: password
+      POSTGRES_DB: silence_auth
     ports:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./deployments/docker/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
@@ -84,7 +85,7 @@ services:
     ports:
       - '8081:8080'
     environment:
-      - HTTP_PORT=8080
+      - HTTP_PORT=:8080
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=postgres
@@ -110,12 +111,13 @@ services:
     ports:
       - '8080:8080'
     environment:
-      - HTTP_PORT=8080
+      - HTTP_PORT=:8080
       - AUTH_SERVICE_URL=http://auth:8080
       - ANALYTICS_SERVICE_URL=http://analytics:8080
       - SERVER_MANAGER_SERVICE_URL=http://server-manager:8085
       - DPI_BYPASS_SERVICE_URL=http://dpi-bypass:8080
       - VPN_CORE_SERVICE_URL=http://vpn-core:8080
+      - AUTH_URL=http://auth:8080
     depends_on:
       auth:
         condition: service_started
@@ -179,7 +181,7 @@ services:
     ports:
       - '8083:8080'
     environment:
-      - HTTP_PORT=8080
+      - HTTP_PORT=:8080
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     depends_on:
@@ -196,7 +198,7 @@ services:
     ports:
       - '8084:8080'
     environment:
-      - HTTP_PORT=8080
+      - HTTP_PORT=:8080
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - DB_HOST=postgres
@@ -219,10 +221,10 @@ services:
       dockerfile: rpc/notifications/Dockerfile
     container_name: silence_notifications
     ports:
-      - '8086:8080'
+      - '8087:8086'
     environment:
       - HTTP_PORT=8080
-      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
+      - NOTIFICATIONS_RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
       - RABBITMQ_EXCHANGE=notifications
       - RABBITMQ_QUEUE=notifications_queue
       - RABBITMQ_ROUTING_KEY=notifications.*

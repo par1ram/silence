@@ -1,16 +1,19 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
-# Копируем go.mod и go.sum
-COPY go.mod go.sum ./
+RUN apk add --no-cache git
+# Копируем только go.mod и go.sum для go mod download
+COPY rpc/notifications/go.mod ./
+COPY rpc/notifications/go.sum ./
+COPY shared ./shared
 RUN go mod download
 
 # Копируем исходный код
 COPY . .
 
 # Собираем приложение
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o notifications cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o notifications rpc/notifications/cmd/main.go
 
 # Финальный образ
 FROM alpine:latest
@@ -22,7 +25,7 @@ WORKDIR /root/
 # Копируем собранное приложение
 COPY --from=builder /app/notifications .
 
-# Экспонируем порт
+# Экспортируем порт
 EXPOSE 8080
 
 # Запускаем приложение

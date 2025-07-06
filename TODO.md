@@ -246,3 +246,5 @@
 - `rpc/analytics/internal/adapters/database/influxdb_*.go` - базовые операции, нужна оптимизация
 - `rpc/analytics/internal/adapters/http/handlers_*.go` - обработчики, но некоторые методы заглушки
 - `rpc/analytics/internal/ports/analytics.go` - интерфейсы, но некоторые методы заглушки
+
+- [ ] Централизовать фильтрацию ошибки sync logger (inappropriate ioctl for device) для всех сервисов, чтобы не дублировать логику в каждом app.go

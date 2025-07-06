@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/par1ram/silence/api/auth/internal/adapters/database"
 	"github.com/par1ram/silence/api/auth/internal/adapters/http"
 	"github.com/par1ram/silence/api/auth/internal/config"
@@ -29,9 +32,29 @@ func main() {
 	}
 	defer dbConn.Close()
 
+	// Универсальный путь к миграциям через переменную окружения
+	migrationsDir := os.Getenv("MIGRATIONS_DIR")
+	if migrationsDir == "" {
+		execPath, err := os.Executable()
+		if err != nil {
+			logger.Fatal("failed to get executable path", zap.Error(err))
+		}
+		migrationsDir = filepath.Join(filepath.Dir(execPath), "internal", "adapters", "database", "migrations")
+		if _, err := os.Stat(migrationsDir); os.IsNotExist(err) {
+			altPath := filepath.Join("api", "auth", "internal", "adapters", "database", "migrations")
+			if _, err := os.Stat(altPath); err == nil {
+				logger.Info("Миграции не найдены рядом с бинарём, использую путь из исходников", zap.String("altPath", altPath))
+				migrationsDir = altPath
+			} else {
+				logger.Fatal("Миграции не найдены ни рядом с бинарём, ни в исходниках", zap.String("tried1", migrationsDir), zap.String("tried2", altPath))
+			}
+		}
+	}
+	logger.Info("Используется путь к миграциям", zap.String("migrationsDir", migrationsDir))
+
 	// Выполняем миграции
 	migrator := database.NewMigrator(dbConn.GetDB(), logger)
-	if err := migrator.RunMigrations("internal/adapters/database/migrations"); err != nil {
+	if err := migrator.RunMigrations(migrationsDir); err != nil {
 		logger.Fatal("failed to run migrations", zap.Error(err))
 	}
 
