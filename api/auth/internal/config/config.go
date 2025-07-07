@@ -24,7 +24,7 @@ type Config struct {
 // Load загружает конфигурацию из переменных окружения
 func Load() *Config {
 	return &Config{
-		HTTPPort:         getEnv("HTTP_PORT", ":8081"),
+		HTTPPort:         getEnv("HTTP_PORT", "9999"),
 		LogLevel:         getEnv("LOG_LEVEL", "info"),
 		Version:          getEnv("VERSION", "1.0.0"),
 		DBHost:           getEnv("DB_HOST", "127.0.0.1"),

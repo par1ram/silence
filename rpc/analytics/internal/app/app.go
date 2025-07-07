@@ -60,8 +60,14 @@ func New(logger *zap.Logger) (*App, error) {
 	router.Use(LoggingMiddleware(logger))
 	router.Use(CORSMiddleware())
 
+	// Добавляем двоеточие к порту для HTTP сервера
+	addr := cfg.HTTP.Port
+	if cfg.HTTP.Port != "" && cfg.HTTP.Port[0] != ':' {
+		addr = ":" + cfg.HTTP.Port
+	}
+
 	httpServer := &http.Server{
-		Addr:         cfg.HTTP.Port,
+		Addr:         addr,
 		Handler:      router,
 		ReadTimeout:  cfg.HTTP.ReadTimeout,
 		WriteTimeout: cfg.HTTP.WriteTimeout,

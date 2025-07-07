@@ -1,0 +1,27 @@
+
+  __    _   ___  
+ / /\  | | | |_) 
+/_/--\ |_| |_| \_ v1.62.0, built with Go go1.24.4
+
+watching .
+watching bin
+watching cmd
+watching etc
+watching internal
+watching internal/adapters
+watching internal/adapters/bypass
+watching internal/adapters/http
+watching internal/app
+watching internal/config
+watching internal/domain
+watching internal/ports
+watching internal/services
+watching internal/services/mocks
+watching internal/svc
+!exclude tmp
+building...
+running...
+2025-07-07T15:14:42.358+0300	[34mINFO[0m	app/app.go:79	starting service	{"service": "dpi-bypass", "service": "dpi-bypass-http"}
+2025-07-07T15:14:42.358+0300	[34mINFO[0m	http/server.go:49	starting DPI Bypass HTTP server	{"service": "dpi-bypass", "port": ":8003"}
+cleaning...
+see you again~

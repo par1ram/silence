@@ -30,6 +30,9 @@ func NewAnalyticsHandler(analyticsService ports.AnalyticsService, logger *zap.Lo
 
 // RegisterRoutes регистрирует маршруты
 func (h *AnalyticsHandler) RegisterRoutes(router *mux.Router) {
+	// Health endpoint
+	router.HandleFunc("/health", h.HealthHandler).Methods("GET")
+
 	// Метрики подключений
 	router.HandleFunc("/api/v1/analytics/connections", h.RecordConnection).Methods("POST")
 	router.HandleFunc("/api/v1/analytics/connections", h.GetConnectionAnalytics).Methods("GET")
@@ -68,6 +71,16 @@ func (h *AnalyticsHandler) RegisterRoutes(router *mux.Router) {
 	// Прогнозирование
 	router.HandleFunc("/api/v1/analytics/predict/load/{serverID}", h.PredictLoad).Methods("GET")
 	router.HandleFunc("/api/v1/analytics/predict/bypass-effectiveness/{bypassType}", h.PredictBypassEffectiveness).Methods("GET")
+}
+
+// HealthHandler обработчик проверки здоровья сервиса
+func (h *AnalyticsHandler) HealthHandler(w http.ResponseWriter, r *http.Request) {
+	response := map[string]interface{}{
+		"service": "analytics",
+		"status":  "ok",
+		"time":    time.Now().UTC(),
+	}
+	h.writeJSON(w, response)
 }
 
 // parseQueryOptions парсит параметры запроса

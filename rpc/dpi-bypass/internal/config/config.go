@@ -12,7 +12,7 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
-		HTTPPort: getEnv("HTTP_PORT", ":8083"),
+		HTTPPort: getEnv("HTTP_PORT", "8080"),
 		LogLevel: getEnv("LOG_LEVEL", "info"),
 		Version:  getEnv("VERSION", "1.0.0"),
 	}

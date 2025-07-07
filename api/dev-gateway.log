@@ -1,0 +1,25 @@
+
+  __    _   ___  
+ / /\  | | | |_) 
+/_/--\ |_| |_| \_ v1.62.0, built with Go go1.24.4
+
+watching .
+watching bin
+watching cmd
+watching etc
+watching internal
+watching internal/adapters
+watching internal/adapters/http
+watching internal/config
+watching internal/domain
+watching internal/ports
+watching internal/services
+watching internal/svc
+!exclude tmp
+building...
+running...
+2025-07-07T15:14:54.423+0300	[34mINFO[0m	svc/service.go:37	rate limiting enabled	{"service": "gateway", "rps": 100, "burst": 200, "window": 60}
+2025-07-07T15:14:54.424+0300	[34mINFO[0m	app/app.go:50	starting service	{"service": "gateway", "service": "gateway-http"}
+2025-07-07T15:14:54.424+0300	[34mINFO[0m	http/server.go:117	starting HTTP server	{"service": "gateway", "port": ":8000"}
+cleaning...
+see you again~

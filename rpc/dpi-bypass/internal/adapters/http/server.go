@@ -28,8 +28,14 @@ func NewServer(port string, handlers *Handlers, logger *zap.Logger) *Server {
 	mux.HandleFunc("POST /api/v1/bypass/{id}/stop", handlers.StopBypass)
 	mux.HandleFunc("GET /api/v1/bypass/{id}/stats", handlers.GetBypassStats)
 
+	// Добавляем двоеточие к порту для HTTP сервера
+	addr := port
+	if port != "" && port[0] != ':' {
+		addr = ":" + port
+	}
+
 	server := &http.Server{
-		Addr:    port,
+		Addr:    addr,
 		Handler: mux,
 	}
 

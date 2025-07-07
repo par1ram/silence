@@ -110,10 +110,10 @@ type AnalyticsConfig struct {
 func Load() *Config {
 	return &Config{
 		Server: ServerConfig{
-			Port:         getEnv("NOTIFICATIONS_PORT", "8080"),
-			ReadTimeout:  getDurationEnv("NOTIFICATIONS_READ_TIMEOUT", 30*time.Second),
-			WriteTimeout: getDurationEnv("NOTIFICATIONS_WRITE_TIMEOUT", 30*time.Second),
-			IdleTimeout:  getDurationEnv("NOTIFICATIONS_IDLE_TIMEOUT", 60*time.Second),
+			Port:         getEnv("HTTP_PORT", "8080"),
+			ReadTimeout:  getDurationEnv("HTTP_READ_TIMEOUT", 30*time.Second),
+			WriteTimeout: getDurationEnv("HTTP_WRITE_TIMEOUT", 30*time.Second),
+			IdleTimeout:  getDurationEnv("HTTP_IDLE_TIMEOUT", 60*time.Second),
 		},
 		Database: DatabaseConfig{
 			Host:     getEnv("NOTIFICATIONS_DB_HOST", "localhost"),

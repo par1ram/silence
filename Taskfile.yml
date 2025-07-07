@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 vars:
   SERVICES: gateway auth vpn-core dpi-bypass server-manager analytics notifications
@@ -7,22 +7,21 @@ tasks:
   # Основные команды
   dev:
     desc: Запуск всех сервисов с hot reload
-    cmds: ['task dev:all']
+    cmds: ["task dev:all"]
   build:
     desc: Сборка всех сервисов
-    cmds: ['task build:all']
+    cmds: ["task build:all"]
   test:
     desc: Запуск всех тестов
-    cmds: ['task test:all']
+    cmds: ["task test:all"]
   clean:
     desc: Очистка всех артефактов
-    cmds: ['task clean:all']
+    cmds: ["task clean:all"]
 
   # Запуск всех сервисов в dev режиме
   dev:all:
     desc: Запуск всех сервисов с hot reload
     deps: [deps, configs]
-    parallel: true
     cmds:
       - task: dev:gateway
       - task: dev:auth
@@ -71,7 +70,6 @@ tasks:
   # Сборка
   build:all:
     desc: Сборка всех сервисов
-    parallel: true
     cmds:
       - task: build:gateway
       - task: build:auth
@@ -120,7 +118,6 @@ tasks:
   # Тестирование
   test:all:
     desc: Запуск всех тестов
-    parallel: true
     cmds:
       - task: test:gateway
       - task: test:auth
@@ -261,7 +258,6 @@ tasks:
 
   lint:
     desc: Линтинг всех сервисов
-    parallel: true
     cmds:
       - task: lint:auth
       - task: lint:vpn-core

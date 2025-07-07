@@ -1,0 +1,43 @@
+
+  __    _   ___  
+ / /\  | | | |_) 
+/_/--\ |_| |_| \_ v1.62.0, built with Go go1.24.4
+
+watching .
+watching bin
+watching cmd
+watching etc
+watching internal
+watching internal/adapters
+watching internal/adapters/database
+watching internal/adapters/database/migrations
+watching internal/adapters/docker
+watching internal/adapters/http
+watching internal/adapters/kubernetes
+watching internal/app
+watching internal/config
+watching internal/domain
+watching internal/handler
+watching internal/logic
+watching internal/ports
+watching internal/services
+watching internal/services/mocks
+watching internal/svc
+watching internal/types
+!exclude tmp
+building...
+running...
+2025-07-07T15:14:38.674+0300	[31mFATAL[0m	app/app.go:49	Миграции не найдены ни рядом с бинарём, ни в исходниках	{"service": "server-manager", "tried1": "/Users/pariram/Documents/fullstack-projects/silence/rpc/server-manager/tmp/internal/adapters/database/migrations", "tried2": "rpc/server-manager/internal/adapters/database/migrations"}
+github.com/par1ram/silence/rpc/server-manager/internal/app.resolveMigrationsDir
+	/Users/pariram/Documents/fullstack-projects/silence/rpc/server-manager/internal/app/app.go:49
+github.com/par1ram/silence/rpc/server-manager/internal/app.New
+	/Users/pariram/Documents/fullstack-projects/silence/rpc/server-manager/internal/app/app.go:77
+github.com/par1ram/silence/rpc/server-manager/internal/app.Run
+	/Users/pariram/Documents/fullstack-projects/silence/rpc/server-manager/internal/app/app.go:179
+main.main
+	/Users/pariram/Documents/fullstack-projects/silence/rpc/server-manager/cmd/main.go:8
+runtime.main
+	/usr/local/go/src/runtime/proc.go:272
+Process Exit with Code: 1
+cleaning...
+see you again~

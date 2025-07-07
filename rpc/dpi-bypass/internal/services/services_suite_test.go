@@ -15,13 +15,14 @@ import (
 
 //go:generate mockgen -destination=mock_bypass.go -package=services_test github.com/par1ram/silence/rpc/dpi-bypass/internal/ports BypassAdapter
 
-func TestBypassService(t *testing.T) {
+func TestServices(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "BypassService Suite")
+	RunSpecs(t, "Services Suite")
 }
 
-var _ = Describe("BypassService", func() {
+var _ = Describe("Services", func() {
 	var bypassService *services.BypassService
+	var healthService *services.HealthService
 	var ctx context.Context
 	var logger *zap.Logger
 	var mockAdapter *MockBypassAdapter
@@ -32,10 +33,11 @@ var _ = Describe("BypassService", func() {
 		mockAdapter = NewMockBypassAdapter(ctrl)
 		logger = zap.NewNop()
 		bypassService = services.NewBypassService(mockAdapter, logger)
+		healthService = services.NewHealthService("test-service", "1.0.0")
 		ctx = context.Background()
 	})
 
-	Describe("CreateBypass", func() {
+	Describe("BypassService", func() {
 		It("should create bypass and return bypass info", func() {
 			request := &domain.CreateBypassRequest{
 				Name:       "test-bypass",
@@ -123,6 +125,62 @@ var _ = Describe("BypassService", func() {
 			Expect(err).To(BeNil())
 			Expect(bypasses).NotTo(BeNil())
 			Expect(len(bypasses)).To(Equal(0))
+		})
+	})
+
+	Describe("CreateBypass with Shadowsocks", func() {
+		It("should create bypass and return bypass info", func() {
+			request := &domain.CreateBypassRequest{
+				Name:       "test-shadowsocks-bypass",
+				Method:     domain.BypassMethodShadowsocks,
+				LocalPort:  1081,
+				RemoteHost: "test-server.com",
+				RemotePort: 8388,
+				Encryption: "aes-256-gcm",
+			}
+
+			bypass, err := bypassService.CreateBypass(ctx, request)
+
+			Expect(err).To(BeNil())
+			Expect(bypass).NotTo(BeNil())
+			Expect(bypass.Name).To(Equal(request.Name))
+			Expect(bypass.Method).To(Equal(request.Method))
+			Expect(bypass.Status).To(Equal("inactive"))
+			Expect(bypass.CreatedAt).NotTo(BeZero())
+		})
+	})
+
+	Describe("CreateBypass with V2Ray", func() {
+		It("should create bypass and return bypass info", func() {
+			request := &domain.CreateBypassRequest{
+				Name:       "test-v2ray-bypass",
+				Method:     domain.BypassMethodV2Ray,
+				LocalPort:  1082,
+				RemoteHost: "test-server.com",
+				RemotePort: 10086,
+				Encryption: "none",
+			}
+
+			bypass, err := bypassService.CreateBypass(ctx, request)
+
+			Expect(err).To(BeNil())
+			Expect(bypass).NotTo(BeNil())
+			Expect(bypass.Name).To(Equal(request.Name))
+			Expect(bypass.Method).To(Equal(request.Method))
+			Expect(bypass.Status).To(Equal("inactive"))
+			Expect(bypass.CreatedAt).NotTo(BeZero())
+		})
+	})
+
+	Describe("HealthService", func() {
+		It("should return health status", func() {
+			status := healthService.GetHealth()
+
+			Expect(status).NotTo(BeNil())
+			Expect(status.Service).To(Equal("test-service"))
+			Expect(status.Version).To(Equal("1.0.0"))
+			Expect(status.Status).To(Equal("ok"))
+			Expect(status.Timestamp).NotTo(BeZero())
 		})
 	})
 })

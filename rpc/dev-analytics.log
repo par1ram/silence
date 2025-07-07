@@ -1,0 +1,27 @@
+
+  __    _   ___  
+ / /\  | | | |_) 
+/_/--\ |_| |_| \_ v1.62.0, built with Go go1.24.4
+
+watching .
+watching bin
+watching cmd
+watching etc
+watching internal
+watching internal/adapters
+watching internal/adapters/database
+watching internal/adapters/http
+watching internal/app
+watching internal/config
+watching internal/domain
+watching internal/handler
+watching internal/ports
+watching internal/services
+watching internal/services/mocks
+!exclude tmp
+building...
+running...
+2025-07-07T15:14:35.030+0300	[34mINFO[0m	app/app.go:89	Starting analytics service	{"service": "analytics", "http_port": "8001", "influxdb_url": "http://localhost:8086"}
+2025-07-07T15:14:35.030+0300	[34mINFO[0m	app/app.go:98	Analytics service started successfully	{"service": "analytics"}
+cleaning...
+see you again~

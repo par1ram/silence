@@ -20,8 +20,8 @@ type Config struct {
 // Load загружает конфигурацию из переменных окружения
 func Load() *Config {
 	return &Config{
-		HTTPPort:     getEnv("HTTP_PORT", ":8082"),
-		GRPCPort:     getEnv("GRPC_PORT", ":9092"),
+		HTTPPort:     getEnv("HTTP_PORT", "8080"),
+		GRPCPort:     getEnv("GRPC_PORT", "9090"),
 		LogLevel:     getEnv("LOG_LEVEL", "info"),
 		Version:      getEnv("VERSION", "1.0.0"),
 		WireGuardDir: getEnv("WIREGUARD_DIR", "/etc/wireguard"),

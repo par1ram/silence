@@ -37,8 +37,15 @@ func NewServer(port string, handlers *Handlers, userHandlers *UserHandlers, cfg 
 	mux.Handle("/users/unblock/", internalMW(http.HandlerFunc(userHandlers.UnblockUserHandler)))
 	mux.Handle("/users/role/", internalMW(http.HandlerFunc(userHandlers.ChangeUserRoleHandler)))
 
+	// Добавляем двоеточие к порту для HTTP сервера
+	addr := port
+	if port != "" && port[0] != ':' {
+		addr = ":" + port
+	}
+	logger.Info("DEBUG: Creating server", zap.String("originalPort", port), zap.String("finalAddr", addr))
+
 	server := &http.Server{
-		Addr:    port,
+		Addr:    addr,
 		Handler: mux,
 	}
 
@@ -52,7 +59,7 @@ func NewServer(port string, handlers *Handlers, userHandlers *UserHandlers, cfg 
 
 // Start запускает HTTP сервер
 func (s *Server) Start(ctx context.Context) error {
-	s.logger.Info("starting auth HTTP server", zap.String("port", s.server.Addr))
+	s.logger.Info("starting auth HTTP server", zap.String("addr", s.server.Addr))
 	return s.server.ListenAndServe()
 }
 

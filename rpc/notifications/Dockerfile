@@ -1,32 +1,54 @@
+# syntax=docker/dockerfile:1
+
+# Build stage
 FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
+# Install git for Go modules
 RUN apk add --no-cache git
-# Копируем только go.mod и go.sum для go mod download
-COPY rpc/notifications/go.mod ./
-COPY rpc/notifications/go.sum ./
+
+# Copy all go.mod and go.sum files for workspace
+COPY api/auth/go.mod api/auth/go.sum ./api/auth/
+COPY api/gateway/go.mod api/gateway/go.sum ./api/gateway/
+COPY rpc/analytics/go.mod rpc/analytics/go.sum ./rpc/analytics/
+COPY rpc/dpi-bypass/go.mod rpc/dpi-bypass/go.sum ./rpc/dpi-bypass/
+COPY rpc/notifications/go.mod rpc/notifications/go.sum ./rpc/notifications/
+COPY rpc/server-manager/go.mod rpc/server-manager/go.sum ./rpc/server-manager/
+COPY rpc/vpn-core/go.mod rpc/vpn-core/go.sum ./rpc/vpn-core/
 COPY shared ./shared
+
+# Copy go work files
+COPY go.work go.work.sum ./
+
+# Download dependencies
 RUN go mod download
 
-# Копируем исходный код
+# Copy source code
 COPY . .
 
-# Собираем приложение
+# Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o notifications rpc/notifications/cmd/main.go
 
-# Финальный образ
-FROM alpine:latest
+# Final stage
+FROM alpine:3.19
 
+WORKDIR /app
+
+# Install ca-certificates for HTTPS requests
 RUN apk --no-cache add ca-certificates
 
-WORKDIR /root/
+# Create directories
+RUN mkdir -p /app/etc
 
-# Копируем собранное приложение
-COPY --from=builder /app/notifications .
+# Copy the binary from builder stage
+COPY --from=builder /app/notifications /app/notifications
 
-# Экспортируем порт
+# Copy configuration files (if they exist)
+COPY rpc/notifications/etc/config.env /app/etc/config.env
+
+# Expose port
 EXPOSE 8080
 
-# Запускаем приложение
-CMD ["./notifications"] 
+# Run the application
+CMD ["/app/notifications"]

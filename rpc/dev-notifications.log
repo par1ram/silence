@@ -9,12 +9,8 @@ watching cmd
 watching etc
 watching internal
 watching internal/adapters
-watching internal/adapters/database
-watching internal/adapters/database/migrations
-watching internal/adapters/docker
 watching internal/adapters/http
-watching internal/adapters/kubernetes
-watching internal/app
+watching internal/adapters/rabbitmq
 watching internal/config
 watching internal/domain
 watching internal/handler
@@ -27,3 +23,8 @@ watching internal/types
 !exclude tmp
 building...
 running...
+2025/07/07 15:14:50 [main] notifications service started, waiting for events...
+2025/07/07 15:14:50 [http] server listening on :8005
+2025/07/07 15:14:50 Started consuming notifications from queue: notifications
+cleaning...
+see you again~

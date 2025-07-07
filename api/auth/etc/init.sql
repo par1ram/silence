@@ -1,0 +1,1 @@
+CREATE DATABASE silence_auth OWNER postgres; 

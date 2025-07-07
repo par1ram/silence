@@ -1,0 +1,85 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+docs/
+*.md
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+bin/
+build/
+dist/
+target/
+
+# Logs
+*.log
+*.out
+logs/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Development files
+.air.toml
+air_tmp/
+build-errors.log
+
+# Testing
+coverage.txt
+coverage.html
+test-results/
+
+# Dependencies (keep go.mod and go.sum)
+node_modules/
+vendor/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Scripts (except necessary ones)
+scripts/
+!scripts/generate.sh
+
+# Config examples
+*.example
+*.sample
+
+# Kubernetes
+k8s/
+deployments/
+
+# Frontend (if not needed for backend builds)
+frontend/
+frontent/
+
+# Test files
+*_test.go
+test/
+tests/
+
+# Cursor IDE
+.cursor/
+
+# Task runner
+Taskfile.yml
+
+# GitHub
+.github/

@@ -1,62 +1,70 @@
 package config
 
 import (
+	"os"
 	"time"
-
-	"github.com/par1ram/silence/shared/config"
 )
 
+// Config конфигурация analytics сервиса
 type Config struct {
-	HTTP     HTTPConfig     `mapstructure:"http"`
-	GRPC     GRPCConfig     `mapstructure:"grpc"`
-	InfluxDB InfluxDBConfig `mapstructure:"influxdb"`
-	Redis    RedisConfig    `mapstructure:"redis"`
-	Metrics  MetricsConfig  `mapstructure:"metrics"`
-	Log      LogConfig      `mapstructure:"log"`
+	HTTP     HTTPConfig
+	InfluxDB InfluxDBConfig
+	Log      LogConfig
 }
 
 type HTTPConfig struct {
-	Port         string        `mapstructure:"port" default:":8080"`
-	ReadTimeout  time.Duration `mapstructure:"read_timeout" default:"30s"`
-	WriteTimeout time.Duration `mapstructure:"write_timeout" default:"30s"`
-	IdleTimeout  time.Duration `mapstructure:"idle_timeout" default:"60s"`
-}
-
-type GRPCConfig struct {
-	Port string `mapstructure:"port" default:":9090"`
+	Port         string
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	IdleTimeout  time.Duration
 }
 
 type InfluxDBConfig struct {
-	URL      string `mapstructure:"url" default:"http://localhost:8086"`
-	Token    string `mapstructure:"token"`
-	Org      string `mapstructure:"org" default:"silence"`
-	Bucket   string `mapstructure:"bucket" default:"analytics"`
-	Username string `mapstructure:"username"`
-	Password string `mapstructure:"password"`
-}
-
-type RedisConfig struct {
-	URL      string `mapstructure:"url" default:"localhost:6379"`
-	Password string `mapstructure:"password"`
-	DB       int    `mapstructure:"db" default:"0"`
-}
-
-type MetricsConfig struct {
-	Enabled bool   `mapstructure:"enabled" default:"true"`
-	Port    string `mapstructure:"port" default:":9091"`
+	URL    string
+	Token  string
+	Org    string
+	Bucket string
 }
 
 type LogConfig struct {
-	Level string `mapstructure:"level" default:"info"`
-	JSON  bool   `mapstructure:"json" default:"false"`
+	Level string
 }
 
+// Load загружает конфигурацию из переменных окружения
 func Load() (*Config, error) {
-	cfg := &Config{}
+	return &Config{
+		HTTP: HTTPConfig{
+			Port:         getEnv("HTTP_PORT", "8080"),
+			ReadTimeout:  getDuration("HTTP_READ_TIMEOUT", 30*time.Second),
+			WriteTimeout: getDuration("HTTP_WRITE_TIMEOUT", 30*time.Second),
+			IdleTimeout:  getDuration("HTTP_IDLE_TIMEOUT", 60*time.Second),
+		},
+		InfluxDB: InfluxDBConfig{
+			URL:    getEnv("INFLUXDB_URL", "http://localhost:8086"),
+			Token:  getEnv("INFLUXDB_TOKEN", ""),
+			Org:    getEnv("INFLUXDB_ORG", "silence"),
+			Bucket: getEnv("INFLUXDB_BUCKET", "analytics"),
+		},
+		Log: LogConfig{
+			Level: getEnv("LOG_LEVEL", "info"),
+		},
+	}, nil
+}
 
-	if err := config.Load("analytics", cfg); err != nil {
-		return nil, err
+// getEnv получает значение переменной окружения или возвращает значение по умолчанию
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
 	}
+	return defaultValue
+}
 
-	return cfg, nil
+// getDuration получает duration из переменной окружения
+func getDuration(key string, defaultValue time.Duration) time.Duration {
+	if value := os.Getenv(key); value != "" {
+		if duration, err := time.ParseDuration(value); err == nil {
+			return duration
+		}
+	}
+	return defaultValue
 }

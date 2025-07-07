@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -59,4 +60,15 @@ func LoadFromEnv(config interface{}) error {
 	}
 
 	return nil
+}
+
+// NormalizePort добавляет двоеточие к порту, если его нет
+func NormalizePort(port string) string {
+	if port == "" {
+		return ":8080"
+	}
+	if !strings.HasPrefix(port, ":") {
+		return ":" + port
+	}
+	return port
 }
