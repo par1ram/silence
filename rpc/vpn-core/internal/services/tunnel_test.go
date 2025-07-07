@@ -47,6 +47,25 @@ var _ = Describe("TunnelService", func() {
 			Expect(tunnel.Name).To(Equal(request.Name))
 			Expect(tunnel.Status).To(Equal(domain.TunnelStatusInactive))
 			Expect(tunnel.CreatedAt).NotTo(BeZero())
+			Expect(tunnel.ID).NotTo(BeEmpty())
+		})
+
+		It("should generate unique IDs for multiple tunnels", func() {
+			mockKeyGen.EXPECT().GenerateKeyPair().Return("pub1", "priv1", nil).Times(2)
+
+			request1 := &domain.CreateTunnelRequest{Name: "tunnel-unique-1"}
+			tunnel1, err1 := tunnelService.CreateTunnel(ctx, request1)
+			Expect(err1).To(BeNil())
+			Expect(tunnel1).NotTo(BeNil())
+			Expect(tunnel1.ID).NotTo(BeEmpty())
+
+			request2 := &domain.CreateTunnelRequest{Name: "tunnel-unique-2"}
+			tunnel2, err2 := tunnelService.CreateTunnel(ctx, request2)
+			Expect(err2).To(BeNil())
+			Expect(tunnel2).NotTo(BeNil())
+			Expect(tunnel2.ID).NotTo(BeEmpty())
+
+			Expect(tunnel1.ID).NotTo(Equal(tunnel2.ID))
 		})
 	})
 

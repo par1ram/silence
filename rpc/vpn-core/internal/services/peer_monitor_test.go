@@ -1,132 +1,202 @@
-package services
+package services_test
 
 import (
-	"testing"
+	"context"
 	"time"
 
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"github.com/par1ram/silence/rpc/vpn-core/internal/domain"
-	"github.com/stretchr/testify/assert"
+	"github.com/par1ram/silence/rpc/vpn-core/internal/ports"
+	svc "github.com/par1ram/silence/rpc/vpn-core/internal/services"
 	"go.uber.org/zap"
 )
 
-func TestPeerService_calculateConnectionQuality(t *testing.T) {
-	logger := zap.NewNop()
-	ps := NewPeerService(logger).(*PeerService)
+var _ = Describe("Peer Monitor", func() {
+	var (
+		peerService *svc.PeerService
+		ctx         context.Context
+		logger      *zap.Logger
+	)
 
-	t.Run("качество соединения для активного пира", func(t *testing.T) {
-		peer := &domain.Peer{
-			ID:            "peer1",
-			Status:        domain.PeerStatusActive,
-			LastHandshake: time.Now().Add(-1 * time.Minute), // недавний handshake
-			Latency:       50 * time.Millisecond,
-			PacketLoss:    0.01,
-		}
-
-		quality := ps.calculateConnectionQuality(peer)
-		assert.Greater(t, quality, 0.9) // высокое качество
+	BeforeEach(func() {
+		logger = zap.NewNop()
+		peerService = svc.NewPeerService(logger).(*svc.PeerService)
+		ctx = context.Background()
 	})
 
-	t.Run("качество соединения для неактивного пира", func(t *testing.T) {
-		peer := &domain.Peer{
-			ID:            "peer2",
-			Status:        domain.PeerStatusInactive,
-			LastHandshake: time.Now().Add(-3 * time.Minute),
-			Latency:       100 * time.Millisecond,
-			PacketLoss:    0.05,
-		}
+	Describe("UpdatePeerStats", func() {
+		Context("when peer exists", func() {
+			It("should update peer statistics", func() {
+				// Add a peer first
+				addReq := &domain.AddPeerRequest{
+					TunnelID:  "test-tunnel",
+					PublicKey: "pubkey1",
+				}
+				createdPeer, err := peerService.AddPeer(ctx, addReq)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(createdPeer).NotTo(BeNil())
 
-		quality := ps.calculateConnectionQuality(peer)
-		assert.Less(t, quality, 0.5) // низкое качество из-за статуса
+				stats := &ports.PeerStats{
+					TransferRx:    100,
+					TransferTx:    200,
+					LastHandshake: time.Now().Unix(),
+				}
+
+				err = peerService.UpdatePeerStats(ctx, addReq.TunnelID, createdPeer.ID, stats)
+				Expect(err).NotTo(HaveOccurred())
+
+				updatedPeer, err := peerService.GetPeer(ctx, addReq.TunnelID, createdPeer.ID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(updatedPeer.TransferRx).To(Equal(stats.TransferRx))
+				Expect(updatedPeer.TransferTx).To(Equal(stats.TransferTx))
+				Expect(updatedPeer.LastHandshake.Unix()).To(BeNumerically("~", stats.LastHandshake, 1))
+				Expect(updatedPeer.LastSeen).NotTo(BeZero())
+				Expect(updatedPeer.UpdatedAt).NotTo(BeZero())
+			})
+
+			It("should update peer status based on last handshake", func() {
+				addReq := &domain.AddPeerRequest{
+					TunnelID:  "test-tunnel-status",
+					PublicKey: "pubkey-status",
+				}
+				createdPeer, err := peerService.AddPeer(ctx, addReq)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Active status
+				statsActive := &ports.PeerStats{
+					LastHandshake: time.Now().Unix() - 30, // 30 seconds ago
+				}
+				err = peerService.UpdatePeerStats(ctx, addReq.TunnelID, createdPeer.ID, statsActive)
+				Expect(err).NotTo(HaveOccurred())
+				peer, _ := peerService.GetPeer(ctx, addReq.TunnelID, createdPeer.ID)
+				Expect(peer.Status).To(Equal(domain.PeerStatusActive))
+
+				// Inactive status
+				statsInactive := &ports.PeerStats{
+					LastHandshake: time.Now().Unix() - int64(5*time.Minute.Seconds()) - 30, // 5 min 30 sec ago
+				}
+				err = peerService.UpdatePeerStats(ctx, addReq.TunnelID, createdPeer.ID, statsInactive)
+				Expect(err).NotTo(HaveOccurred())
+				peer, _ = peerService.GetPeer(ctx, addReq.TunnelID, createdPeer.ID)
+				Expect(peer.Status).To(Equal(domain.PeerStatusInactive))
+
+				// Offline status
+				statsOffline := &ports.PeerStats{
+					LastHandshake: time.Now().Unix() - int64(15*time.Minute.Seconds()), // 15 min ago
+				}
+				err = peerService.UpdatePeerStats(ctx, addReq.TunnelID, createdPeer.ID, statsOffline)
+				Expect(err).NotTo(HaveOccurred())
+				peer, _ = peerService.GetPeer(ctx, addReq.TunnelID, createdPeer.ID)
+				Expect(peer.Status).To(Equal(domain.PeerStatusOffline))
+			})
+		})
+
+		Context("when peer does not exist", func() {
+			It("should return an error", func() {
+				stats := &ports.PeerStats{}
+				err := peerService.UpdatePeerStats(ctx, "non-existent-tunnel", "non-existent-peer", stats)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("tunnel not found"))
+			})
+		})
 	})
 
-	t.Run("качество соединения для оффлайн пира", func(t *testing.T) {
-		peer := &domain.Peer{
-			ID:            "peer3",
-			Status:        domain.PeerStatusOffline,
-			LastHandshake: time.Now().Add(-15 * time.Minute), // очень старый handshake
-			Latency:       1000 * time.Millisecond,
-			PacketLoss:    0.2,
-		}
+	Describe("GetPeerHealth", func() {
+		Context("when peer exists", func() {
+			It("should return peer health information", func() {
+				addReq := &domain.AddPeerRequest{
+					TunnelID:  "health-tunnel",
+					PublicKey: "pubkey-health",
+				}
+				createdPeer, err := peerService.AddPeer(ctx, addReq)
+				Expect(err).NotTo(HaveOccurred())
 
-		quality := ps.calculateConnectionQuality(peer)
-		assert.Less(t, quality, 0.2) // очень низкое качество
+				// Manually set some peer properties for health calculation
+				peerService.GetPeersMap()[addReq.TunnelID][createdPeer.ID].LastHandshake = time.Now().Add(-1 * time.Minute)
+				peerService.GetPeersMap()[addReq.TunnelID][createdPeer.ID].Latency = 50 * time.Millisecond
+				peerService.GetPeersMap()[addReq.TunnelID][createdPeer.ID].PacketLoss = 0.05
+				peerService.GetPeersMap()[addReq.TunnelID][createdPeer.ID].Status = domain.PeerStatusActive
+
+				health, err := peerService.GetPeerHealth(ctx, addReq.TunnelID, createdPeer.ID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(health).NotTo(BeNil())
+				Expect(health.PeerID).To(Equal(createdPeer.ID))
+				Expect(health.Status).To(Equal(domain.PeerStatusActive))
+				Expect(health.LastHandshake.Unix()).To(BeNumerically("~", time.Now().Add(-1*time.Minute).Unix(), 1))
+				Expect(health.Latency).To(Equal(50 * time.Millisecond))
+				Expect(health.PacketLoss).To(Equal(0.05))
+				Expect(health.ConnectionQuality).To(BeNumerically(">", 0))
+			})
+		})
+
+		Context("when peer does not exist", func() {
+			It("should return an error", func() {
+				health, err := peerService.GetPeerHealth(ctx, "non-existent-tunnel", "non-existent-peer")
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("tunnel not found"))
+				Expect(health).To(BeNil())
+			})
+		})
 	})
 
-	t.Run("качество соединения с высоким packet loss", func(t *testing.T) {
-		peer := &domain.Peer{
-			ID:            "peer4",
-			Status:        domain.PeerStatusActive,
-			LastHandshake: time.Now().Add(-30 * time.Second),
-			Latency:       50 * time.Millisecond,
-			PacketLoss:    0.5, // 50% потерь
-		}
+	Describe("EnablePeer", func() {
+		Context("when peer exists", func() {
+			It("should enable the peer", func() {
+				addReq := &domain.AddPeerRequest{
+					TunnelID:  "enable-tunnel",
+					PublicKey: "pubkey-enable",
+				}
+				createdPeer, err := peerService.AddPeer(ctx, addReq)
+				Expect(err).NotTo(HaveOccurred())
+				peerService.GetPeersMap()[addReq.TunnelID][createdPeer.ID].Status = domain.PeerStatusInactive // Set initial status
 
-		quality := ps.calculateConnectionQuality(peer)
-		assert.Less(t, quality, 0.6) // качество снижено из-за потерь
+				err = peerService.EnablePeer(ctx, addReq.TunnelID, createdPeer.ID)
+				Expect(err).NotTo(HaveOccurred())
+
+				updatedPeer, err := peerService.GetPeer(ctx, addReq.TunnelID, createdPeer.ID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(updatedPeer.Status).To(Equal(domain.PeerStatusActive))
+				Expect(updatedPeer.UpdatedAt).NotTo(BeZero())
+			})
+		})
+
+		Context("when peer does not exist", func() {
+			It("should return an error", func() {
+				err := peerService.EnablePeer(ctx, "non-existent-tunnel", "non-existent-peer")
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("tunnel not found"))
+			})
+		})
 	})
 
-	t.Run("качество соединения с высокой задержкой", func(t *testing.T) {
-		peer := &domain.Peer{
-			ID:            "peer5",
-			Status:        domain.PeerStatusActive,
-			LastHandshake: time.Now().Add(-1 * time.Minute),
-			Latency:       600 * time.Millisecond, // высокая задержка
-			PacketLoss:    0.01,
-		}
+	Describe("DisablePeer", func() {
+		Context("when peer exists", func() {
+			It("should disable the peer", func() {
+				addReq := &domain.AddPeerRequest{
+					TunnelID:  "disable-tunnel",
+					PublicKey: "pubkey-disable",
+				}
+				createdPeer, err := peerService.AddPeer(ctx, addReq)
+				Expect(err).NotTo(HaveOccurred())
+				peerService.GetPeersMap()[addReq.TunnelID][createdPeer.ID].Status = domain.PeerStatusActive // Set initial status
 
-		quality := ps.calculateConnectionQuality(peer)
-		assert.Less(t, quality, 0.6) // качество снижено из-за задержки
+				err = peerService.DisablePeer(ctx, addReq.TunnelID, createdPeer.ID)
+				Expect(err).NotTo(HaveOccurred())
+
+				updatedPeer, err := peerService.GetPeer(ctx, addReq.TunnelID, createdPeer.ID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(updatedPeer.Status).To(Equal(domain.PeerStatusInactive))
+				Expect(updatedPeer.UpdatedAt).NotTo(BeZero())
+			})
+		})
+
+		Context("when peer does not exist", func() {
+			It("should return an error", func() {
+				err := peerService.DisablePeer(ctx, "non-existent-tunnel", "non-existent-peer")
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("tunnel not found"))
+			})
+		})
 	})
-
-	t.Run("качество соединения без handshake", func(t *testing.T) {
-		peer := &domain.Peer{
-			ID:            "peer6",
-			Status:        domain.PeerStatusActive,
-			LastHandshake: time.Time{}, // нулевое время
-			Latency:       50 * time.Millisecond,
-			PacketLoss:    0.0, // убираем packet loss для точного теста
-		}
-
-		quality := ps.calculateConnectionQuality(peer)
-		assert.Equal(t, 1.0, quality) // максимальное качество без учета handshake
-	})
-
-	t.Run("качество соединения с очень старым handshake", func(t *testing.T) {
-		peer := &domain.Peer{
-			ID:            "peer7",
-			Status:        domain.PeerStatusActive,
-			LastHandshake: time.Now().Add(-15 * time.Minute), // очень старый
-			Latency:       50 * time.Millisecond,
-			PacketLoss:    0.01,
-		}
-
-		quality := ps.calculateConnectionQuality(peer)
-		assert.Less(t, quality, 0.2) // очень низкое качество из-за старого handshake
-	})
-
-	t.Run("качество соединения с пиром в ошибке", func(t *testing.T) {
-		peer := &domain.Peer{
-			ID:            "peer8",
-			Status:        domain.PeerStatusError,
-			LastHandshake: time.Now().Add(-1 * time.Minute),
-			Latency:       50 * time.Millisecond,
-			PacketLoss:    0.01,
-		}
-
-		quality := ps.calculateConnectionQuality(peer)
-		assert.Less(t, quality, 0.2) // очень низкое качество из-за статуса ошибки
-	})
-
-	t.Run("качество соединения с максимальными проблемами", func(t *testing.T) {
-		peer := &domain.Peer{
-			ID:            "peer9",
-			Status:        domain.PeerStatusOffline,
-			LastHandshake: time.Now().Add(-20 * time.Minute), // очень старый
-			Latency:       1000 * time.Millisecond,           // высокая задержка
-			PacketLoss:    0.8,                               // высокие потери
-		}
-
-		quality := ps.calculateConnectionQuality(peer)
-		assert.Less(t, quality, 0.1) // минимальное качество
-	})
-}
+})

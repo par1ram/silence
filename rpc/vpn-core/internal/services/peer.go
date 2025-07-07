@@ -18,6 +18,11 @@ type PeerService struct {
 	mutex  sync.RWMutex
 }
 
+// GetPeersMap returns the internal peers map for testing purposes.
+func (p *PeerService) GetPeersMap() map[string]map[string]*domain.Peer {
+	return p.peers
+}
+
 // NewPeerService создает новый сервис управления пирами
 func NewPeerService(logger *zap.Logger) ports.PeerManager {
 	return &PeerService{

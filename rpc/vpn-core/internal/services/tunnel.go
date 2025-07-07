@@ -26,6 +26,26 @@ type TunnelService struct {
 	recoveryCounts   map[string]int
 }
 
+// GetTunnels returns the internal tunnels map for testing purposes.
+func (t *TunnelService) GetTunnels() map[string]*domain.Tunnel {
+	return t.tunnels
+}
+
+// GetPeers returns the internal peers map for testing purposes.
+func (t *TunnelService) GetPeers() map[string][]*domain.Peer {
+	return t.peers
+}
+
+// GetErrorCounts returns the internal errorCounts map for testing purposes.
+func (t *TunnelService) GetErrorCounts() map[string]int {
+	return t.errorCounts
+}
+
+// GetRecoveryCounts returns the internal recoveryCounts map for testing purposes.
+func (t *TunnelService) GetRecoveryCounts() map[string]int {
+	return t.recoveryCounts
+}
+
 // NewTunnelService создает новый сервис управления туннелями
 func NewTunnelService(keyGen ports.KeyGenerator, wgManager ports.WireGuardManager, logger *zap.Logger) ports.TunnelManager {
 	return &TunnelService{

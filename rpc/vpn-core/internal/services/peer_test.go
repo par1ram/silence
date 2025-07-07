@@ -46,6 +46,7 @@ var _ = Describe("PeerService", func() {
 			Expect(peer.PersistentKeepalive).To(Equal(request.PersistentKeepalive))
 			Expect(peer.Status).To(Equal(domain.PeerStatusInactive))
 			Expect(peer.CreatedAt).NotTo(BeZero())
+			Expect(peer.ID).NotTo(BeEmpty())
 		})
 
 		It("should add multiple peers to same tunnel", func() {
@@ -65,10 +66,12 @@ var _ = Describe("PeerService", func() {
 			peer1, err1 := peerService.AddPeer(ctx, request1)
 			Expect(err1).To(BeNil())
 			Expect(peer1).NotTo(BeNil())
+			Expect(peer1.ID).NotTo(BeEmpty())
 
 			peer2, err2 := peerService.AddPeer(ctx, request2)
 			Expect(err2).To(BeNil())
 			Expect(peer2).NotTo(BeNil())
+			Expect(peer2.ID).NotTo(BeEmpty())
 
 			Expect(peer1.ID).NotTo(Equal(peer2.ID))
 		})
