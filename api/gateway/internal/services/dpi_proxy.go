@@ -145,3 +145,31 @@ func (d *DPIProxy) StartBypass(ctx context.Context, id string) error {
 
 	return nil
 }
+
+// StopBypass останавливает bypass-соединение
+func (d *DPIProxy) StopBypass(ctx context.Context, id string) error {
+	dpiBypassURL, err := url.Parse(d.dpiBypassURL)
+	if err != nil {
+		return fmt.Errorf("failed to parse DPI Bypass URL: %w", err)
+	}
+
+	stopURL := dpiBypassURL.JoinPath("api", "v1", "bypass", id, "stop")
+
+	req, err := http.NewRequestWithContext(ctx, "POST", stopURL.String(), nil)
+	if err != nil {
+		return fmt.Errorf("failed to create stop bypass request: %w", err)
+	}
+
+	resp, err := d.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to stop bypass: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("failed to stop bypass: status=%d, body=%s", resp.StatusCode, string(body))
+	}
+
+	return nil
+}

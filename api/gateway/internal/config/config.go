@@ -36,7 +36,7 @@ func Load() *Config {
 		DPIBypassURL:     getEnv("DPI_BYPASS_URL", "http://localhost:8083"),
 		AnalyticsURL:     getEnv("ANALYTICS_URL", "http://localhost:8084"),
 		ServerManagerURL: getEnv("SERVER_MANAGER_URL", "http://localhost:8085"),
-		JWTSecret:        getEnv("JWT_SECRET", "your-secret-key"),
+		JWTSecret:        getEnv("JWT_SECRET", "your-jwt-secret-key-change-this-in-production"),
 		InternalAPIToken: getEnv("INTERNAL_API_TOKEN", "super-secret-internal-token"),
 
 		// Rate Limiting настройки

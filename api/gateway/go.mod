@@ -6,6 +6,7 @@ toolchain go1.23.2
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.0.0
+	github.com/gorilla/websocket v1.5.0
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
 	github.com/par1ram/silence/shared v0.0.0

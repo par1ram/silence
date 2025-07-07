@@ -74,6 +74,13 @@ func NewServer(port string, handlers *Handlers, logger *zap.Logger, jwtSecret st
 	mux.Handle("/api/v1/dpi-bypass/bypass/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.DPIHandler))))
 	mux.Handle("/api/v1/dpi-bypass/", wrap(http.HandlerFunc(handlers.DPIHandler)))
 	mux.Handle("/api/v1/connect", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ConnectHandler))))
+	mux.Handle("/api/v1/connect/vpn", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ConnectVPNHandler))))
+	mux.Handle("/api/v1/connect/dpi", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ConnectDPIHandler))))
+	mux.Handle("/api/v1/connect/shadowsocks", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ConnectShadowsocksHandler))))
+	mux.Handle("/api/v1/connect/v2ray", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ConnectV2RayHandler))))
+	mux.Handle("/api/v1/connect/obfs4", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ConnectObfs4Handler))))
+	mux.Handle("/api/v1/disconnect", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.DisconnectHandler))))
+	mux.Handle("/api/v1/connect/status", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ConnectionStatusHandler))))
 	mux.Handle("/api/v1/rate-limit/whitelist/add", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.RateLimitWhitelistAddHandler))))
 	mux.Handle("/api/v1/rate-limit/whitelist/remove", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.RateLimitWhitelistRemoveHandler))))
 	mux.Handle("/api/v1/rate-limit/stats", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.RateLimitStatsHandler))))
@@ -92,6 +99,11 @@ func NewServer(port string, handlers *Handlers, logger *zap.Logger, jwtSecret st
 	mux.Handle("/api/v1/server-manager/scaling/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
 	mux.Handle("/api/v1/server-manager/backups/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
 	mux.Handle("/api/v1/server-manager/", wrap(http.HandlerFunc(handlers.ServerManagerHandler)))
+
+	// WebSocket endpoint
+	wsHandler := NewWebSocketHandler(logger)
+	mux.Handle("/ws", http.HandlerFunc(wsHandler.HandleWebSocket))
+
 	mux.Handle("/", wrap(http.HandlerFunc(handlers.RootHandler)))
 
 	// Добавляем двоеточие к порту для HTTP сервера

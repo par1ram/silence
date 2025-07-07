@@ -161,6 +161,120 @@ test_gateway_service() {
             print_info "Gateway authentication may need configuration: $vpn_response"
         fi
     fi
+
+    # Test new connection endpoints
+    test_new_connection_endpoints
+}
+
+# Test new connection endpoints
+test_new_connection_endpoints() {
+    print_header "Testing New Connection Endpoints"
+
+    if [ -n "$TOKEN" ]; then
+        # Test connection status
+        print_test "Testing connection status endpoint"
+        status_response=$(curl -s "$BASE_URL:$GATEWAY_PORT/api/v1/connect/status" \
+            -H "Authorization: Bearer $TOKEN")
+
+        if echo "$status_response" | grep -q "vpn_tunnels\|dpi_bypasses\|active_connections"; then
+            print_success "Connection status endpoint working"
+        else
+            print_error "Connection status endpoint failed: $status_response"
+        fi
+
+        # Test VPN-only connection
+        print_test "Testing VPN-only connection endpoint"
+        vpn_connect_response=$(curl -s -X POST "$BASE_URL:$GATEWAY_PORT/api/v1/connect/vpn" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"test-vpn","listen_port":51820,"mtu":1420,"auto_recovery":true}')
+
+        if echo "$vpn_connect_response" | grep -q "tunnel_id\|status"; then
+            print_success "VPN-only connection endpoint working"
+        else
+            print_error "VPN-only connection endpoint failed: $vpn_connect_response"
+        fi
+
+        # Test DPI-only connection
+        print_test "Testing DPI-only connection endpoint"
+        dpi_connect_response=$(curl -s -X POST "$BASE_URL:$GATEWAY_PORT/api/v1/connect/dpi" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"method":"shadowsocks","name":"test-dpi","remote_host":"example.com","remote_port":443,"password":"testpass","encryption":"aes-256-gcm"}')
+
+        if echo "$dpi_connect_response" | grep -q "bypass_id\|status"; then
+            print_success "DPI-only connection endpoint working"
+        else
+            print_error "DPI-only connection endpoint failed: $dpi_connect_response"
+        fi
+
+        # Test Shadowsocks connection
+        print_test "Testing Shadowsocks connection endpoint"
+        ss_connect_response=$(curl -s -X POST "$BASE_URL:$GATEWAY_PORT/api/v1/connect/shadowsocks" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"test-ss","server_host":"example.com","server_port":443,"password":"testpass","encryption":"aes-256-gcm"}')
+
+        if echo "$ss_connect_response" | grep -q "connection_id\|status"; then
+            print_success "Shadowsocks connection endpoint working"
+        else
+            print_error "Shadowsocks connection endpoint failed: $ss_connect_response"
+        fi
+
+        # Test V2Ray connection
+        print_test "Testing V2Ray connection endpoint"
+        v2ray_connect_response=$(curl -s -X POST "$BASE_URL:$GATEWAY_PORT/api/v1/connect/v2ray" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"test-v2ray","server_host":"example.com","server_port":443,"uuid":"550e8400-e29b-41d4-a716-446655440000","alter_id":0}')
+
+        if echo "$v2ray_connect_response" | grep -q "connection_id\|status"; then
+            print_success "V2Ray connection endpoint working"
+        else
+            print_error "V2Ray connection endpoint failed: $v2ray_connect_response"
+        fi
+
+        # Test Obfs4 connection
+        print_test "Testing Obfs4 connection endpoint"
+        obfs4_connect_response=$(curl -s -X POST "$BASE_URL:$GATEWAY_PORT/api/v1/connect/obfs4" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"test-obfs4","bridge":"192.168.1.1:443","cert":"test-cert-data"}')
+
+        if echo "$obfs4_connect_response" | grep -q "connection_id\|status"; then
+            print_success "Obfs4 connection endpoint working"
+        else
+            print_error "Obfs4 connection endpoint failed: $obfs4_connect_response"
+        fi
+
+        # Test disconnect
+        print_test "Testing disconnect endpoint"
+        disconnect_response=$(curl -s -X POST "$BASE_URL:$GATEWAY_PORT/api/v1/disconnect" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"all":true}')
+
+        if echo "$disconnect_response" | grep -q "status\|disconnected"; then
+            print_success "Disconnect endpoint working"
+        else
+            print_error "Disconnect endpoint failed: $disconnect_response"
+        fi
+
+        # Test WebSocket endpoint (basic connectivity)
+        print_test "Testing WebSocket endpoint"
+        if command -v wscat >/dev/null 2>&1; then
+            ws_test=$(timeout 5 wscat -c "ws://localhost:$GATEWAY_PORT/ws" -x '{"type":"ping"}' 2>/dev/null || echo "no_wscat")
+            if [ "$ws_test" != "no_wscat" ]; then
+                print_success "WebSocket endpoint accessible"
+            else
+                print_info "WebSocket endpoint may be working (need wscat for full test)"
+            fi
+        else
+            print_info "WebSocket endpoint registered (install wscat for testing)"
+        fi
+    else
+        print_error "No authentication token available for connection endpoint testing"
+    fi
 }
 
 # Test analytics service

@@ -32,7 +32,7 @@ func Load() *Config {
 		DBUser:           getEnv("DB_USER", "pariram"),
 		DBPassword:       getEnv("DB_PASSWORD", "password"),
 		DBName:           getEnv("DB_NAME", "silence_auth"),
-		JWTSecret:        getEnv("JWT_SECRET", "your-secret-key"),
+		JWTSecret:        getEnv("JWT_SECRET", "your-jwt-secret-key-change-this-in-production"),
 		JWTExpiresIn:     time.Duration(getEnvInt("JWT_EXPIRES_IN_HOURS", 24)) * time.Hour,
 		InternalAPIToken: getEnv("INTERNAL_API_TOKEN", "super-secret-internal-token"),
 	}

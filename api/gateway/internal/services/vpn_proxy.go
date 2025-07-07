@@ -117,3 +117,59 @@ func (v *VPNProxy) CreateTunnel(ctx context.Context, config map[string]interface
 
 	return result, nil
 }
+
+// StartTunnel запускает VPN-туннель
+func (v *VPNProxy) StartTunnel(ctx context.Context, id string) error {
+	vpnCoreURL, err := url.Parse(v.vpnCoreURL)
+	if err != nil {
+		return fmt.Errorf("failed to parse VPN Core URL: %w", err)
+	}
+
+	startURL := vpnCoreURL.JoinPath("tunnels", id, "start")
+
+	req, err := http.NewRequestWithContext(ctx, "POST", startURL.String(), nil)
+	if err != nil {
+		return fmt.Errorf("failed to create start tunnel request: %w", err)
+	}
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to start tunnel: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("failed to start tunnel: status=%d, body=%s", resp.StatusCode, string(body))
+	}
+
+	return nil
+}
+
+// StopTunnel останавливает VPN-туннель
+func (v *VPNProxy) StopTunnel(ctx context.Context, id string) error {
+	vpnCoreURL, err := url.Parse(v.vpnCoreURL)
+	if err != nil {
+		return fmt.Errorf("failed to parse VPN Core URL: %w", err)
+	}
+
+	stopURL := vpnCoreURL.JoinPath("tunnels", id, "stop")
+
+	req, err := http.NewRequestWithContext(ctx, "POST", stopURL.String(), nil)
+	if err != nil {
+		return fmt.Errorf("failed to create stop tunnel request: %w", err)
+	}
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to stop tunnel: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("failed to stop tunnel: status=%d, body=%s", resp.StatusCode, string(body))
+	}
+
+	return nil
+}

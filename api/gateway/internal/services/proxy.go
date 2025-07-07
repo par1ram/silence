@@ -78,3 +78,18 @@ func (p *ProxyService) StartBypass(ctx context.Context, id string) error {
 func (p *ProxyService) CreateVPNTunnel(ctx context.Context, config map[string]interface{}) (map[string]interface{}, error) {
 	return p.vpnProxy.CreateTunnel(ctx, config)
 }
+
+// StopBypass останавливает bypass-соединение
+func (p *ProxyService) StopBypass(ctx context.Context, id string) error {
+	return p.dpiProxy.StopBypass(ctx, id)
+}
+
+// StartVPNTunnel запускает VPN-туннель
+func (p *ProxyService) StartVPNTunnel(ctx context.Context, id string) error {
+	return p.vpnProxy.StartTunnel(ctx, id)
+}
+
+// StopVPNTunnel останавливает VPN-туннель
+func (p *ProxyService) StopVPNTunnel(ctx context.Context, id string) error {
+	return p.vpnProxy.StopTunnel(ctx, id)
+}

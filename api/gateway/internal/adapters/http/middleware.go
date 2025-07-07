@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,6 +12,13 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
 
 // ===== Типы и конструкторы =====
 
@@ -113,13 +121,20 @@ func NewAuthMiddleware(secret string) func(http.Handler) http.Handler {
 				return
 			}
 			tokenStr := strings.TrimPrefix(header, "Bearer ")
+
 			token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+				// Check signing method
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+				}
 				return []byte(secret), nil
 			})
+
 			if err != nil || !token.Valid {
 				http.Error(w, "invalid or expired token", http.StatusUnauthorized)
 				return
 			}
+
 			next.ServeHTTP(w, r)
 		})
 	}
