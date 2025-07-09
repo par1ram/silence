@@ -22,26 +22,34 @@ func (k *KubernetesAdapter) GetServerStats(ctx context.Context, serverID string)
 
 	if len(pods.Items) == 0 {
 		return &domain.ServerStats{
-			ServerID:    serverID,
-			CPU:         0,
-			Memory:      0,
-			Disk:        0,
-			Network:     0,
-			Connections: 0,
-			Timestamp:   time.Now(),
+			ServerID:     serverID,
+			CPUUsage:     0.0,
+			MemoryUsage:  0.0,
+			StorageUsage: 0.0,
+			NetworkIn:    0,
+			NetworkOut:   0,
+			Uptime:       0,
+			RequestCount: 0,
+			ResponseTime: 0.0,
+			ErrorRate:    0.0,
+			Timestamp:    time.Now(),
 		}, nil
 	}
 
 	// Получаем метрики для первого Pod'а
 	_ = pods.Items[0] // TODO: использовать pod для получения метрик
 	stats := &domain.ServerStats{
-		ServerID:    serverID,
-		CPU:         0,
-		Memory:      0,
-		Disk:        0,
-		Network:     0,
-		Connections: 0,
-		Timestamp:   time.Now(),
+		ServerID:     serverID,
+		CPUUsage:     0.0,
+		MemoryUsage:  0.0,
+		StorageUsage: 0.0,
+		NetworkIn:    0,
+		NetworkOut:   0,
+		Uptime:       0,
+		RequestCount: 0,
+		ResponseTime: 0.0,
+		ErrorRate:    0.0,
+		Timestamp:    time.Now(),
 	}
 
 	// TODO: Получить реальные метрики из Kubernetes Metrics API
@@ -67,22 +75,23 @@ func (k *KubernetesAdapter) GetServerHealth(ctx context.Context, serverID string
 	}
 
 	health := &domain.ServerHealth{
-		ServerID:  serverID,
-		Status:    "unknown",
-		Message:   "",
-		Timestamp: time.Now(),
+		ServerID:    serverID,
+		Status:      domain.ServerStatusError,
+		Message:     "",
+		LastCheckAt: time.Now(),
+		Checks:      []map[string]interface{}{},
 	}
 
 	// Определяем статус на основе состояния Deployment и Pod'ов
 	if deployment.Status.ReadyReplicas > 0 {
-		health.Status = "running"
+		health.Status = domain.ServerStatusRunning
 		health.Message = "Server is running"
 	} else if deployment.Status.Replicas == 0 {
-		health.Status = "stopped"
+		health.Status = domain.ServerStatusStopped
 		health.Message = "Server is stopped"
 	} else {
-		health.Status = "starting"
-		health.Message = "Server is starting"
+		health.Status = domain.ServerStatusError
+		health.Message = "Server has issues"
 	}
 
 	// Проверяем состояние Pod'ов

@@ -5,16 +5,22 @@ import (
 )
 
 type Config struct {
-	HTTPPort string
 	LogLevel string
 	Version  string
+	GRPC     GRPCConfig
+}
+
+type GRPCConfig struct {
+	Address string
 }
 
 func Load() *Config {
 	return &Config{
-		HTTPPort: getEnv("HTTP_PORT", "8080"),
 		LogLevel: getEnv("LOG_LEVEL", "info"),
 		Version:  getEnv("VERSION", "1.0.0"),
+		GRPC: GRPCConfig{
+			Address: getEnv("GRPC_ADDRESS", ":9091"),
+		},
 	}
 }
 

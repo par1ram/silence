@@ -23,6 +23,16 @@ func NewAdapterFactory(logger *zap.Logger) *AdapterFactory {
 // CreateAdapter создает адаптер для указанного метода обфускации
 func (f *AdapterFactory) CreateAdapter(method domain.BypassMethod) (ports.BypassAdapter, error) {
 	switch method {
+	case domain.BypassMethodHTTPHeader:
+		return NewCustomAdapter(f.logger), nil
+	case domain.BypassMethodTLSHandshake:
+		return NewCustomAdapter(f.logger), nil
+	case domain.BypassMethodTCPFragment:
+		return NewCustomAdapter(f.logger), nil
+	case domain.BypassMethodUDPFragment:
+		return NewCustomAdapter(f.logger), nil
+	case domain.BypassMethodProxyChain:
+		return NewCustomAdapter(f.logger), nil
 	case domain.BypassMethodShadowsocks:
 		return NewShadowsocksAdapter(f.logger), nil
 	case domain.BypassMethodV2Ray:

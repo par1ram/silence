@@ -141,6 +141,34 @@ func (a *AuthService) GetProfile(ctx context.Context, userID string) (*domain.Us
 	return user, nil
 }
 
+// GetMe получает профиль текущего пользователя по токену
+func (a *AuthService) GetMe(ctx context.Context, token string) (*domain.User, error) {
+	// Валидируем токен
+	claims, err := a.tokenGenerator.ValidateToken(token)
+	if err != nil {
+		return nil, fmt.Errorf("invalid token: %w", err)
+	}
+
+	// Получаем пользователя по ID из токена
+	user, err := a.userRepo.GetByID(ctx, claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	// Проверяем статус пользователя
+	if user.Status == domain.StatusBlocked {
+		return nil, fmt.Errorf("user account is blocked")
+	}
+
+	if user.Status == domain.StatusInactive {
+		return nil, fmt.Errorf("user account is inactive")
+	}
+
+	a.logger.Info("user profile retrieved via token", zap.String("user_id", user.ID))
+
+	return user, nil
+}
+
 // generateID генерирует уникальный ID
 func generateID() string {
 	bytes := make([]byte, 16)

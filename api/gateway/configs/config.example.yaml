@@ -1,0 +1,108 @@
+# Gateway Service Configuration Example
+# Copy this to config.yaml and modify as needed
+
+server:
+  port: 8080
+  host: "0.0.0.0"
+  read_timeout: 30s
+  write_timeout: 30s
+  idle_timeout: 120s
+
+# Redis Configuration for distributed state management
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  database: 0
+  prefix: "gateway"
+
+  # Connection pool settings
+  pool:
+    max_idle: 10
+    max_active: 100
+    idle_timeout: 300s
+
+  # Connection timeouts
+  timeouts:
+    connect: 5s
+    read: 3s
+    write: 3s
+
+# Rate Limiting (Redis-based)
+rate_limiting:
+  enabled: true
+  default_rps: 100
+  default_burst: 200
+  window: 60s
+  cleanup_interval: 300s
+
+  # Per-endpoint limits
+  endpoints:
+    auth:
+      rps: 50
+      burst: 100
+    vpn:
+      rps: 200
+      burst: 400
+    analytics:
+      rps: 30
+      burst: 60
+    notifications:
+      rps: 100
+      burst: 200
+
+# WebSocket Session Management (Redis-based)
+websocket:
+  enabled: true
+  session_ttl: 24h
+  cleanup_interval: 600s
+  max_sessions: 10000
+  key_prefix: "websocket"
+
+# GRPC Clients with Redis-based health checking and load balancing
+grpc_clients:
+  # Health check settings
+  health_check_ttl: 30s
+  connection_ttl: 5m
+  retry_interval: 5s
+  max_retries: 3
+  circuit_breaker: true
+  load_balancing: true
+
+  # Service endpoints (can specify multiple for load balancing)
+  endpoints:
+    auth:
+      - "localhost:9001"
+      - "localhost:9002"  # backup endpoint
+    vpn:
+      - "localhost:9003"
+    analytics:
+      - "localhost:9004"
+    notifications:
+      - "localhost:9005"
+    dpi_bypass:
+      - "localhost:9006"
+    server_manager:
+      - "localhost:9007"
+
+# Security
+security:
+  jwt_secret: "your-jwt-secret-here"
+
+# CORS settings
+cors:
+  allowed_origins: "*"
+  allowed_methods: "GET,POST,PUT,DELETE,OPTIONS"
+  allowed_headers: "Content-Type,Authorization,X-Requested-With"
+
+# Logging
+logging:
+  level: "info"
+  format: "json"
+  redis_operations: false
+
+# Development settings
+development:
+  mock_redis: false
+  flush_on_start: false
+  populate_test_data: false

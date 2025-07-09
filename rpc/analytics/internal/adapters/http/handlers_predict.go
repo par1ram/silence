@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/par1ram/silence/rpc/analytics/internal/domain"
 	"go.uber.org/zap"
 )
 
@@ -18,13 +19,17 @@ func (h *AnalyticsHandler) PredictLoad(w http.ResponseWriter, r *http.Request) {
 			hours = h
 		}
 	}
-	metrics, err := h.analyticsService.PredictLoad(r.Context(), serverID, hours)
+	predictionReq := &domain.PredictionRequest{
+		ServerID:   serverID,
+		HoursAhead: hours,
+	}
+	predictions, err := h.analyticsService.PredictLoad(r.Context(), predictionReq)
 	if err != nil {
 		h.logger.Error("Failed to predict load", zap.String("error", err.Error()))
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-	h.writeJSON(w, metrics)
+	h.writeJSON(w, predictions)
 }
 
 func (h *AnalyticsHandler) PredictBypassEffectiveness(w http.ResponseWriter, r *http.Request) {

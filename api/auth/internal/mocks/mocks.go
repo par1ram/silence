@@ -35,6 +35,21 @@ func (m *MockAuthService) EXPECT() *MockAuthServiceMockRecorder {
 	return m.recorder
 }
 
+// GetMe mocks base method.
+func (m *MockAuthService) GetMe(arg0 context.Context, arg1 string) (*domain.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMe", arg0, arg1)
+	ret0, _ := ret[0].(*domain.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMe indicates an expected call of GetMe.
+func (mr *MockAuthServiceMockRecorder) GetMe(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMe", reflect.TypeOf((*MockAuthService)(nil).GetMe), arg0, arg1)
+}
+
 // GetProfile mocks base method.
 func (m *MockAuthService) GetProfile(arg0 context.Context, arg1 string) (*domain.User, error) {
 	m.ctrl.T.Helper()

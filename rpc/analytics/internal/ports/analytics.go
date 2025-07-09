@@ -81,8 +81,16 @@ type AnalyticsService interface {
 	DeleteDashboard(ctx context.Context, id string) error
 	ListDashboards(ctx context.Context) ([]domain.DashboardConfig, error)
 
-	// Прогнозирование
-	PredictLoad(ctx context.Context, serverID string, hours int) ([]domain.Metric, error)
+	// Методы для gRPC handler
+	CollectMetric(ctx context.Context, metric *domain.Metric) (*domain.Metric, error)
+	GetMetrics(ctx context.Context, filters *domain.MetricFilters) ([]*domain.Metric, int, error)
+	GetMetricsHistory(ctx context.Context, req *domain.MetricHistoryRequest) ([]domain.TimeSeriesPoint, error)
+	GetStatistics(ctx context.Context, req *domain.StatisticsRequest) ([]*domain.Statistics, error)
+	GetSystemStats(ctx context.Context) (*domain.SystemStats, error)
+	GetUserStats(ctx context.Context, req *domain.UserStatsRequest) (*domain.UserStats, error)
+	GetDashboardData(ctx context.Context, timeRange string) (*domain.DashboardData, error)
+	PredictLoad(ctx context.Context, req *domain.PredictionRequest) ([]domain.PredictionPoint, error)
+	PredictTrend(ctx context.Context, req *domain.TrendRequest) ([]domain.PredictionPoint, error)
 	PredictBypassEffectiveness(ctx context.Context, bypassType string, hours int) ([]domain.Metric, error)
 }
 

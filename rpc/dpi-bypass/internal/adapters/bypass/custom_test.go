@@ -1,6 +1,7 @@
 package bypass
 
 import (
+	"fmt"
 	"net"
 	"testing"
 
@@ -15,14 +16,16 @@ func TestCustomAdapter_Basic(t *testing.T) {
 	assert.NotNil(t, adapter)
 
 	config := &domain.BypassConfig{
-		ID:         "custom-1",
-		Name:       "Custom Test",
-		Method:     domain.BypassMethodCustom,
-		LocalPort:  0, // 0 — выбрать свободный порт
-		RemoteHost: "localhost",
-		RemotePort: 12345,
-		Password:   "testpass",
-		Encryption: "none",
+		ID:     "custom-1",
+		Name:   "Custom Test",
+		Method: domain.BypassMethodCustom,
+		Parameters: map[string]string{
+			"local_port":  "0", // 0 — выбрать свободный порт
+			"remote_host": "localhost",
+			"remote_port": "12345",
+			"password":    "testpass",
+			"encryption":  "none",
+		},
 	}
 
 	err := adapter.Start(config)
@@ -49,14 +52,16 @@ func TestCustomAdapter_Start_PortBusy(t *testing.T) {
 	adapter2 := NewCustomAdapter(logger)
 
 	config := &domain.BypassConfig{
-		ID:         "busy-1",
-		Name:       "Busy Test",
-		Method:     domain.BypassMethodCustom,
-		LocalPort:  0, // 0 — выбрать свободный порт
-		RemoteHost: "localhost",
-		RemotePort: 12345,
-		Password:   "testpass",
-		Encryption: "none",
+		ID:     "busy-1",
+		Name:   "Busy Test",
+		Method: domain.BypassMethodCustom,
+		Parameters: map[string]string{
+			"local_port":  "0", // 0 — выбрать свободный порт
+			"remote_host": "localhost",
+			"remote_port": "12345",
+			"password":    "testpass",
+			"encryption":  "none",
+		},
 	}
 
 	err := adapter1.Start(config)
@@ -66,12 +71,17 @@ func TestCustomAdapter_Start_PortBusy(t *testing.T) {
 	adapter1.mutex.RLock()
 	conn := adapter1.running["busy-1"]
 	adapter1.mutex.RUnlock()
+
+	if conn == nil || conn.listener == nil {
+		t.Fatal("connection or listener is nil")
+	}
+
 	port := conn.listener.Addr().(*net.TCPAddr).Port
 
 	// Пытаемся запустить второй адаптер на том же порту
 	config2 := *config
 	config2.ID = "busy-2"
-	config2.LocalPort = port
+	config2.Parameters["local_port"] = fmt.Sprintf("%d", port)
 	err = adapter2.Start(&config2)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to create listener")

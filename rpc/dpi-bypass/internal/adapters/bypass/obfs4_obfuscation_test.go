@@ -20,7 +20,7 @@ func TestObfs4Adapter_generateKey(t *testing.T) {
 
 func TestObfs4Adapter_obfuscateData(t *testing.T) {
 	o := &Obfs4Adapter{}
-	conn := &obfs4Connection{config: &domain.BypassConfig{Password: "test"}}
+	conn := &obfs4Connection{config: &domain.BypassConfig{Parameters: map[string]string{"password": "test"}}}
 	plain := []byte("hello world")
 	obf := o.obfuscateData(plain, conn)
 	assert.NotEqual(t, plain, obf)
@@ -70,12 +70,12 @@ func TestObfs4Adapter_statsHelpers(t *testing.T) {
 	o := &Obfs4Adapter{}
 	conn := &obfs4Connection{stats: &domain.BypassStats{}}
 	o.updateStats(conn, 10, 20)
-	assert.Equal(t, int64(10), conn.stats.BytesRx)
-	assert.Equal(t, int64(20), conn.stats.BytesTx)
+	assert.Equal(t, int64(10), conn.stats.BytesReceived)
+	assert.Equal(t, int64(20), conn.stats.BytesSent)
 	o.updateLastActivity(conn)
-	assert.WithinDuration(t, time.Now(), conn.stats.LastActivity, time.Second)
+	assert.WithinDuration(t, time.Now(), conn.stats.EndTime, time.Second)
 	o.incrementConnections(conn)
-	assert.Equal(t, 1, conn.stats.Connections)
+	assert.Equal(t, int64(1), conn.stats.ConnectionsEstablished)
 	o.incrementErrorCount(conn)
-	assert.Equal(t, 1, conn.stats.ErrorCount)
+	assert.Equal(t, int64(1), conn.stats.ConnectionsFailed)
 }

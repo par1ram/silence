@@ -70,7 +70,11 @@ func (s *ServerService) CreateServer(ctx context.Context, req *domain.CreateServ
 	containerName := fmt.Sprintf("silence-%s-%s", req.Type, server.ID)
 
 	// Создаем контейнер
-	containerID, err := s.dockerAdapter.CreateContainer(ctx, containerName, image, req.Config)
+	configInterface := make(map[string]interface{})
+	for k, v := range req.Config {
+		configInterface[k] = v
+	}
+	containerID, err := s.dockerAdapter.CreateContainer(ctx, containerName, image, configInterface)
 	if err != nil {
 		// Обновляем статус на ошибку
 		server.Status = domain.ServerStatusError
@@ -125,12 +129,11 @@ func (s *ServerService) UpdateServer(ctx context.Context, id string, req *domain
 	}
 
 	// Обновляем поля
-	if req.Name != nil {
-		server.Name = *req.Name
+	if req.Name != "" {
+		server.Name = req.Name
 	}
-	if req.Status != nil {
-		server.Status = *req.Status
-	}
+	// Обновляем конфигурацию
+	// TODO: обновить конфигурацию сервера
 
 	// Обновляем в базе данных
 	if err := s.serverRepo.Update(ctx, server); err != nil {

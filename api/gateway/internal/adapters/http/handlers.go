@@ -242,3 +242,27 @@ func (h *Handlers) RateLimitStatsHandler(w http.ResponseWriter, r *http.Request)
 	}
 	writeJSON(w, http.StatusOK, resp, h.logger, "failed to encode stats response")
 }
+
+// StatsHandler обработчик статистики с Redis поддержкой
+func (h *Handlers) StatsHandler(w http.ResponseWriter, r *http.Request, redisClient interface{}) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	h.rateLimiter.statsMu.RLock()
+	stats := map[string]interface{}{
+		"gateway": map[string]interface{}{
+			"status":    "running",
+			"timestamp": time.Now(),
+		},
+		"rate_limiter": map[string]interface{}{
+			"total_requests":       h.rateLimiter.stats.requests,
+			"blocked_requests":     h.rateLimiter.stats.blocked,
+			"whitelisted_requests": h.rateLimiter.stats.whitelisted,
+		},
+	}
+	h.rateLimiter.statsMu.RUnlock()
+
+	writeJSON(w, http.StatusOK, stats, h.logger, "failed to encode stats response")
+}

@@ -9,6 +9,7 @@ import (
 // Config конфигурация auth сервиса
 type Config struct {
 	HTTPPort         string
+	GRPCPort         int
 	LogLevel         string
 	Version          string
 	DBHost           string
@@ -25,6 +26,7 @@ type Config struct {
 func Load() *Config {
 	return &Config{
 		HTTPPort:         getEnv("HTTP_PORT", "9999"),
+		GRPCPort:         getEnvInt("GRPC_PORT", 9998),
 		LogLevel:         getEnv("LOG_LEVEL", "info"),
 		Version:          getEnv("VERSION", "1.0.0"),
 		DBHost:           getEnv("DB_HOST", "127.0.0.1"),

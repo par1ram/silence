@@ -1,0 +1,287 @@
+syntax = "proto3";
+
+package dpi;
+
+option go_package = "github.com/par1ram/silence/rpc/dpi-bypass/api/proto";
+
+import "google/protobuf/timestamp.proto";
+
+// DPI Bypass Service
+service DpiBypassService {
+  // Health check
+  rpc Health(HealthRequest) returns (HealthResponse);
+
+  // Bypass configuration management
+  rpc CreateBypassConfig(CreateBypassConfigRequest) returns (BypassConfig);
+  rpc GetBypassConfig(GetBypassConfigRequest) returns (BypassConfig);
+  rpc ListBypassConfigs(ListBypassConfigsRequest) returns (ListBypassConfigsResponse);
+  rpc UpdateBypassConfig(UpdateBypassConfigRequest) returns (BypassConfig);
+  rpc DeleteBypassConfig(DeleteBypassConfigRequest) returns (DeleteBypassConfigResponse);
+
+  // Bypass operations
+  rpc StartBypass(StartBypassRequest) returns (StartBypassResponse);
+  rpc StopBypass(StopBypassRequest) returns (StopBypassResponse);
+  rpc GetBypassStatus(GetBypassStatusRequest) returns (GetBypassStatusResponse);
+
+  // Statistics and monitoring
+  rpc GetBypassStats(GetBypassStatsRequest) returns (BypassStats);
+  rpc GetBypassHistory(GetBypassHistoryRequest) returns (GetBypassHistoryResponse);
+
+  // Rule management
+  rpc AddBypassRule(AddBypassRuleRequest) returns (BypassRule);
+  rpc UpdateBypassRule(UpdateBypassRuleRequest) returns (BypassRule);
+  rpc DeleteBypassRule(DeleteBypassRuleRequest) returns (DeleteBypassRuleResponse);
+  rpc ListBypassRules(ListBypassRulesRequest) returns (ListBypassRulesResponse);
+}
+
+// Health
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string version = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+// Bypass Configuration
+message BypassConfig {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  BypassType type = 4;
+  BypassMethod method = 5;
+  BypassStatus status = 6;
+  map<string, string> parameters = 7;
+  repeated BypassRule rules = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+enum BypassType {
+  BYPASS_TYPE_UNSPECIFIED = 0;
+  BYPASS_TYPE_DOMAIN_FRONTING = 1;
+  BYPASS_TYPE_SNI_MASKING = 2;
+  BYPASS_TYPE_PACKET_FRAGMENTATION = 3;
+  BYPASS_TYPE_PROTOCOL_OBFUSCATION = 4;
+  BYPASS_TYPE_TUNNEL_OBFUSCATION = 5;
+}
+
+enum BypassMethod {
+  BYPASS_METHOD_UNSPECIFIED = 0;
+  BYPASS_METHOD_HTTP_HEADER = 1;
+  BYPASS_METHOD_TLS_HANDSHAKE = 2;
+  BYPASS_METHOD_TCP_FRAGMENT = 3;
+  BYPASS_METHOD_UDP_FRAGMENT = 4;
+  BYPASS_METHOD_PROXY_CHAIN = 5;
+}
+
+enum BypassStatus {
+  BYPASS_STATUS_UNSPECIFIED = 0;
+  BYPASS_STATUS_INACTIVE = 1;
+  BYPASS_STATUS_ACTIVE = 2;
+  BYPASS_STATUS_ERROR = 3;
+  BYPASS_STATUS_TESTING = 4;
+}
+
+message CreateBypassConfigRequest {
+  string name = 1;
+  string description = 2;
+  BypassType type = 3;
+  BypassMethod method = 4;
+  map<string, string> parameters = 5;
+}
+
+message GetBypassConfigRequest {
+  string id = 1;
+}
+
+message ListBypassConfigsRequest {
+  BypassType type = 1;
+  BypassStatus status = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+message ListBypassConfigsResponse {
+  repeated BypassConfig configs = 1;
+  int32 total = 2;
+}
+
+message UpdateBypassConfigRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  BypassType type = 4;
+  BypassMethod method = 5;
+  map<string, string> parameters = 6;
+}
+
+message DeleteBypassConfigRequest {
+  string id = 1;
+}
+
+message DeleteBypassConfigResponse {
+  bool success = 1;
+}
+
+// Bypass Operations
+message StartBypassRequest {
+  string config_id = 1;
+  string target_host = 2;
+  int32 target_port = 3;
+  map<string, string> options = 4;
+}
+
+message StartBypassResponse {
+  bool success = 1;
+  string session_id = 2;
+  string message = 3;
+}
+
+message StopBypassRequest {
+  string session_id = 1;
+}
+
+message StopBypassResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetBypassStatusRequest {
+  string session_id = 1;
+}
+
+message GetBypassStatusResponse {
+  string session_id = 1;
+  BypassStatus status = 2;
+  string config_id = 3;
+  string target_host = 4;
+  int32 target_port = 5;
+  google.protobuf.Timestamp started_at = 6;
+  int64 duration_seconds = 7;
+  string message = 8;
+}
+
+// Statistics
+message BypassStats {
+  string id = 1;
+  string config_id = 2;
+  string session_id = 3;
+  int64 bytes_sent = 4;
+  int64 bytes_received = 5;
+  int64 packets_sent = 6;
+  int64 packets_received = 7;
+  int64 connections_established = 8;
+  int64 connections_failed = 9;
+  double success_rate = 10;
+  double average_latency = 11;
+  google.protobuf.Timestamp start_time = 12;
+  google.protobuf.Timestamp end_time = 13;
+}
+
+message GetBypassStatsRequest {
+  string session_id = 1;
+  string config_id = 2;
+}
+
+message GetBypassHistoryRequest {
+  string config_id = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+message GetBypassHistoryResponse {
+  repeated BypassHistoryEntry entries = 1;
+  int32 total = 2;
+}
+
+message BypassHistoryEntry {
+  string id = 1;
+  string config_id = 2;
+  string session_id = 3;
+  string target_host = 4;
+  int32 target_port = 5;
+  BypassStatus status = 6;
+  google.protobuf.Timestamp started_at = 7;
+  google.protobuf.Timestamp ended_at = 8;
+  int64 duration_seconds = 9;
+  int64 bytes_transferred = 10;
+  string error_message = 11;
+}
+
+// Bypass Rules
+message BypassRule {
+  string id = 1;
+  string config_id = 2;
+  string name = 3;
+  RuleType type = 4;
+  RuleAction action = 5;
+  string pattern = 6;
+  map<string, string> parameters = 7;
+  int32 priority = 8;
+  bool enabled = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+enum RuleType {
+  RULE_TYPE_UNSPECIFIED = 0;
+  RULE_TYPE_DOMAIN = 1;
+  RULE_TYPE_IP = 2;
+  RULE_TYPE_PORT = 3;
+  RULE_TYPE_PROTOCOL = 4;
+  RULE_TYPE_REGEX = 5;
+}
+
+enum RuleAction {
+  RULE_ACTION_UNSPECIFIED = 0;
+  RULE_ACTION_ALLOW = 1;
+  RULE_ACTION_BLOCK = 2;
+  RULE_ACTION_BYPASS = 3;
+  RULE_ACTION_FRAGMENT = 4;
+  RULE_ACTION_OBFUSCATE = 5;
+}
+
+message AddBypassRuleRequest {
+  string config_id = 1;
+  string name = 2;
+  RuleType type = 3;
+  RuleAction action = 4;
+  string pattern = 5;
+  map<string, string> parameters = 6;
+  int32 priority = 7;
+}
+
+message UpdateBypassRuleRequest {
+  string id = 1;
+  string name = 2;
+  RuleType type = 3;
+  RuleAction action = 4;
+  string pattern = 5;
+  map<string, string> parameters = 6;
+  int32 priority = 7;
+  bool enabled = 8;
+}
+
+message DeleteBypassRuleRequest {
+  string id = 1;
+}
+
+message DeleteBypassRuleResponse {
+  bool success = 1;
+}
+
+message ListBypassRulesRequest {
+  string config_id = 1;
+  RuleType type = 2;
+  bool enabled = 3;
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+message ListBypassRulesResponse {
+  repeated BypassRule rules = 1;
+  int32 total = 2;
+}

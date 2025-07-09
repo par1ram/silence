@@ -1,6 +1,7 @@
 package svc
 
 import (
+	"context"
 	"time"
 
 	"github.com/par1ram/silence/api/gateway/internal/adapters/http"
@@ -16,6 +17,7 @@ type ServiceContext struct {
 	Logger        *zap.Logger
 	HealthService ports.HealthService
 	ProxyService  ports.ProxyService
+	GRPCClients   *services.GRPCClients
 	HTTPServer    *http.Server
 }
 
@@ -24,6 +26,16 @@ func NewServiceContext(cfg *config.Config, logger *zap.Logger) *ServiceContext {
 	// Создаем сервисы
 	healthService := services.NewHealthService("gateway", cfg.Version)
 	proxyService := services.NewProxyService(cfg.AuthURL, cfg.VPNCoreURL, cfg.DPIBypassURL, cfg.AnalyticsURL, cfg.ServerManagerURL, cfg.InternalAPIToken, logger)
+
+	// Создаем gRPC клиенты
+	grpcClients := services.NewGRPCClients(cfg, logger)
+
+	// Инициализируем gRPC клиенты
+	ctx := context.Background()
+	if err := grpcClients.Initialize(ctx); err != nil {
+		logger.Error("failed to initialize gRPC clients", zap.Error(err))
+		// Продолжаем работу с HTTP прокси в случае ошибки
+	}
 
 	// Создаем rate limiter если включен
 	var rateLimiter *http.RateLimiter
@@ -54,6 +66,7 @@ func NewServiceContext(cfg *config.Config, logger *zap.Logger) *ServiceContext {
 		Logger:        logger,
 		HealthService: healthService,
 		ProxyService:  proxyService,
+		GRPCClients:   grpcClients,
 		HTTPServer:    httpServer,
 	}
 }

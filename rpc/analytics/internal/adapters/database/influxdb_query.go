@@ -58,11 +58,11 @@ func (r *InfluxDBRepository) executeQuery(ctx context.Context, query string, opt
 		metric := domain.Metric{
 			Name:      record.Measurement(),
 			Timestamp: record.Time(),
-			Labels:    make(map[string]string),
+			Tags:      make(map[string]string),
 		}
 		for key, value := range record.Values() {
 			if key != "_time" && key != "_value" && key != "_field" && key != "_measurement" {
-				metric.Labels[key] = fmt.Sprintf("%v", value)
+				metric.Tags[key] = fmt.Sprintf("%v", value)
 			}
 		}
 		if value, ok := record.Value().(float64); ok {

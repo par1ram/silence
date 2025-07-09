@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-//go:generate mockgen -destination=mock_bypass.go -package=services_test github.com/par1ram/silence/rpc/dpi-bypass/internal/ports BypassAdapter
+//go:generate mockgen -destination=mocks/mock_bypass_adapter.go -package=mocks github.com/par1ram/silence/rpc/dpi-bypass/internal/ports BypassAdapter
 
 func TestServices(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -32,143 +32,166 @@ var _ = Describe("Services", func() {
 		ctrl = gomock.NewController(GinkgoT())
 		mockAdapter = NewMockBypassAdapter(ctrl)
 		logger = zap.NewNop()
-		bypassService = services.NewBypassService(mockAdapter, logger)
+		bypassService = services.NewBypassService(mockAdapter, logger).(*services.BypassService)
 		healthService = services.NewHealthService("test-service", "1.0.0")
 		ctx = context.Background()
 	})
 
 	Describe("BypassService", func() {
 		It("should create bypass and return bypass info", func() {
-			request := &domain.CreateBypassRequest{
-				Name:       "test-bypass",
-				Method:     domain.BypassMethodObfs4,
-				LocalPort:  1080,
-				RemoteHost: "test-server.com",
-				RemotePort: 443,
-				Encryption: "aes-256-gcm",
+			request := &domain.CreateBypassConfigRequest{
+				Name:        "test-bypass",
+				Description: "test bypass configuration",
+				Type:        domain.BypassTypeTunnelObfuscation,
+				Method:      domain.BypassMethodObfs4,
+				Parameters: map[string]string{
+					"local_port":  "1080",
+					"remote_host": "test-server.com",
+					"remote_port": "443",
+					"encryption":  "aes-256-gcm",
+				},
 			}
 
-			bypass, err := bypassService.CreateBypass(ctx, request)
+			config, err := bypassService.CreateBypassConfig(ctx, request)
 
 			Expect(err).To(BeNil())
-			Expect(bypass).NotTo(BeNil())
-			Expect(bypass.Name).To(Equal(request.Name))
-			Expect(bypass.Method).To(Equal(request.Method))
-			Expect(bypass.Status).To(Equal("inactive"))
-			Expect(bypass.CreatedAt).NotTo(BeZero())
+			Expect(config).NotTo(BeNil())
+			Expect(config.Name).To(Equal(request.Name))
+			Expect(config.Method).To(Equal(request.Method))
+			Expect(config.Status).To(Equal(domain.BypassStatusInactive))
+			Expect(config.CreatedAt).NotTo(BeZero())
 		})
 	})
 
 	Describe("GetBypass", func() {
 		It("should return bypass", func() {
-			request := &domain.CreateBypassRequest{
-				Name:       "test-bypass",
-				Method:     domain.BypassMethodObfs4,
-				LocalPort:  1080,
-				RemoteHost: "test-server.com",
-				RemotePort: 443,
-				Encryption: "aes-256-gcm",
+			request := &domain.CreateBypassConfigRequest{
+				Name:        "test-bypass",
+				Description: "test bypass configuration",
+				Type:        domain.BypassTypeTunnelObfuscation,
+				Method:      domain.BypassMethodObfs4,
+				Parameters: map[string]string{
+					"local_port":  "1080",
+					"remote_host": "test-server.com",
+					"remote_port": "443",
+					"encryption":  "aes-256-gcm",
+				},
 			}
-			createdBypass, _ := bypassService.CreateBypass(ctx, request)
+			createdConfig, _ := bypassService.CreateBypassConfig(ctx, request)
 
-			bypass, err := bypassService.GetBypass(ctx, createdBypass.ID)
+			config, err := bypassService.GetBypassConfig(ctx, createdConfig.ID)
 
 			Expect(err).To(BeNil())
-			Expect(bypass).NotTo(BeNil())
-			Expect(bypass.ID).To(Equal(createdBypass.ID))
-			Expect(bypass.Name).To(Equal(createdBypass.Name))
+			Expect(config).NotTo(BeNil())
+			Expect(config.ID).To(Equal(createdConfig.ID))
 		})
 
-		It("should return error for nonexistent bypass", func() {
-			bypassID := "nonexistent-bypass-id"
-
-			bypass, err := bypassService.GetBypass(ctx, bypassID)
+		It("should return error for non-existent bypass", func() {
+			config, err := bypassService.GetBypassConfig(ctx, "non-existent-id")
 
 			Expect(err).NotTo(BeNil())
-			Expect(bypass).To(BeNil())
+			Expect(config).To(BeNil())
 		})
 	})
 
 	Describe("ListBypasses", func() {
 		It("should return list of bypasses", func() {
-			request1 := &domain.CreateBypassRequest{
-				Name:       "bypass-1",
-				Method:     domain.BypassMethodObfs4,
-				LocalPort:  1080,
-				RemoteHost: "server1.com",
-				RemotePort: 443,
-				Encryption: "aes-256-gcm",
+			request1 := &domain.CreateBypassConfigRequest{
+				Name:        "test-bypass-1",
+				Description: "test bypass configuration 1",
+				Type:        domain.BypassTypeTunnelObfuscation,
+				Method:      domain.BypassMethodObfs4,
+				Parameters: map[string]string{
+					"local_port":  "1080",
+					"remote_host": "test-server.com",
+					"remote_port": "443",
+					"encryption":  "aes-256-gcm",
+				},
 			}
-			request2 := &domain.CreateBypassRequest{
-				Name:       "bypass-2",
-				Method:     domain.BypassMethodShadowsocks,
-				LocalPort:  1081,
-				RemoteHost: "server2.com",
-				RemotePort: 8388,
-				Encryption: "aes-256-gcm",
+			request2 := &domain.CreateBypassConfigRequest{
+				Name:        "test-bypass-2",
+				Description: "test bypass configuration 2",
+				Type:        domain.BypassTypeTunnelObfuscation,
+				Method:      domain.BypassMethodShadowsocks,
+				Parameters: map[string]string{
+					"local_port":  "1081",
+					"remote_host": "test-server2.com",
+					"remote_port": "443",
+					"encryption":  "aes-256-gcm",
+				},
 			}
-			_, err1 := bypassService.CreateBypass(ctx, request1)
+			_, err1 := bypassService.CreateBypassConfig(ctx, request1)
 			Expect(err1).To(BeNil())
-			_, err2 := bypassService.CreateBypass(ctx, request2)
+			_, err2 := bypassService.CreateBypassConfig(ctx, request2)
 			Expect(err2).To(BeNil())
 
-			bypasses, err := bypassService.ListBypasses(ctx)
+			configs, total, err := bypassService.ListBypassConfigs(ctx, nil)
 
 			Expect(err).To(BeNil())
-			Expect(bypasses).NotTo(BeNil())
-			Expect(len(bypasses)).To(BeNumerically(">=", 2))
+			Expect(configs).NotTo(BeNil())
+			Expect(len(configs)).To(Equal(2))
+			Expect(total).To(Equal(2))
 		})
 
-		It("should return empty list if no bypasses", func() {
-			bypasses, err := bypassService.ListBypasses(ctx)
+		It("should return empty list when no bypasses exist", func() {
+			configs, total, err := bypassService.ListBypassConfigs(ctx, nil)
 
 			Expect(err).To(BeNil())
-			Expect(bypasses).NotTo(BeNil())
-			Expect(len(bypasses)).To(Equal(0))
+			Expect(configs).NotTo(BeNil())
+			Expect(len(configs)).To(Equal(0))
+			Expect(total).To(Equal(0))
 		})
 	})
 
 	Describe("CreateBypass with Shadowsocks", func() {
 		It("should create bypass and return bypass info", func() {
-			request := &domain.CreateBypassRequest{
-				Name:       "test-shadowsocks-bypass",
-				Method:     domain.BypassMethodShadowsocks,
-				LocalPort:  1081,
-				RemoteHost: "test-server.com",
-				RemotePort: 8388,
-				Encryption: "aes-256-gcm",
+			request := &domain.CreateBypassConfigRequest{
+				Name:        "test-shadowsocks-bypass",
+				Description: "test shadowsocks bypass configuration",
+				Type:        domain.BypassTypeTunnelObfuscation,
+				Method:      domain.BypassMethodShadowsocks,
+				Parameters: map[string]string{
+					"local_port":  "1081",
+					"remote_host": "test-server.com",
+					"remote_port": "8388",
+					"encryption":  "aes-256-gcm",
+				},
 			}
 
-			bypass, err := bypassService.CreateBypass(ctx, request)
+			config, err := bypassService.CreateBypassConfig(ctx, request)
 
 			Expect(err).To(BeNil())
-			Expect(bypass).NotTo(BeNil())
-			Expect(bypass.Name).To(Equal(request.Name))
-			Expect(bypass.Method).To(Equal(request.Method))
-			Expect(bypass.Status).To(Equal("inactive"))
-			Expect(bypass.CreatedAt).NotTo(BeZero())
+			Expect(config).NotTo(BeNil())
+			Expect(config.Name).To(Equal(request.Name))
+			Expect(config.Method).To(Equal(request.Method))
+			Expect(config.Status).To(Equal(domain.BypassStatusInactive))
+			Expect(config.CreatedAt).NotTo(BeZero())
 		})
 	})
 
 	Describe("CreateBypass with V2Ray", func() {
 		It("should create bypass and return bypass info", func() {
-			request := &domain.CreateBypassRequest{
-				Name:       "test-v2ray-bypass",
-				Method:     domain.BypassMethodV2Ray,
-				LocalPort:  1082,
-				RemoteHost: "test-server.com",
-				RemotePort: 10086,
-				Encryption: "none",
+			request := &domain.CreateBypassConfigRequest{
+				Name:        "test-v2ray-bypass",
+				Description: "test v2ray bypass configuration",
+				Type:        domain.BypassTypeTunnelObfuscation,
+				Method:      domain.BypassMethodV2Ray,
+				Parameters: map[string]string{
+					"local_port":  "1082",
+					"remote_host": "test-server.com",
+					"remote_port": "10808",
+					"encryption":  "vmess",
+				},
 			}
 
-			bypass, err := bypassService.CreateBypass(ctx, request)
+			config, err := bypassService.CreateBypassConfig(ctx, request)
 
 			Expect(err).To(BeNil())
-			Expect(bypass).NotTo(BeNil())
-			Expect(bypass.Name).To(Equal(request.Name))
-			Expect(bypass.Method).To(Equal(request.Method))
-			Expect(bypass.Status).To(Equal("inactive"))
-			Expect(bypass.CreatedAt).NotTo(BeZero())
+			Expect(config).NotTo(BeNil())
+			Expect(config.Name).To(Equal(request.Name))
+			Expect(config.Method).To(Equal(request.Method))
+			Expect(config.Status).To(Equal(domain.BypassStatusInactive))
+			Expect(config.CreatedAt).NotTo(BeZero())
 		})
 	})
 

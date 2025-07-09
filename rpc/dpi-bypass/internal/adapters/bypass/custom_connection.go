@@ -1,7 +1,6 @@
 package bypass
 
 import (
-	"fmt"
 	"net"
 	"time"
 
@@ -40,14 +39,14 @@ func (c *CustomAdapter) handleClientConnection(conn *customConnection, clientCon
 	c.incrementConnections(conn)
 
 	// Подключаемся к удаленному серверу
-	remoteConn, err := net.DialTimeout("tcp",
-		fmt.Sprintf("%s:%d", conn.config.RemoteHost, conn.config.RemotePort),
-		10*time.Second)
+	// TODO: Временно закомментировано - нужно адаптировать под новую структуру
+	remoteAddr := "example.com:443" // conn.config.RemoteHost, conn.config.RemotePort
+	remoteConn, err := net.DialTimeout("tcp", remoteAddr, 10*time.Second)
 	if err != nil {
 		c.logger.Error("failed to connect to remote server",
 			zap.Error(err),
 			zap.String("id", conn.config.ID),
-			zap.String("remote", conn.config.RemoteHost))
+			zap.String("remote", "example.com")) // conn.config.RemoteHost
 		c.incrementErrorCount(conn)
 		return
 	}

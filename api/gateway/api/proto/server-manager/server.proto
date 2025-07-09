@@ -1,0 +1,294 @@
+syntax = "proto3";
+
+package server;
+
+option go_package = "github.com/par1ram/silence/api/gateway/api/proto/server-manager";
+
+import "google/protobuf/timestamp.proto";
+
+// Server Manager Service
+service ServerManagerService {
+  // Health check
+  rpc Health(HealthRequest) returns (HealthResponse);
+
+  // Server management
+  rpc CreateServer(CreateServerRequest) returns (Server);
+  rpc GetServer(GetServerRequest) returns (Server);
+  rpc ListServers(ListServersRequest) returns (ListServersResponse);
+  rpc UpdateServer(UpdateServerRequest) returns (Server);
+  rpc DeleteServer(DeleteServerRequest) returns (DeleteServerResponse);
+
+  // Server operations
+  rpc StartServer(StartServerRequest) returns (StartServerResponse);
+  rpc StopServer(StopServerRequest) returns (StopServerResponse);
+  rpc RestartServer(RestartServerRequest) returns (RestartServerResponse);
+
+  // Server monitoring
+  rpc GetServerStats(GetServerStatsRequest) returns (ServerStats);
+  rpc GetServerHealth(GetServerHealthRequest) returns (ServerHealth);
+  rpc MonitorServer(MonitorServerRequest) returns (stream ServerMonitorEvent);
+
+  // Server filtering
+  rpc GetServersByType(GetServersByTypeRequest) returns (GetServersByTypeResponse);
+  rpc GetServersByRegion(GetServersByRegionRequest) returns (GetServersByRegionResponse);
+  rpc GetServersByStatus(GetServersByStatusRequest) returns (GetServersByStatusResponse);
+
+  // Scaling and management
+  rpc ScaleServer(ScaleServerRequest) returns (ScaleServerResponse);
+  rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
+  rpc RestoreBackup(RestoreBackupRequest) returns (RestoreBackupResponse);
+  rpc UpdateServerSoftware(UpdateServerSoftwareRequest) returns (UpdateServerSoftwareResponse);
+}
+
+// Health
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string version = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+// Server
+message Server {
+  string id = 1;
+  string name = 2;
+  ServerType type = 3;
+  ServerStatus status = 4;
+  string region = 5;
+  string ip = 6;
+  int32 port = 7;
+  double cpu = 8;
+  double memory = 9;
+  double disk = 10;
+  double network = 11;
+  map<string, string> config = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}
+
+enum ServerType {
+  SERVER_TYPE_UNSPECIFIED = 0;
+  SERVER_TYPE_VPN = 1;
+  SERVER_TYPE_DPI = 2;
+  SERVER_TYPE_GATEWAY = 3;
+  SERVER_TYPE_ANALYTICS = 4;
+}
+
+enum ServerStatus {
+  SERVER_STATUS_UNSPECIFIED = 0;
+  SERVER_STATUS_CREATING = 1;
+  SERVER_STATUS_RUNNING = 2;
+  SERVER_STATUS_STOPPED = 3;
+  SERVER_STATUS_ERROR = 4;
+  SERVER_STATUS_DELETING = 5;
+}
+
+message CreateServerRequest {
+  string name = 1;
+  ServerType type = 2;
+  string region = 3;
+  map<string, string> config = 4;
+}
+
+message GetServerRequest {
+  string id = 1;
+}
+
+message ListServersRequest {
+  ServerType type = 1;
+  ServerStatus status = 2;
+  string region = 3;
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+message ListServersResponse {
+  repeated Server servers = 1;
+  int32 total = 2;
+}
+
+message UpdateServerRequest {
+  string id = 1;
+  string name = 2;
+  ServerStatus status = 3;
+  map<string, string> config = 4;
+}
+
+message DeleteServerRequest {
+  string id = 1;
+}
+
+message DeleteServerResponse {
+  bool success = 1;
+}
+
+// Server Operations
+message StartServerRequest {
+  string id = 1;
+}
+
+message StartServerResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message StopServerRequest {
+  string id = 1;
+}
+
+message StopServerResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RestartServerRequest {
+  string id = 1;
+}
+
+message RestartServerResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Server Monitoring
+message ServerStats {
+  string server_id = 1;
+  double cpu_usage = 2;
+  double memory_usage = 3;
+  double disk_usage = 4;
+  double network_usage = 5;
+  int32 connections = 6;
+  int64 uptime = 7;
+  google.protobuf.Timestamp timestamp = 8;
+}
+
+message GetServerStatsRequest {
+  string id = 1;
+}
+
+message ServerHealth {
+  string server_id = 1;
+  string status = 2;
+  string message = 3;
+  repeated HealthCheck checks = 4;
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+message HealthCheck {
+  string name = 1;
+  string status = 2;
+  string message = 3;
+  double response_time = 4;
+}
+
+message GetServerHealthRequest {
+  string id = 1;
+}
+
+message MonitorServerRequest {
+  string id = 1;
+  int32 interval_seconds = 2;
+}
+
+message ServerMonitorEvent {
+  string server_id = 1;
+  string event_type = 2;
+  ServerStats stats = 3;
+  ServerHealth health = 4;
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+// Server Filtering
+message GetServersByTypeRequest {
+  ServerType type = 1;
+}
+
+message GetServersByTypeResponse {
+  repeated Server servers = 1;
+}
+
+message GetServersByRegionRequest {
+  string region = 1;
+}
+
+message GetServersByRegionResponse {
+  repeated Server servers = 1;
+}
+
+message GetServersByStatusRequest {
+  ServerStatus status = 1;
+}
+
+message GetServersByStatusResponse {
+  repeated Server servers = 1;
+}
+
+// Scaling and Management
+message ScaleServerRequest {
+  string id = 1;
+  ScaleAction action = 2;
+  ScaleSpec spec = 3;
+}
+
+enum ScaleAction {
+  SCALE_ACTION_UNSPECIFIED = 0;
+  SCALE_ACTION_UP = 1;
+  SCALE_ACTION_DOWN = 2;
+  SCALE_ACTION_AUTO = 3;
+}
+
+message ScaleSpec {
+  double cpu = 1;
+  double memory = 2;
+  double disk = 3;
+  int32 replicas = 4;
+}
+
+message ScaleServerResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message CreateBackupRequest {
+  string server_id = 1;
+  string backup_type = 2;
+  string description = 3;
+}
+
+message CreateBackupResponse {
+  bool success = 1;
+  string backup_id = 2;
+  string message = 3;
+}
+
+message RestoreBackupRequest {
+  string server_id = 1;
+  string backup_id = 2;
+}
+
+message RestoreBackupResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UpdateServerSoftwareRequest {
+  string server_id = 1;
+  string version = 2;
+  bool force = 3;
+}
+
+message UpdateServerSoftwareResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateStatus status = 3;
+}
+
+message UpdateStatus {
+  string server_id = 1;
+  string status = 2;
+  int32 progress = 3;
+  string message = 4;
+  google.protobuf.Timestamp started_at = 5;
+  google.protobuf.Timestamp completed_at = 6;
+}

@@ -24,14 +24,16 @@ func TestMockBypassAdapter(t *testing.T) {
 
 	t.Run("запуск bypass соединения", func(t *testing.T) {
 		config := &domain.BypassConfig{
-			ID:         "test-1",
-			Name:       "Test Bypass",
-			Method:     domain.BypassMethodShadowsocks,
-			LocalPort:  8080,
-			RemoteHost: "example.com",
-			RemotePort: 443,
-			Password:   "test123",
-			Encryption: "aes-256-gcm",
+			ID:     "test-1",
+			Name:   "Test Bypass",
+			Method: domain.BypassMethodShadowsocks,
+			Parameters: map[string]string{
+				"local_port":  "8080",
+				"remote_host": "example.com",
+				"remote_port": "443",
+				"password":    "test123",
+				"encryption":  "aes-256-gcm",
+			},
 		}
 
 		err := mock.Start(config)
@@ -43,12 +45,14 @@ func TestMockBypassAdapter(t *testing.T) {
 
 	t.Run("запуск дублирующегося соединения", func(t *testing.T) {
 		config := &domain.BypassConfig{
-			ID:         "test-1", // тот же ID
-			Name:       "Test Bypass 2",
-			Method:     domain.BypassMethodV2Ray,
-			LocalPort:  8081,
-			RemoteHost: "example2.com",
-			RemotePort: 443,
+			ID:     "test-1", // тот же ID
+			Name:   "Test Bypass 2",
+			Method: domain.BypassMethodV2Ray,
+			Parameters: map[string]string{
+				"local_port":  "8081",
+				"remote_host": "example2.com",
+				"remote_port": "443",
+			},
 		}
 
 		err := mock.Start(config)
@@ -64,12 +68,14 @@ func TestMockBypassAdapter(t *testing.T) {
 	t.Run("получение статистики", func(t *testing.T) {
 		// Сначала запускаем соединение
 		config := &domain.BypassConfig{
-			ID:         "test-2",
-			Name:       "Test Bypass 2",
-			Method:     domain.BypassMethodObfs4,
-			LocalPort:  8082,
-			RemoteHost: "example3.com",
-			RemotePort: 443,
+			ID:     "test-2",
+			Name:   "Test Bypass 2",
+			Method: domain.BypassMethodObfs4,
+			Parameters: map[string]string{
+				"local_port":  "8082",
+				"remote_host": "example3.com",
+				"remote_port": "443",
+			},
 		}
 		err := mock.Start(config)
 		assert.NoError(t, err)
@@ -79,9 +85,9 @@ func TestMockBypassAdapter(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, stats)
 		assert.Equal(t, "test-2", stats.ID)
-		assert.Greater(t, stats.BytesRx, int64(0))
-		assert.Greater(t, stats.BytesTx, int64(0))
-		assert.True(t, stats.LastActivity.After(time.Now().Add(-time.Second)))
+		assert.Greater(t, stats.BytesReceived, int64(0))
+		assert.Greater(t, stats.BytesSent, int64(0))
+		assert.True(t, stats.EndTime.After(time.Now().Add(-time.Second)))
 	})
 
 	t.Run("получение статистики несуществующего соединения", func(t *testing.T) {
@@ -90,25 +96,26 @@ func TestMockBypassAdapter(t *testing.T) {
 		assert.Nil(t, stats)
 	})
 
-	t.Run("остановка соединения", func(t *testing.T) {
-		// Сначала запускаем соединение
+	t.Run("остановка bypass соединения", func(t *testing.T) {
 		config := &domain.BypassConfig{
-			ID:         "test-3",
-			Name:       "Test Bypass 3",
-			Method:     domain.BypassMethodCustom,
-			LocalPort:  8083,
-			RemoteHost: "example4.com",
-			RemotePort: 443,
+			ID:     "test-stop",
+			Name:   "Test Stop",
+			Method: domain.BypassMethodObfs4,
+			Parameters: map[string]string{
+				"local_port":  "8082",
+				"remote_host": "example3.com",
+				"remote_port": "443",
+			},
 		}
 		err := mock.Start(config)
 		assert.NoError(t, err)
-		assert.True(t, mock.IsRunning("test-3"))
+		assert.True(t, mock.IsRunning("test-stop"))
 
 		// Останавливаем соединение
-		err = mock.Stop("test-3")
+		err = mock.Stop("test-stop")
 		assert.NoError(t, err)
-		assert.False(t, mock.IsRunning("test-3"))
-		assert.NotContains(t, mock.running, "test-3")
+		assert.False(t, mock.IsRunning("test-stop"))
+		assert.NotContains(t, mock.running, "test-stop")
 	})
 
 	t.Run("остановка несуществующего соединения", func(t *testing.T) {
@@ -120,20 +127,24 @@ func TestMockBypassAdapter(t *testing.T) {
 		// Запускаем несколько соединений
 		configs := []*domain.BypassConfig{
 			{
-				ID:         "multi-1",
-				Name:       "Multi 1",
-				Method:     domain.BypassMethodShadowsocks,
-				LocalPort:  9001,
-				RemoteHost: "multi1.com",
-				RemotePort: 443,
+				ID:     "multi-1",
+				Name:   "Multi 1",
+				Method: domain.BypassMethodShadowsocks,
+				Parameters: map[string]string{
+					"local_port":  "9001",
+					"remote_host": "multi1.com",
+					"remote_port": "443",
+				},
 			},
 			{
-				ID:         "multi-2",
-				Name:       "Multi 2",
-				Method:     domain.BypassMethodV2Ray,
-				LocalPort:  9002,
-				RemoteHost: "multi2.com",
-				RemotePort: 443,
+				ID:     "multi-2",
+				Name:   "Multi 2",
+				Method: domain.BypassMethodV2Ray,
+				Parameters: map[string]string{
+					"local_port":  "9002",
+					"remote_host": "multi2.com",
+					"remote_port": "443",
+				},
 			},
 		}
 

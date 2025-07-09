@@ -45,21 +45,23 @@ type Server struct {
 
 // CreateServerRequest запрос на создание сервера
 type CreateServerRequest struct {
-	Name   string                 `json:"name" validate:"required"`
-	Type   ServerType             `json:"type" validate:"required"`
-	Region string                 `json:"region" validate:"required"`
-	Config map[string]interface{} `json:"config,omitempty"`
+	Name   string            `json:"name" validate:"required"`
+	Type   ServerType        `json:"type" validate:"required"`
+	Region string            `json:"region" validate:"required"`
+	Config map[string]string `json:"config,omitempty"`
 }
 
 // UpdateServerRequest запрос на обновление сервера
 type UpdateServerRequest struct {
-	Name   *string                `json:"name,omitempty"`
-	Status *ServerStatus          `json:"status,omitempty"`
-	Config map[string]interface{} `json:"config,omitempty"`
+	ID     string            `json:"id"`
+	Name   string            `json:"name"`
+	Type   ServerType        `json:"type"`
+	Region string            `json:"region"`
+	Config map[string]string `json:"config,omitempty"`
 }
 
-// ServerStats статистика сервера
-type ServerStats struct {
+// ServerStatsOld статистика сервера (старая версия)
+type ServerStatsOld struct {
 	ServerID    string    `json:"server_id"`
 	CPU         float64   `json:"cpu"`
 	Memory      float64   `json:"memory"`
@@ -69,8 +71,8 @@ type ServerStats struct {
 	Timestamp   time.Time `json:"timestamp"`
 }
 
-// ServerHealth здоровье сервера
-type ServerHealth struct {
+// ServerHealthOld здоровье сервера (старая версия)
+type ServerHealthOld struct {
 	ServerID  string    `json:"server_id"`
 	Status    string    `json:"status"`
 	Message   string    `json:"message"`
@@ -118,4 +120,84 @@ type UpdateStatus struct {
 	Message     string     `json:"message"`
 	StartedAt   time.Time  `json:"started_at"`
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
+}
+
+// ServerFilters фильтры для списка серверов
+type ServerFilters struct {
+	Type   ServerType   `json:"type"`
+	Region string       `json:"region"`
+	Status ServerStatus `json:"status"`
+	Limit  int          `json:"limit"`
+	Offset int          `json:"offset"`
+}
+
+// ServerMonitorEvent событие мониторинга сервера
+type ServerMonitorEvent struct {
+	ServerID  string    `json:"server_id"`
+	Type      string    `json:"type"`
+	Message   string    `json:"message"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
+// ServerStats статистика сервера для gRPC
+type ServerStats struct {
+	ServerID     string    `json:"server_id"`
+	CPUUsage     float64   `json:"cpu_usage"`
+	MemoryUsage  float64   `json:"memory_usage"`
+	StorageUsage float64   `json:"storage_usage"`
+	NetworkIn    int64     `json:"network_in"`
+	NetworkOut   int64     `json:"network_out"`
+	Uptime       int64     `json:"uptime"`
+	RequestCount int64     `json:"request_count"`
+	ResponseTime float64   `json:"response_time"`
+	ErrorRate    float64   `json:"error_rate"`
+	Timestamp    time.Time `json:"timestamp"`
+}
+
+// ServerHealth здоровье сервера для gRPC
+type ServerHealth struct {
+	ServerID    string                   `json:"server_id"`
+	Status      ServerStatus             `json:"status"`
+	Message     string                   `json:"message"`
+	LastCheckAt time.Time                `json:"last_check_at"`
+	Checks      []map[string]interface{} `json:"checks"`
+}
+
+// ScaleServerRequest запрос на масштабирование сервера
+type ScaleServerRequest struct {
+	ServerID string  `json:"server_id"`
+	CPU      float64 `json:"cpu"`
+	Memory   float64 `json:"memory"`
+	Storage  float64 `json:"storage"`
+	Replicas int     `json:"replicas"`
+}
+
+// CreateBackupRequest запрос на создание резервной копии
+type CreateBackupRequest struct {
+	ServerID    string `json:"server_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+// RestoreBackupRequest запрос на восстановление из резервной копии
+type RestoreBackupRequest struct {
+	BackupID string `json:"backup_id"`
+	ServerID string `json:"server_id"`
+}
+
+// UpdateServerSoftwareRequest запрос на обновление ПО сервера
+type UpdateServerSoftwareRequest struct {
+	ServerID string `json:"server_id"`
+	Version  string `json:"version"`
+	Package  string `json:"package"`
+	Force    bool   `json:"force"`
+}
+
+// Backup резервная копия
+type Backup struct {
+	ID          string    `json:"id"`
+	ServerID    string    `json:"server_id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
 }

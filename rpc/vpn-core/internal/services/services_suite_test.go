@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/par1ram/silence/rpc/vpn-core/internal/domain"
 	svc "github.com/par1ram/silence/rpc/vpn-core/internal/services"
-		mocks "github.com/par1ram/silence/rpc/vpn-core/internal/services/mocks"
+	mocks "github.com/par1ram/silence/rpc/vpn-core/internal/services/mocks"
 	"go.uber.org/zap"
 )
 
@@ -47,9 +47,9 @@ var _ = Describe("Services", func() {
 			It("should create a new tunnel", func() {
 				mockKeyGen.EXPECT().GenerateKeyPair().Return("pubkey", "privkey", nil)
 				req := &domain.CreateTunnelRequest{
-					Name:       "test-tunnel",
-					ListenPort: 51820,
-					MTU:        1420,
+					Name:         "test-tunnel",
+					ListenPort:   51820,
+					MTU:          1420,
 					AutoRecovery: true,
 				}
 				tunnel, err := tunnelService.CreateTunnel(ctx, req)
@@ -91,8 +91,8 @@ var _ = Describe("Services", func() {
 		Describe("ListTunnels", func() {
 			It("should return a list of all tunnels", func() {
 				mockKeyGen.EXPECT().GenerateKeyPair().Return("pubkey1", "privkey1", nil).Times(2)
-				tunnelService.CreateTunnel(ctx, &domain.CreateTunnelRequest{Name: "tunnel1"})
-				tunnelService.CreateTunnel(ctx, &domain.CreateTunnelRequest{Name: "tunnel2"})
+				_, _ = tunnelService.CreateTunnel(ctx, &domain.CreateTunnelRequest{Name: "tunnel1"})
+				_, _ = tunnelService.CreateTunnel(ctx, &domain.CreateTunnelRequest{Name: "tunnel2"})
 				tunnels, err := tunnelService.ListTunnels(ctx)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(tunnels)).To(Equal(2))
@@ -151,7 +151,7 @@ var _ = Describe("Services", func() {
 				mockKeyGen.EXPECT().GenerateKeyPair().Return("pubkey", "privkey", nil)
 				createdTunnel, _ := tunnelService.CreateTunnel(ctx, &domain.CreateTunnelRequest{Name: "test-tunnel", ListenPort: 51820, MTU: 1420})
 				mockWgManager.EXPECT().CreateInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				tunnelService.StartTunnel(ctx, createdTunnel.ID)
+				_ = tunnelService.StartTunnel(ctx, createdTunnel.ID)
 				mockWgManager.EXPECT().DeleteInterface(createdTunnel.Interface).Return(nil)
 				err := tunnelService.StopTunnel(ctx, createdTunnel.ID)
 				Expect(err).NotTo(HaveOccurred())
@@ -167,7 +167,7 @@ var _ = Describe("Services", func() {
 				mockKeyGen.EXPECT().GenerateKeyPair().Return("pubkey", "privkey", nil)
 				createdTunnel, _ := tunnelService.CreateTunnel(ctx, &domain.CreateTunnelRequest{Name: "test-tunnel", ListenPort: 51820, MTU: 1420})
 				mockWgManager.EXPECT().CreateInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				tunnelService.StartTunnel(ctx, createdTunnel.ID)
+				_ = tunnelService.StartTunnel(ctx, createdTunnel.ID)
 				mockWgManager.EXPECT().DeleteInterface(gomock.Any()).Return(errors.New("delete error"))
 				err := tunnelService.StopTunnel(ctx, createdTunnel.ID)
 				Expect(err).To(HaveOccurred())
@@ -196,4 +196,3 @@ var _ = Describe("Services", func() {
 		})
 	})
 })
-

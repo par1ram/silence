@@ -47,8 +47,14 @@ func (s *ShadowsocksAdapter) Start(config *domain.BypassConfig) error {
 	// Создаем контекст для управления жизненным циклом
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// Получаем параметры из конфигурации
+	localPort := config.Parameters["local_port"]
+	if localPort == "" {
+		localPort = "1080"
+	}
+
 	// Создаем listener
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", config.LocalPort))
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", localPort))
 	if err != nil {
 		cancel()
 		return fmt.Errorf("failed to create listener: %w", err)
@@ -60,12 +66,14 @@ func (s *ShadowsocksAdapter) Start(config *domain.BypassConfig) error {
 		ctx:      ctx,
 		cancel:   cancel,
 		stats: &domain.BypassStats{
-			ID:           config.ID,
-			BytesRx:      0,
-			BytesTx:      0,
-			Connections:  0,
-			LastActivity: time.Now(),
-			ErrorCount:   0,
+			ID:                     config.ID,
+			ConfigID:               config.ID,
+			SessionID:              config.ID,
+			BytesReceived:          0,
+			BytesSent:              0,
+			ConnectionsEstablished: 0,
+			StartTime:              time.Now(),
+			EndTime:                time.Now(),
 		},
 	}
 
@@ -74,11 +82,14 @@ func (s *ShadowsocksAdapter) Start(config *domain.BypassConfig) error {
 	// Запускаем обработку соединений
 	go s.handleConnections(conn)
 
+	remoteHost := config.Parameters["remote_host"]
+	remotePort := config.Parameters["remote_port"]
+
 	s.logger.Info("shadowsocks server started",
 		zap.String("id", config.ID),
-		zap.Int("local_port", config.LocalPort),
-		zap.String("remote", config.RemoteHost),
-		zap.Int("remote_port", config.RemotePort))
+		zap.String("local_port", localPort),
+		zap.String("remote", remoteHost),
+		zap.String("remote_port", remotePort))
 
 	return nil
 }
@@ -165,15 +176,25 @@ func (s *ShadowsocksAdapter) handleClientConnection(conn *shadowsocksConnection,
 	// Увеличиваем счетчик соединений
 	s.incrementConnections(conn)
 
+	// Получаем параметры удаленного сервера
+	remoteHost := conn.config.Parameters["remote_host"]
+	remotePort := conn.config.Parameters["remote_port"]
+	if remoteHost == "" {
+		remoteHost = "127.0.0.1"
+	}
+	if remotePort == "" {
+		remotePort = "8080"
+	}
+
 	// Подключаемся к удаленному серверу
 	remoteConn, err := net.DialTimeout("tcp",
-		fmt.Sprintf("%s:%d", conn.config.RemoteHost, conn.config.RemotePort),
+		fmt.Sprintf("%s:%s", remoteHost, remotePort),
 		10*time.Second)
 	if err != nil {
 		s.logger.Error("failed to connect to remote server",
 			zap.Error(err),
 			zap.String("id", conn.config.ID),
-			zap.String("remote", conn.config.RemoteHost))
+			zap.String("remote", remoteHost))
 		s.incrementErrorCount(conn)
 		return
 	}
@@ -254,8 +275,8 @@ func (s *ShadowsocksAdapter) updateStats(conn *shadowsocksConnection, rx, tx int
 	conn.statsMutex.Lock()
 	defer conn.statsMutex.Unlock()
 
-	conn.stats.BytesRx += rx
-	conn.stats.BytesTx += tx
+	conn.stats.BytesReceived += rx
+	conn.stats.BytesSent += tx
 }
 
 // updateLastActivity обновляет время последней активности
@@ -263,7 +284,7 @@ func (s *ShadowsocksAdapter) updateLastActivity(conn *shadowsocksConnection) {
 	conn.statsMutex.Lock()
 	defer conn.statsMutex.Unlock()
 
-	conn.stats.LastActivity = time.Now()
+	conn.stats.EndTime = time.Now()
 }
 
 // incrementConnections увеличивает счетчик соединений
@@ -271,7 +292,7 @@ func (s *ShadowsocksAdapter) incrementConnections(conn *shadowsocksConnection) {
 	conn.statsMutex.Lock()
 	defer conn.statsMutex.Unlock()
 
-	conn.stats.Connections++
+	conn.stats.ConnectionsEstablished++
 }
 
 // incrementErrorCount увеличивает счетчик ошибок
@@ -279,5 +300,5 @@ func (s *ShadowsocksAdapter) incrementErrorCount(conn *shadowsocksConnection) {
 	conn.statsMutex.Lock()
 	defer conn.statsMutex.Unlock()
 
-	conn.stats.ErrorCount++
+	conn.stats.ConnectionsFailed++
 }

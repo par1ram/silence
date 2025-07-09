@@ -9,7 +9,11 @@ import (
 // obfuscateData применяет обфускацию к данным
 func (o *Obfs4Adapter) obfuscateData(data []byte, conn *obfs4Connection) []byte {
 	// Простая обфускация: XOR с ключом
-	key := o.generateKey(conn.config.Password)
+	password := conn.config.Parameters["password"]
+	if password == "" {
+		password = "default_password"
+	}
+	key := o.generateKey(password)
 	obfuscated := make([]byte, len(data))
 
 	for i, b := range data {
@@ -78,8 +82,8 @@ func (o *Obfs4Adapter) updateStats(conn *obfs4Connection, rx, tx int64) {
 	conn.statsMutex.Lock()
 	defer conn.statsMutex.Unlock()
 
-	conn.stats.BytesRx += rx
-	conn.stats.BytesTx += tx
+	conn.stats.BytesReceived += rx
+	conn.stats.BytesSent += tx
 }
 
 // updateLastActivity обновляет время последней активности
@@ -87,7 +91,7 @@ func (o *Obfs4Adapter) updateLastActivity(conn *obfs4Connection) {
 	conn.statsMutex.Lock()
 	defer conn.statsMutex.Unlock()
 
-	conn.stats.LastActivity = time.Now()
+	conn.stats.EndTime = time.Now()
 }
 
 // incrementConnections увеличивает счетчик соединений
@@ -95,7 +99,7 @@ func (o *Obfs4Adapter) incrementConnections(conn *obfs4Connection) {
 	conn.statsMutex.Lock()
 	defer conn.statsMutex.Unlock()
 
-	conn.stats.Connections++
+	conn.stats.ConnectionsEstablished++
 }
 
 // incrementErrorCount увеличивает счетчик ошибок
@@ -103,5 +107,5 @@ func (o *Obfs4Adapter) incrementErrorCount(conn *obfs4Connection) {
 	conn.statsMutex.Lock()
 	defer conn.statsMutex.Unlock()
 
-	conn.stats.ErrorCount++
+	conn.stats.ConnectionsFailed++
 }

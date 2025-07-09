@@ -18,6 +18,14 @@ type Config struct {
 	JWTSecret        string
 	InternalAPIToken string
 
+	// gRPC service URLs
+	AuthGRPCURL          string
+	VPNCoreGRPCURL       string
+	DPIBypassGRPCURL     string
+	AnalyticsGRPCURL     string
+	ServerManagerGRPCURL string
+	NotificationsGRPCURL string
+
 	// Rate Limiting настройки
 	RateLimitEnabled bool
 	RateLimitRPS     int // requests per second
@@ -38,6 +46,14 @@ func Load() *Config {
 		ServerManagerURL: getEnv("SERVER_MANAGER_URL", "http://localhost:8085"),
 		JWTSecret:        getEnv("JWT_SECRET", "your-jwt-secret-key-change-this-in-production"),
 		InternalAPIToken: getEnv("INTERNAL_API_TOKEN", "super-secret-internal-token"),
+
+		// gRPC service URLs
+		AuthGRPCURL:          getEnv("AUTH_GRPC_SERVICE_URL", "localhost:9081"),
+		VPNCoreGRPCURL:       getEnv("VPN_CORE_GRPC_SERVICE_URL", "localhost:9082"),
+		DPIBypassGRPCURL:     getEnv("DPI_BYPASS_GRPC_SERVICE_URL", "localhost:9083"),
+		AnalyticsGRPCURL:     getEnv("ANALYTICS_GRPC_SERVICE_URL", "localhost:9084"),
+		ServerManagerGRPCURL: getEnv("SERVER_MANAGER_GRPC_SERVICE_URL", "localhost:9085"),
+		NotificationsGRPCURL: getEnv("NOTIFICATIONS_GRPC_SERVICE_URL", "localhost:9087"),
 
 		// Rate Limiting настройки
 		RateLimitEnabled: getEnvBool("RATE_LIMIT_ENABLED", true),

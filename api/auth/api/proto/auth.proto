@@ -1,0 +1,149 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "github.com/par1ram/silence/api/auth/api/proto";
+
+import "google/protobuf/timestamp.proto";
+
+// Auth Service
+service AuthService {
+  // Authentication
+  rpc Login(LoginRequest) returns (AuthResponse);
+  rpc Register(RegisterRequest) returns (AuthResponse);
+  rpc GetMe(GetMeRequest) returns (User);
+  rpc Health(HealthRequest) returns (HealthResponse);
+
+  // User Management
+  rpc CreateUser(CreateUserRequest) returns (User);
+  rpc GetUser(GetUserRequest) returns (User);
+  rpc UpdateUser(UpdateUserRequest) returns (User);
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  rpc BlockUser(BlockUserRequest) returns (BlockUserResponse);
+  rpc UnblockUser(UnblockUserRequest) returns (UnblockUserResponse);
+  rpc ChangeUserRole(ChangeUserRoleRequest) returns (ChangeUserRoleResponse);
+}
+
+// User roles
+enum UserRole {
+  USER_ROLE_UNSPECIFIED = 0;
+  USER_ROLE_USER = 1;
+  USER_ROLE_MODERATOR = 2;
+  USER_ROLE_ADMIN = 3;
+}
+
+// User status
+enum UserStatus {
+  USER_STATUS_UNSPECIFIED = 0;
+  USER_STATUS_ACTIVE = 1;
+  USER_STATUS_INACTIVE = 2;
+  USER_STATUS_BLOCKED = 3;
+}
+
+// User model
+message User {
+  string id = 1;
+  string email = 2;
+  UserRole role = 3;
+  UserStatus status = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+// Health check
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string version = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+// Authentication messages
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message AuthResponse {
+  string token = 1;
+  User user = 2;
+}
+
+message GetMeRequest {
+  string token = 1;
+}
+
+// User management messages
+message CreateUserRequest {
+  string email = 1;
+  string password = 2;
+  UserRole role = 3;
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message UpdateUserRequest {
+  string id = 1;
+  string email = 2;
+  UserRole role = 3;
+  UserStatus status = 4;
+}
+
+message DeleteUserRequest {
+  string id = 1;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ListUsersRequest {
+  UserRole role = 1;
+  UserStatus status = 2;
+  string email = 3;
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  int32 total = 2;
+}
+
+message BlockUserRequest {
+  string id = 1;
+}
+
+message BlockUserResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UnblockUserRequest {
+  string id = 1;
+}
+
+message UnblockUserResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ChangeUserRoleRequest {
+  string id = 1;
+  UserRole role = 2;
+}
+
+message ChangeUserRoleResponse {
+  bool success = 1;
+  string message = 2;
+}

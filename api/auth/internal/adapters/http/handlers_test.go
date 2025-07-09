@@ -164,6 +164,73 @@ var _ = Describe("Handlers", func() {
 			Expect(w.Code).To(Equal(http.StatusOK))
 		})
 	})
+
+	Describe("GetMeHandler", func() {
+		It("should return user profile successfully", func() {
+			token := "valid-token"
+			claims := &domain.Claims{
+				UserID: "user-123",
+			}
+			expectedUser := &domain.User{
+				ID:    "user-123",
+				Email: "test@example.com",
+			}
+
+			mockAuthSvc.EXPECT().ValidateToken(token).Return(claims, nil)
+			mockAuthSvc.EXPECT().GetProfile(gomock.Any(), claims.UserID).Return(expectedUser, nil)
+
+			req := httptest.NewRequest("GET", "/me", nil)
+			req.Header.Set("Authorization", "Bearer "+token)
+			w := httptest.NewRecorder()
+
+			handlers.GetMeHandler(w, req)
+
+			Expect(w.Code).To(Equal(http.StatusOK))
+			var user domain.User
+			err := json.NewDecoder(w.Body).Decode(&user)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(&user).To(Equal(expectedUser))
+		})
+
+		It("should return error if authorization header is missing", func() {
+			req := httptest.NewRequest("GET", "/me", nil)
+			w := httptest.NewRecorder()
+
+			handlers.GetMeHandler(w, req)
+
+			Expect(w.Code).To(Equal(http.StatusUnauthorized))
+		})
+
+		It("should return error if token is invalid", func() {
+			token := "invalid-token"
+			mockAuthSvc.EXPECT().ValidateToken(token).Return(nil, errors.New("invalid token"))
+
+			req := httptest.NewRequest("GET", "/me", nil)
+			req.Header.Set("Authorization", "Bearer "+token)
+			w := httptest.NewRecorder()
+
+			handlers.GetMeHandler(w, req)
+
+			Expect(w.Code).To(Equal(http.StatusUnauthorized))
+		})
+
+		It("should return error if get profile fails", func() {
+			token := "valid-token"
+			claims := &domain.Claims{
+				UserID: "user-123",
+			}
+			mockAuthSvc.EXPECT().ValidateToken(token).Return(claims, nil)
+			mockAuthSvc.EXPECT().GetProfile(gomock.Any(), claims.UserID).Return(nil, errors.New("get profile error"))
+
+			req := httptest.NewRequest("GET", "/me", nil)
+			req.Header.Set("Authorization", "Bearer "+token)
+			w := httptest.NewRecorder()
+
+			handlers.GetMeHandler(w, req)
+
+			Expect(w.Code).To(Equal(http.StatusInternalServerError))
+		})
+	})
 })
 
 var _ = Describe("Middleware", func() {

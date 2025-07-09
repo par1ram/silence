@@ -2,7 +2,7 @@ package svc
 
 import (
 	"github.com/par1ram/silence/rpc/dpi-bypass/internal/adapters/bypass"
-	"github.com/par1ram/silence/rpc/dpi-bypass/internal/adapters/http"
+	"github.com/par1ram/silence/rpc/dpi-bypass/internal/adapters/grpc"
 	"github.com/par1ram/silence/rpc/dpi-bypass/internal/config"
 	"github.com/par1ram/silence/rpc/dpi-bypass/internal/ports"
 	"github.com/par1ram/silence/rpc/dpi-bypass/internal/services"
@@ -14,9 +14,9 @@ type ServiceContext struct {
 	Config        *config.Config
 	Logger        *zap.Logger
 	HealthService ports.HealthService
-	BypassService ports.BypassService
+	BypassService ports.DPIBypassService
 	BypassAdapter ports.BypassAdapter
-	HTTPServer    *http.Server
+	GRPCServer    *grpc.Server
 }
 
 // NewServiceContext создает новый контекст сервиса
@@ -30,11 +30,8 @@ func NewServiceContext(cfg *config.Config, logger *zap.Logger) *ServiceContext {
 	// Создаем bypass сервис
 	bypassService := services.NewBypassService(bypassAdapter, logger)
 
-	// Создаем HTTP обработчики
-	handlers := http.NewHandlers(healthService, bypassService, logger)
-
-	// Создаем HTTP сервер
-	httpServer := http.NewServer(cfg.HTTPPort, handlers, logger)
+	// Создаем gRPC сервер
+	grpcServer := grpc.NewServer(bypassService, logger, cfg)
 
 	return &ServiceContext{
 		Config:        cfg,
@@ -42,6 +39,6 @@ func NewServiceContext(cfg *config.Config, logger *zap.Logger) *ServiceContext {
 		HealthService: healthService,
 		BypassService: bypassService,
 		BypassAdapter: bypassAdapter,
-		HTTPServer:    httpServer,
+		GRPCServer:    grpcServer,
 	}
 }

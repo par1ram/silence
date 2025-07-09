@@ -1,0 +1,456 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "analytics/analytics.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "AnalyticsService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "analyticsAlert": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "acknowledged": {
+          "type": "boolean"
+        }
+      }
+    },
+    "analyticsCollectMetricResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "metricId": {
+          "type": "string"
+        }
+      }
+    },
+    "analyticsDashboardData": {
+      "type": "object",
+      "properties": {
+        "systemStats": {
+          "$ref": "#/definitions/analyticsSystemStats"
+        },
+        "connectionsOverTime": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsTimeSeriesPoint"
+          }
+        },
+        "dataTransferOverTime": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsTimeSeriesPoint"
+          }
+        },
+        "serverUsage": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsServerUsage"
+          }
+        },
+        "regionStats": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsRegionStats"
+          }
+        },
+        "alerts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsAlert"
+          }
+        }
+      }
+    },
+    "analyticsGetDashboardDataResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/analyticsDashboardData"
+        }
+      }
+    },
+    "analyticsGetMetricsHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "points": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsTimeSeriesPoint"
+          }
+        }
+      }
+    },
+    "analyticsGetMetricsResponse": {
+      "type": "object",
+      "properties": {
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsMetric"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "analyticsGetStatisticsResponse": {
+      "type": "object",
+      "properties": {
+        "statistics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsStatistics"
+          }
+        }
+      }
+    },
+    "analyticsGetSystemStatsResponse": {
+      "type": "object",
+      "properties": {
+        "stats": {
+          "$ref": "#/definitions/analyticsSystemStats"
+        }
+      }
+    },
+    "analyticsGetUserStatsResponse": {
+      "type": "object",
+      "properties": {
+        "stats": {
+          "$ref": "#/definitions/analyticsUserStats"
+        }
+      }
+    },
+    "analyticsHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "analyticsMetric": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Metrics"
+    },
+    "analyticsPredictLoadResponse": {
+      "type": "object",
+      "properties": {
+        "predictions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsPredictionPoint"
+          }
+        }
+      }
+    },
+    "analyticsPredictTrendResponse": {
+      "type": "object",
+      "properties": {
+        "predictions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsPredictionPoint"
+          }
+        }
+      }
+    },
+    "analyticsPredictionPoint": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "predictedValue": {
+          "type": "number",
+          "format": "double"
+        },
+        "confidence": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "analyticsRegionStats": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "type": "string"
+        },
+        "userCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "connectionCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "dataTransferred": {
+          "type": "string",
+          "format": "int64"
+        },
+        "avgLatency": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "analyticsServerUsage": {
+      "type": "object",
+      "properties": {
+        "serverId": {
+          "type": "string"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "activeConnections": {
+          "type": "string",
+          "format": "int64"
+        },
+        "cpuUsage": {
+          "type": "number",
+          "format": "double"
+        },
+        "memoryUsage": {
+          "type": "number",
+          "format": "double"
+        },
+        "networkUsage": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "analyticsStatistics": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "calculatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "period": {
+          "type": "string"
+        }
+      },
+      "title": "Statistics"
+    },
+    "analyticsSystemStats": {
+      "type": "object",
+      "properties": {
+        "totalUsers": {
+          "type": "string",
+          "format": "int64"
+        },
+        "activeUsers": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalConnections": {
+          "type": "string",
+          "format": "int64"
+        },
+        "activeConnections": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalDataTransferred": {
+          "type": "string",
+          "format": "int64"
+        },
+        "serversCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "activeServers": {
+          "type": "string",
+          "format": "int64"
+        },
+        "avgConnectionTime": {
+          "type": "number",
+          "format": "double"
+        },
+        "systemLoad": {
+          "type": "number",
+          "format": "double"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "analyticsTimeSeriesPoint": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "analyticsUserStats": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "totalConnections": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalDataTransferred": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalSessionTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "favoriteServersCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "avgConnectionTime": {
+          "type": "number",
+          "format": "double"
+        },
+        "firstConnection": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastConnection": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 package bypass
 
 import (
+	"fmt"
 	"net"
 	"testing"
 
@@ -15,14 +16,16 @@ func TestObfs4Adapter_Basic(t *testing.T) {
 	assert.NotNil(t, adapter)
 
 	config := &domain.BypassConfig{
-		ID:         "obfs4-1",
-		Name:       "Obfs4 Test",
-		Method:     domain.BypassMethodObfs4,
-		LocalPort:  0,
-		RemoteHost: "localhost",
-		RemotePort: 12345,
-		Password:   "testpass",
-		Encryption: "none",
+		ID:     "obfs4-1",
+		Name:   "Obfs4 Test",
+		Method: domain.BypassMethodObfs4,
+		Parameters: map[string]string{
+			"local_port":  "0",
+			"remote_host": "localhost",
+			"remote_port": "12345",
+			"password":    "testpass",
+			"encryption":  "none",
+		},
 	}
 
 	err := adapter.Start(config)
@@ -49,14 +52,16 @@ func TestObfs4Adapter_Start_PortBusy(t *testing.T) {
 	adapter2 := NewObfs4Adapter(logger)
 
 	config := &domain.BypassConfig{
-		ID:         "obfs4-busy-1",
-		Name:       "Busy Test",
-		Method:     domain.BypassMethodObfs4,
-		LocalPort:  0,
-		RemoteHost: "localhost",
-		RemotePort: 12345,
-		Password:   "testpass",
-		Encryption: "none",
+		ID:     "obfs4-busy-1",
+		Name:   "Busy Test",
+		Method: domain.BypassMethodObfs4,
+		Parameters: map[string]string{
+			"local_port":  "0",
+			"remote_host": "localhost",
+			"remote_port": "12345",
+			"password":    "testpass",
+			"encryption":  "none",
+		},
 	}
 
 	err := adapter1.Start(config)
@@ -69,7 +74,7 @@ func TestObfs4Adapter_Start_PortBusy(t *testing.T) {
 
 	config2 := *config
 	config2.ID = "obfs4-busy-2"
-	config2.LocalPort = port
+	config2.Parameters["local_port"] = fmt.Sprintf("%d", port)
 	err = adapter2.Start(&config2)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to create listener")

@@ -1,0 +1,225 @@
+syntax = "proto3";
+
+package analytics;
+
+option go_package = "github.com/par1ram/silence/rpc/analytics/api/proto";
+
+import "google/protobuf/timestamp.proto";
+
+// Analytics Service
+service AnalyticsService {
+  // Health check
+  rpc Health(HealthRequest) returns (HealthResponse);
+
+  // Metrics collection
+  rpc CollectMetric(CollectMetricRequest) returns (CollectMetricResponse);
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+  rpc GetMetricsHistory(GetMetricsHistoryRequest) returns (GetMetricsHistoryResponse);
+
+  // Statistics
+  rpc GetStatistics(GetStatisticsRequest) returns (GetStatisticsResponse);
+  rpc GetSystemStats(GetSystemStatsRequest) returns (GetSystemStatsResponse);
+  rpc GetUserStats(GetUserStatsRequest) returns (GetUserStatsResponse);
+
+  // Dashboard
+  rpc GetDashboardData(GetDashboardDataRequest) returns (GetDashboardDataResponse);
+
+  // Predictions
+  rpc PredictLoad(PredictLoadRequest) returns (PredictLoadResponse);
+  rpc PredictTrend(PredictTrendRequest) returns (PredictTrendResponse);
+}
+
+// Health
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string version = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+// Metrics
+message Metric {
+  string id = 1;
+  string name = 2;
+  string type = 3;
+  double value = 4;
+  string unit = 5;
+  map<string, string> tags = 6;
+  google.protobuf.Timestamp timestamp = 7;
+}
+
+message CollectMetricRequest {
+  string name = 1;
+  string type = 2;
+  double value = 3;
+  string unit = 4;
+  map<string, string> tags = 5;
+}
+
+message CollectMetricResponse {
+  bool success = 1;
+  string metric_id = 2;
+}
+
+message GetMetricsRequest {
+  string name = 1;
+  map<string, string> filters = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+  google.protobuf.Timestamp start_time = 5;
+  google.protobuf.Timestamp end_time = 6;
+}
+
+message GetMetricsResponse {
+  repeated Metric metrics = 1;
+  int32 total = 2;
+}
+
+message GetMetricsHistoryRequest {
+  string name = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+  string interval = 4; // 1m, 5m, 1h, 1d
+}
+
+message GetMetricsHistoryResponse {
+  repeated TimeSeriesPoint points = 1;
+}
+
+message TimeSeriesPoint {
+  google.protobuf.Timestamp timestamp = 1;
+  double value = 2;
+}
+
+// Statistics
+message Statistics {
+  string id = 1;
+  string name = 2;
+  string type = 3;
+  double value = 4;
+  string unit = 5;
+  google.protobuf.Timestamp calculated_at = 6;
+  string period = 7;
+}
+
+message GetStatisticsRequest {
+  string type = 1;
+  string period = 2; // hourly, daily, weekly, monthly
+  google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp end_time = 4;
+}
+
+message GetStatisticsResponse {
+  repeated Statistics statistics = 1;
+}
+
+message GetSystemStatsRequest {}
+
+message GetSystemStatsResponse {
+  SystemStats stats = 1;
+}
+
+message SystemStats {
+  int64 total_users = 1;
+  int64 active_users = 2;
+  int64 total_connections = 3;
+  int64 active_connections = 4;
+  int64 total_data_transferred = 5;
+  int64 servers_count = 6;
+  int64 active_servers = 7;
+  double avg_connection_time = 8;
+  double system_load = 9;
+  google.protobuf.Timestamp last_updated = 10;
+}
+
+message GetUserStatsRequest {
+  string user_id = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+}
+
+message GetUserStatsResponse {
+  UserStats stats = 1;
+}
+
+message UserStats {
+  string user_id = 1;
+  int64 total_connections = 2;
+  int64 total_data_transferred = 3;
+  int64 total_session_time = 4;
+  int32 favorite_servers_count = 5;
+  double avg_connection_time = 6;
+  google.protobuf.Timestamp first_connection = 7;
+  google.protobuf.Timestamp last_connection = 8;
+}
+
+// Dashboard
+message GetDashboardDataRequest {
+  string time_range = 1; // 1h, 6h, 24h, 7d, 30d
+}
+
+message GetDashboardDataResponse {
+  DashboardData data = 1;
+}
+
+message DashboardData {
+  SystemStats system_stats = 1;
+  repeated TimeSeriesPoint connections_over_time = 2;
+  repeated TimeSeriesPoint data_transfer_over_time = 3;
+  repeated ServerUsage server_usage = 4;
+  repeated RegionStats region_stats = 5;
+  repeated Alert alerts = 6;
+}
+
+message ServerUsage {
+  string server_id = 1;
+  string server_name = 2;
+  int64 active_connections = 3;
+  double cpu_usage = 4;
+  double memory_usage = 5;
+  double network_usage = 6;
+}
+
+message RegionStats {
+  string region = 1;
+  int64 user_count = 2;
+  int64 connection_count = 3;
+  int64 data_transferred = 4;
+  double avg_latency = 5;
+}
+
+message Alert {
+  string id = 1;
+  string type = 2;
+  string severity = 3;
+  string title = 4;
+  string message = 5;
+  google.protobuf.Timestamp created_at = 6;
+  bool acknowledged = 7;
+}
+
+// Predictions
+message PredictLoadRequest {
+  string server_id = 1;
+  int32 hours_ahead = 2;
+}
+
+message PredictLoadResponse {
+  repeated PredictionPoint predictions = 1;
+}
+
+message PredictTrendRequest {
+  string metric_name = 1;
+  int32 days_ahead = 2;
+}
+
+message PredictTrendResponse {
+  repeated PredictionPoint predictions = 1;
+}
+
+message PredictionPoint {
+  google.protobuf.Timestamp timestamp = 1;
+  double predicted_value = 2;
+  double confidence = 3;
+}

@@ -1,0 +1,81 @@
+package grpc
+
+import (
+	"context"
+	"net"
+
+	"github.com/par1ram/silence/rpc/dpi-bypass/api/proto"
+	"github.com/par1ram/silence/rpc/dpi-bypass/internal/config"
+	"github.com/par1ram/silence/rpc/dpi-bypass/internal/ports"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+)
+
+// Server gRPC сервер для dpi-bypass сервиса
+type Server struct {
+	server     *grpc.Server
+	listener   net.Listener
+	dpiService ports.DPIBypassService
+	logger     *zap.Logger
+	config     *config.Config
+}
+
+// NewServer создает новый gRPC сервер
+func NewServer(
+	dpiService ports.DPIBypassService,
+	logger *zap.Logger,
+	cfg *config.Config,
+) *Server {
+	return &Server{
+		dpiService: dpiService,
+		logger:     logger,
+		config:     cfg,
+	}
+}
+
+// Start запускает gRPC сервер
+func (s *Server) Start(ctx context.Context) error {
+	listener, err := net.Listen("tcp", s.config.GRPC.Address)
+	if err != nil {
+		return err
+	}
+
+	s.listener = listener
+
+	// Создаем gRPC сервер
+	s.server = grpc.NewServer()
+
+	// Регистрируем сервис
+	dpiHandler := NewDPIBypassHandler(s.dpiService, s.logger)
+	proto.RegisterDpiBypassServiceServer(s.server, dpiHandler)
+
+	// Включаем reflection для отладки
+	reflection.Register(s.server)
+
+	s.logger.Info("gRPC server starting", zap.String("address", s.config.GRPC.Address))
+
+	go func() {
+		<-ctx.Done()
+		s.logger.Info("gRPC server shutting down")
+		s.server.GracefulStop()
+	}()
+
+	return s.server.Serve(listener)
+}
+
+// Stop останавливает gRPC сервер
+func (s *Server) Stop(ctx context.Context) error {
+	if s.server != nil {
+		s.server.GracefulStop()
+	}
+	if s.listener != nil {
+		return s.listener.Close()
+	}
+	return nil
+}
+
+// Name возвращает имя сервиса
+func (s *Server) Name() string {
+	return "grpc-server"
+}

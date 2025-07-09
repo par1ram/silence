@@ -48,11 +48,29 @@ func (v *V2RayAdapter) Start(config *domain.BypassConfig) error {
 	// Создаем контекст для управления жизненным циклом
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// Получаем параметры из конфигурации
+	localPort := config.Parameters["local_port"]
+	if localPort == "" {
+		localPort = "1080"
+	}
+	remoteHost := config.Parameters["remote_host"]
+	if remoteHost == "" {
+		remoteHost = "127.0.0.1"
+	}
+	remotePort := config.Parameters["remote_port"]
+	if remotePort == "" {
+		remotePort = "8080"
+	}
+	encryption := config.Parameters["encryption"]
+	if encryption == "" {
+		encryption = "none"
+	}
+
 	// Создаем listener с TLS для WebSocket
 	var listener net.Listener
 	var err error
 
-	if config.Encryption == "tls" {
+	if encryption == "tls" {
 		// Создаем самоподписанный сертификат для тестирования
 		cert, err := generateSelfSignedCert()
 		if err != nil {
@@ -64,16 +82,16 @@ func (v *V2RayAdapter) Start(config *domain.BypassConfig) error {
 			Certificates: []tls.Certificate{cert},
 		}
 
-		listener, err = tls.Listen("tcp", fmt.Sprintf(":%d", config.LocalPort), tlsConfig)
+		listener, err = tls.Listen("tcp", fmt.Sprintf(":%s", localPort), tlsConfig)
 		if err != nil {
 			cancel()
 			return fmt.Errorf("failed to create TLS listener: %w", err)
 		}
 	} else {
-		listener, err = net.Listen("tcp", fmt.Sprintf(":%d", config.LocalPort))
+		listener, err = net.Listen("tcp", fmt.Sprintf(":%s", localPort))
 		if err != nil {
 			cancel()
-			return fmt.Errorf("failed to create TCP listener: %w", err)
+			return fmt.Errorf("failed to create listener: %w", err)
 		}
 	}
 
@@ -83,12 +101,14 @@ func (v *V2RayAdapter) Start(config *domain.BypassConfig) error {
 		ctx:      ctx,
 		cancel:   cancel,
 		stats: &domain.BypassStats{
-			ID:           config.ID,
-			BytesRx:      0,
-			BytesTx:      0,
-			Connections:  0,
-			LastActivity: time.Now(),
-			ErrorCount:   0,
+			ID:                     config.ID,
+			ConfigID:               config.ID,
+			SessionID:              config.ID,
+			BytesReceived:          0,
+			BytesSent:              0,
+			ConnectionsEstablished: 0,
+			StartTime:              time.Now(),
+			EndTime:                time.Now(),
 		},
 	}
 
@@ -99,10 +119,10 @@ func (v *V2RayAdapter) Start(config *domain.BypassConfig) error {
 
 	v.logger.Info("v2ray server started",
 		zap.String("id", config.ID),
-		zap.Int("local_port", config.LocalPort),
-		zap.String("remote", config.RemoteHost),
-		zap.Int("remote_port", config.RemotePort),
-		zap.String("encryption", config.Encryption))
+		zap.String("local_port", localPort),
+		zap.String("remote", remoteHost),
+		zap.String("remote_port", remotePort),
+		zap.String("encryption", encryption))
 
 	return nil
 }
@@ -189,15 +209,25 @@ func (v *V2RayAdapter) handleClientConnection(conn *v2rayConnection, clientConn 
 	// Увеличиваем счетчик соединений
 	v.incrementConnections(conn)
 
+	// Получаем параметры удаленного сервера
+	remoteHost := conn.config.Parameters["remote_host"]
+	remotePort := conn.config.Parameters["remote_port"]
+	if remoteHost == "" {
+		remoteHost = "127.0.0.1"
+	}
+	if remotePort == "" {
+		remotePort = "8080"
+	}
+
 	// Подключаемся к удаленному серверу
 	remoteConn, err := net.DialTimeout("tcp",
-		fmt.Sprintf("%s:%d", conn.config.RemoteHost, conn.config.RemotePort),
+		fmt.Sprintf("%s:%s", remoteHost, remotePort),
 		10*time.Second)
 	if err != nil {
 		v.logger.Error("failed to connect to remote server",
 			zap.Error(err),
 			zap.String("id", conn.config.ID),
-			zap.String("remote", conn.config.RemoteHost))
+			zap.String("remote", remoteHost))
 		v.incrementErrorCount(conn)
 		return
 	}
@@ -278,8 +308,8 @@ func (v *V2RayAdapter) updateStats(conn *v2rayConnection, rx, tx int64) {
 	conn.statsMutex.Lock()
 	defer conn.statsMutex.Unlock()
 
-	conn.stats.BytesRx += rx
-	conn.stats.BytesTx += tx
+	conn.stats.BytesReceived += rx
+	conn.stats.BytesSent += tx
 }
 
 // updateLastActivity обновляет время последней активности
@@ -287,7 +317,7 @@ func (v *V2RayAdapter) updateLastActivity(conn *v2rayConnection) {
 	conn.statsMutex.Lock()
 	defer conn.statsMutex.Unlock()
 
-	conn.stats.LastActivity = time.Now()
+	conn.stats.EndTime = time.Now()
 }
 
 // incrementConnections увеличивает счетчик соединений
@@ -295,7 +325,7 @@ func (v *V2RayAdapter) incrementConnections(conn *v2rayConnection) {
 	conn.statsMutex.Lock()
 	defer conn.statsMutex.Unlock()
 
-	conn.stats.Connections++
+	conn.stats.ConnectionsEstablished++
 }
 
 // incrementErrorCount увеличивает счетчик ошибок
@@ -303,5 +333,5 @@ func (v *V2RayAdapter) incrementErrorCount(conn *v2rayConnection) {
 	conn.statsMutex.Lock()
 	defer conn.statsMutex.Unlock()
 
-	conn.stats.ErrorCount++
+	conn.stats.ConnectionsFailed++
 }

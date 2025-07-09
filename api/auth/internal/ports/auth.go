@@ -26,6 +26,7 @@ type AuthService interface {
 	Login(ctx context.Context, req *domain.LoginRequest) (*domain.AuthResponse, error)
 	ValidateToken(token string) (*domain.Claims, error)
 	GetProfile(ctx context.Context, userID string) (*domain.User, error)
+	GetMe(ctx context.Context, token string) (*domain.User, error)
 }
 
 // UserService интерфейс для управления пользователями

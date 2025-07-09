@@ -94,8 +94,10 @@ services:
     container_name: silence_auth
     ports:
       - "${AUTH_HTTP_PORT:-8081}:8080"
+      - "${AUTH_GRPC_PORT:-9081}:9080"
     environment:
       HTTP_PORT: 8080
+      GRPC_PORT: 9080
       DB_HOST: ${DB_HOST:-postgres}
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER:-postgres}
@@ -133,10 +135,12 @@ services:
     environment:
       HTTP_PORT: 8080
       AUTH_SERVICE_URL: ${GATEWAY_AUTH_SERVICE_URL:-http://auth:8080}
-      ANALYTICS_SERVICE_URL: ${GATEWAY_ANALYTICS_SERVICE_URL:-http://analytics:8080}
-      SERVER_MANAGER_SERVICE_URL: ${GATEWAY_SERVER_MANAGER_SERVICE_URL:-http://server-manager:8085}
-      DPI_BYPASS_SERVICE_URL: ${GATEWAY_DPI_BYPASS_SERVICE_URL:-http://dpi-bypass:8080}
+      AUTH_GRPC_SERVICE_URL: ${GATEWAY_AUTH_GRPC_SERVICE_URL:-auth:9080}
+      ANALYTICS_SERVICE_URL: ${GATEWAY_ANALYTICS_SERVICE_URL:-analytics:8080}
+      SERVER_MANAGER_SERVICE_URL: ${GATEWAY_SERVER_MANAGER_SERVICE_URL:-server-manager:8085}
+      DPI_BYPASS_SERVICE_URL: ${GATEWAY_DPI_BYPASS_SERVICE_URL:-dpi-bypass:8080}
       VPN_CORE_SERVICE_URL: ${GATEWAY_VPN_CORE_SERVICE_URL:-http://vpn-core:8080}
+      NOTIFICATIONS_SERVICE_URL: ${GATEWAY_NOTIFICATIONS_SERVICE_URL:-notifications:8080}
       AUTH_URL: ${GATEWAY_AUTH_SERVICE_URL:-http://auth:8080}
       JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-key-change-this-in-production}
       INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-super-secret-internal-token}
@@ -158,9 +162,9 @@ services:
       dockerfile: rpc/analytics/Dockerfile
     container_name: silence_analytics
     ports:
-      - "${ANALYTICS_HTTP_PORT:-8082}:8080"
+      - "${ANALYTICS_GRPC_PORT:-8082}:8080"
     environment:
-      HTTP_PORT: 8080
+      GRPC_PORT: 8080
       INFLUXDB_URL: ${ANALYTICS_INFLUXDB_URL:-http://influxdb:8086}
       INFLUXDB_TOKEN: ${ANALYTICS_INFLUXDB_TOKEN:-your-influxdb-token}
       INFLUXDB_ORG: ${ANALYTICS_INFLUXDB_ORG:-silence}
@@ -179,9 +183,9 @@ services:
       dockerfile: rpc/server-manager/Dockerfile
     container_name: silence_server_manager
     ports:
-      - "${SERVER_MANAGER_HTTP_PORT:-8085}:8085"
+      - "${SERVER_MANAGER_GRPC_PORT:-8085}:8085"
     environment:
-      HTTP_PORT: 8085
+      GRPC_PORT: 8085
       DB_HOST: ${DB_HOST:-postgres}
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER:-postgres}
@@ -208,9 +212,9 @@ services:
       dockerfile: rpc/dpi-bypass/Dockerfile
     container_name: silence_dpi_bypass
     ports:
-      - "${DPI_BYPASS_HTTP_PORT:-8083}:8080"
+      - "${DPI_BYPASS_GRPC_PORT:-8083}:8080"
     environment:
-      HTTP_PORT: 8080
+      GRPC_PORT: 8080
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       LOG_LEVEL: ${LOG_LEVEL:-info}
@@ -254,9 +258,9 @@ services:
       dockerfile: rpc/notifications/Dockerfile
     container_name: silence_notifications
     ports:
-      - "${NOTIFICATIONS_HTTP_PORT:-8087}:8080"
+      - "${NOTIFICATIONS_GRPC_PORT:-8087}:8080"
     environment:
-      HTTP_PORT: 8080
+      GRPC_PORT: 8080
       NOTIFICATIONS_RABBITMQ_URL: ${NOTIFICATIONS_RABBITMQ_URL:-amqp://admin:admin@rabbitmq:5672/}
       RABBITMQ_EXCHANGE: ${NOTIFICATIONS_RABBITMQ_EXCHANGE:-notifications}
       RABBITMQ_QUEUE: ${NOTIFICATIONS_RABBITMQ_QUEUE:-notifications_queue}

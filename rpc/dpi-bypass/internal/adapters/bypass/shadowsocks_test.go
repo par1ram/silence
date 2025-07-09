@@ -1,6 +1,7 @@
 package bypass
 
 import (
+	"fmt"
 	"net"
 	"testing"
 
@@ -15,14 +16,16 @@ func TestShadowsocksAdapter_Basic(t *testing.T) {
 	assert.NotNil(t, adapter)
 
 	config := &domain.BypassConfig{
-		ID:         "ss-1",
-		Name:       "Shadowsocks Test",
-		Method:     domain.BypassMethodShadowsocks,
-		LocalPort:  0,
-		RemoteHost: "localhost",
-		RemotePort: 12345,
-		Password:   "testpass",
-		Encryption: "none",
+		ID:     "ss-1",
+		Name:   "Shadowsocks Test",
+		Method: domain.BypassMethodShadowsocks,
+		Parameters: map[string]string{
+			"local_port":  "0",
+			"remote_host": "localhost",
+			"remote_port": "12345",
+			"password":    "testpass",
+			"encryption":  "aes-256-gcm",
+		},
 	}
 
 	err := adapter.Start(config)
@@ -49,27 +52,35 @@ func TestShadowsocksAdapter_Start_PortBusy(t *testing.T) {
 	adapter2 := NewShadowsocksAdapter(logger)
 
 	config := &domain.BypassConfig{
-		ID:         "ss-busy-1",
-		Name:       "Busy Test",
-		Method:     domain.BypassMethodShadowsocks,
-		LocalPort:  0,
-		RemoteHost: "localhost",
-		RemotePort: 12345,
-		Password:   "testpass",
-		Encryption: "none",
+		ID:     "ss-busy-1",
+		Name:   "Busy Test",
+		Method: domain.BypassMethodShadowsocks,
+		Parameters: map[string]string{
+			"local_port":  "0", // 0 — выбрать свободный порт
+			"remote_host": "localhost",
+			"remote_port": "12345",
+			"password":    "testpass",
+			"encryption":  "aes-256-gcm",
+		},
 	}
 
 	err := adapter1.Start(config)
 	assert.NoError(t, err)
 
+	// Получаем реальный порт, который был выбран
 	adapter1.mutex.RLock()
 	conn := adapter1.running["ss-busy-1"]
 	adapter1.mutex.RUnlock()
+
+	if conn == nil || conn.listener == nil {
+		t.Fatal("connection or listener is nil")
+	}
+
 	port := conn.listener.Addr().(*net.TCPAddr).Port
 
 	config2 := *config
 	config2.ID = "ss-busy-2"
-	config2.LocalPort = port
+	config2.Parameters["local_port"] = fmt.Sprintf("%d", port)
 	err = adapter2.Start(&config2)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to create listener")

@@ -18,13 +18,17 @@ func (s *ServerService) GetServerStats(ctx context.Context, id string) (*domain.
 	// Получаем последнюю статистику из базы данных
 	if s.statsRepo == nil {
 		return &domain.ServerStats{
-			ServerID:    id,
-			CPU:         0.0,
-			Memory:      0.0,
-			Disk:        0.0,
-			Network:     0.0,
-			Connections: 0,
-			Timestamp:   time.Now(),
+			ServerID:     id,
+			CPUUsage:     0.0,
+			MemoryUsage:  0.0,
+			StorageUsage: 0.0,
+			NetworkIn:    0,
+			NetworkOut:   0,
+			Uptime:       0,
+			RequestCount: 0,
+			ResponseTime: 0.0,
+			ErrorRate:    0.0,
+			Timestamp:    time.Now(),
 		}, nil
 	}
 
@@ -46,10 +50,11 @@ func (s *ServerService) GetServerHealth(ctx context.Context, id string) (*domain
 	// Получаем данные о здоровье из базы данных
 	if s.healthRepo == nil {
 		return &domain.ServerHealth{
-			ServerID:  id,
-			Status:    "unknown",
-			Message:   "Health repository not initialized",
-			Timestamp: time.Now(),
+			ServerID:    id,
+			Status:      domain.ServerStatusError,
+			Message:     "Health repository not initialized",
+			LastCheckAt: time.Now(),
+			Checks:      []map[string]interface{}{},
 		}, nil
 	}
 

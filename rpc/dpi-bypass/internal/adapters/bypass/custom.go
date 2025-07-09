@@ -54,21 +54,18 @@ func (c *CustomAdapter) Start(config *domain.BypassConfig) error {
 	// Создаем контекст для управления жизненным циклом
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// Получаем параметры из конфигурации
+	localPort := config.Parameters["local_port"]
+	if localPort == "" {
+		localPort = "1080"
+	}
+
 	// Создаем listener
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", config.LocalPort))
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", localPort))
 	if err != nil {
 		cancel()
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
-
-	// Инициализируем кастомные параметры
-	obfuscationMode := "hybrid" // По умолчанию гибридный режим
-	chaffRatio := 0.3           // 30% мусорного трафика
-	fragmentSize := 1024        // 1KB фрагменты
-	timingJitter := 50          // 50ms джиттер
-
-	// Генерируем ключ шифрования из пароля
-	encryptionKey := c.generateKey(config.Password)
 
 	conn := &customConnection{
 		config:   config,
@@ -76,19 +73,20 @@ func (c *CustomAdapter) Start(config *domain.BypassConfig) error {
 		ctx:      ctx,
 		cancel:   cancel,
 		stats: &domain.BypassStats{
-			ID:           config.ID,
-			BytesRx:      0,
-			BytesTx:      0,
-			Connections:  0,
-			LastActivity: time.Now(),
-			ErrorCount:   0,
+			ID:                     config.ID,
+			ConfigID:               config.ID,
+			SessionID:              "session_" + config.ID,
+			BytesSent:              0,
+			BytesReceived:          0,
+			PacketsSent:            0,
+			PacketsReceived:        0,
+			ConnectionsEstablished: 0,
+			ConnectionsFailed:      0,
+			SuccessRate:            1.0,
+			AverageLatency:         0,
+			StartTime:              time.Now(),
+			EndTime:                time.Now(),
 		},
-		obfuscationMode: obfuscationMode,
-		chaffRatio:      chaffRatio,
-		fragmentSize:    fragmentSize,
-		timingJitter:    timingJitter,
-		encryptionKey:   encryptionKey,
-		nonceCounter:    0,
 	}
 
 	c.running[config.ID] = conn
@@ -98,10 +96,8 @@ func (c *CustomAdapter) Start(config *domain.BypassConfig) error {
 
 	c.logger.Info("custom obfuscator started",
 		zap.String("id", config.ID),
-		zap.Int("local_port", config.LocalPort),
-		zap.String("remote", config.RemoteHost),
-		zap.Int("remote_port", config.RemotePort),
-		zap.String("mode", obfuscationMode))
+		zap.String("name", config.Name),
+		zap.String("local_port", localPort))
 
 	return nil
 }
@@ -117,11 +113,15 @@ func (c *CustomAdapter) Stop(id string) error {
 	}
 
 	// Отменяем контекст
-	conn.cancel()
+	if conn.cancel != nil {
+		conn.cancel()
+	}
 
 	// Закрываем listener
-	if err := conn.listener.Close(); err != nil {
-		c.logger.Error("failed to close listener", zap.Error(err), zap.String("id", id))
+	if conn.listener != nil {
+		if err := conn.listener.Close(); err != nil {
+			c.logger.Error("failed to close listener", zap.Error(err), zap.String("id", id))
+		}
 	}
 
 	delete(c.running, id)

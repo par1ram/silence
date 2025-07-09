@@ -57,8 +57,8 @@ func Run() {
 	// Создаем контекст сервиса
 	svcCtx := svc.NewServiceContext(cfg, logger)
 
-	// Добавляем HTTP сервер
-	app.AddService(svcCtx.HTTPServer)
+	// Добавляем gRPC сервер
+	app.AddService(svcCtx.GRPCServer)
 
 	// Запускаем приложение
 	app.run()

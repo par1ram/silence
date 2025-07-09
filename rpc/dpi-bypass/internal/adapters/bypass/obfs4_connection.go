@@ -39,15 +39,25 @@ func (o *Obfs4Adapter) handleClientConnection(conn *obfs4Connection, clientConn 
 	// Увеличиваем счетчик соединений
 	o.incrementConnections(conn)
 
+	// Получаем параметры удаленного сервера
+	remoteHost := conn.config.Parameters["remote_host"]
+	remotePort := conn.config.Parameters["remote_port"]
+	if remoteHost == "" {
+		remoteHost = "127.0.0.1"
+	}
+	if remotePort == "" {
+		remotePort = "8080"
+	}
+
 	// Подключаемся к удаленному серверу
 	remoteConn, err := net.DialTimeout("tcp",
-		fmt.Sprintf("%s:%d", conn.config.RemoteHost, conn.config.RemotePort),
+		fmt.Sprintf("%s:%s", remoteHost, remotePort),
 		10*time.Second)
 	if err != nil {
 		o.logger.Error("failed to connect to remote server",
 			zap.Error(err),
 			zap.String("id", conn.config.ID),
-			zap.String("remote", conn.config.RemoteHost))
+			zap.String("remote", remoteHost))
 		o.incrementErrorCount(conn)
 		return
 	}

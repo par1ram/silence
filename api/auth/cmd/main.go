@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/par1ram/silence/api/auth/internal/adapters/database"
+	"github.com/par1ram/silence/api/auth/internal/adapters/grpc"
 	"github.com/par1ram/silence/api/auth/internal/adapters/http"
 	"github.com/par1ram/silence/api/auth/internal/config"
 	"github.com/par1ram/silence/api/auth/internal/services"
@@ -72,9 +73,13 @@ func main() {
 	// Создаем HTTP сервер
 	httpServer := http.NewServer(cfg.HTTPPort, handlers, userHandlers, cfg, logger)
 
+	// Создаем gRPC сервер
+	grpcServer := grpc.NewServer(cfg.GRPCPort, authService, userService)
+
 	// Создаем приложение
 	application := app.New(container)
 	application.AddService(httpServer)
+	application.AddService(grpcServer)
 
 	// Запускаем приложение
 	application.Run()

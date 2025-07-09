@@ -21,12 +21,9 @@ type Config struct {
 	Analytics AnalyticsConfig `json:"analytics"`
 }
 
-// ServerConfig конфигурация HTTP сервера
+// ServerConfig конфигурация gRPC сервера
 type ServerConfig struct {
-	Port         string        `json:"port"`
-	ReadTimeout  time.Duration `json:"read_timeout"`
-	WriteTimeout time.Duration `json:"write_timeout"`
-	IdleTimeout  time.Duration `json:"idle_timeout"`
+	Port int `json:"port"`
 }
 
 // DatabaseConfig конфигурация базы данных
@@ -110,10 +107,7 @@ type AnalyticsConfig struct {
 func Load() *Config {
 	return &Config{
 		Server: ServerConfig{
-			Port:         getEnv("HTTP_PORT", "8080"),
-			ReadTimeout:  getDurationEnv("HTTP_READ_TIMEOUT", 30*time.Second),
-			WriteTimeout: getDurationEnv("HTTP_WRITE_TIMEOUT", 30*time.Second),
-			IdleTimeout:  getDurationEnv("HTTP_IDLE_TIMEOUT", 60*time.Second),
+			Port: getIntEnv("GRPC_PORT", 8080),
 		},
 		Database: DatabaseConfig{
 			Host:     getEnv("NOTIFICATIONS_DB_HOST", "localhost"),

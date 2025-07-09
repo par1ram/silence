@@ -172,13 +172,17 @@ func (d *DockerOrchestrator) GetServerStats(ctx context.Context, serverID string
 	}
 
 	return &domain.ServerStats{
-		ServerID:    serverID,
-		CPU:         0,
-		Memory:      0,
-		Disk:        0,
-		Network:     0,
-		Connections: 0,
-		Timestamp:   time.Now(),
+		ServerID:     serverID,
+		CPUUsage:     0.0,
+		MemoryUsage:  0.0,
+		StorageUsage: 0.0,
+		NetworkIn:    0,
+		NetworkOut:   0,
+		Uptime:       0,
+		RequestCount: 0,
+		ResponseTime: 0.0,
+		ErrorRate:    0.0,
+		Timestamp:    time.Now(),
 	}, nil
 }
 
@@ -198,10 +202,11 @@ func (d *DockerOrchestrator) GetServerHealth(ctx context.Context, serverID strin
 	}
 
 	return &domain.ServerHealth{
-		ServerID:  serverID,
-		Status:    "not_found",
-		Message:   "Container not found",
-		Timestamp: time.Now(),
+		ServerID:    serverID,
+		Status:      domain.ServerStatusError,
+		Message:     "Container not found",
+		LastCheckAt: time.Now(),
+		Checks:      []map[string]interface{}{},
 	}, nil
 }
 

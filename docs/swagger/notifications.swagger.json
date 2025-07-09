@@ -1,0 +1,1178 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "notifications/notifications.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "NotificationsService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/notifications": {
+      "get": {
+        "operationId": "NotificationsService_ListNotifications",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsListNotificationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "recipient",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "description": " - NOTIFICATION_TYPE_SYSTEM_ALERT: System notifications\n - NOTIFICATION_TYPE_USER_LOGIN: User notifications\n - NOTIFICATION_TYPE_VPN_CONNECTED: VPN notifications\n - NOTIFICATION_TYPE_METRICS_ALERT: Analytics notifications",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NOTIFICATION_TYPE_UNSPECIFIED",
+              "NOTIFICATION_TYPE_SYSTEM_ALERT",
+              "NOTIFICATION_TYPE_SERVER_DOWN",
+              "NOTIFICATION_TYPE_SERVER_UP",
+              "NOTIFICATION_TYPE_HIGH_LOAD",
+              "NOTIFICATION_TYPE_LOW_DISK_SPACE",
+              "NOTIFICATION_TYPE_BACKUP_FAILED",
+              "NOTIFICATION_TYPE_BACKUP_SUCCESS",
+              "NOTIFICATION_TYPE_UPDATE_FAILED",
+              "NOTIFICATION_TYPE_UPDATE_SUCCESS",
+              "NOTIFICATION_TYPE_USER_LOGIN",
+              "NOTIFICATION_TYPE_USER_LOGOUT",
+              "NOTIFICATION_TYPE_USER_REGISTERED",
+              "NOTIFICATION_TYPE_USER_BLOCKED",
+              "NOTIFICATION_TYPE_USER_UNBLOCKED",
+              "NOTIFICATION_TYPE_PASSWORD_RESET",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED",
+              "NOTIFICATION_TYPE_VPN_CONNECTED",
+              "NOTIFICATION_TYPE_VPN_DISCONNECTED",
+              "NOTIFICATION_TYPE_VPN_ERROR",
+              "NOTIFICATION_TYPE_BYPASS_BLOCKED",
+              "NOTIFICATION_TYPE_BYPASS_SUCCESS",
+              "NOTIFICATION_TYPE_METRICS_ALERT",
+              "NOTIFICATION_TYPE_ANOMALY_DETECTED",
+              "NOTIFICATION_TYPE_THRESHOLD_EXCEEDED"
+            ],
+            "default": "NOTIFICATION_TYPE_UNSPECIFIED"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NOTIFICATION_STATUS_UNSPECIFIED",
+              "NOTIFICATION_STATUS_PENDING",
+              "NOTIFICATION_STATUS_SENDING",
+              "NOTIFICATION_STATUS_SENT",
+              "NOTIFICATION_STATUS_DELIVERED",
+              "NOTIFICATION_STATUS_FAILED",
+              "NOTIFICATION_STATUS_CANCELLED"
+            ],
+            "default": "NOTIFICATION_STATUS_UNSPECIFIED"
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/dispatch": {
+      "post": {
+        "summary": "Notification dispatch",
+        "operationId": "NotificationsService_DispatchNotification",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsDispatchNotificationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/notificationsDispatchNotificationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "NotificationsService_Health",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsHealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/preferences/{userId}": {
+      "get": {
+        "summary": "User preferences",
+        "operationId": "NotificationsService_GetUserPreferences",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotificationPreference"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "description": " - NOTIFICATION_TYPE_SYSTEM_ALERT: System notifications\n - NOTIFICATION_TYPE_USER_LOGIN: User notifications\n - NOTIFICATION_TYPE_VPN_CONNECTED: VPN notifications\n - NOTIFICATION_TYPE_METRICS_ALERT: Analytics notifications",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NOTIFICATION_TYPE_UNSPECIFIED",
+              "NOTIFICATION_TYPE_SYSTEM_ALERT",
+              "NOTIFICATION_TYPE_SERVER_DOWN",
+              "NOTIFICATION_TYPE_SERVER_UP",
+              "NOTIFICATION_TYPE_HIGH_LOAD",
+              "NOTIFICATION_TYPE_LOW_DISK_SPACE",
+              "NOTIFICATION_TYPE_BACKUP_FAILED",
+              "NOTIFICATION_TYPE_BACKUP_SUCCESS",
+              "NOTIFICATION_TYPE_UPDATE_FAILED",
+              "NOTIFICATION_TYPE_UPDATE_SUCCESS",
+              "NOTIFICATION_TYPE_USER_LOGIN",
+              "NOTIFICATION_TYPE_USER_LOGOUT",
+              "NOTIFICATION_TYPE_USER_REGISTERED",
+              "NOTIFICATION_TYPE_USER_BLOCKED",
+              "NOTIFICATION_TYPE_USER_UNBLOCKED",
+              "NOTIFICATION_TYPE_PASSWORD_RESET",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED",
+              "NOTIFICATION_TYPE_VPN_CONNECTED",
+              "NOTIFICATION_TYPE_VPN_DISCONNECTED",
+              "NOTIFICATION_TYPE_VPN_ERROR",
+              "NOTIFICATION_TYPE_BYPASS_BLOCKED",
+              "NOTIFICATION_TYPE_BYPASS_SUCCESS",
+              "NOTIFICATION_TYPE_METRICS_ALERT",
+              "NOTIFICATION_TYPE_ANOMALY_DETECTED",
+              "NOTIFICATION_TYPE_THRESHOLD_EXCEEDED"
+            ],
+            "default": "NOTIFICATION_TYPE_UNSPECIFIED"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      },
+      "put": {
+        "operationId": "NotificationsService_UpdateUserPreferences",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotificationPreference"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NotificationsServiceUpdateUserPreferencesBody"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/stats": {
+      "get": {
+        "summary": "Statistics",
+        "operationId": "NotificationsService_GetNotificationStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotificationStats"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "startTime",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "description": " - NOTIFICATION_TYPE_SYSTEM_ALERT: System notifications\n - NOTIFICATION_TYPE_USER_LOGIN: User notifications\n - NOTIFICATION_TYPE_VPN_CONNECTED: VPN notifications\n - NOTIFICATION_TYPE_METRICS_ALERT: Analytics notifications",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NOTIFICATION_TYPE_UNSPECIFIED",
+              "NOTIFICATION_TYPE_SYSTEM_ALERT",
+              "NOTIFICATION_TYPE_SERVER_DOWN",
+              "NOTIFICATION_TYPE_SERVER_UP",
+              "NOTIFICATION_TYPE_HIGH_LOAD",
+              "NOTIFICATION_TYPE_LOW_DISK_SPACE",
+              "NOTIFICATION_TYPE_BACKUP_FAILED",
+              "NOTIFICATION_TYPE_BACKUP_SUCCESS",
+              "NOTIFICATION_TYPE_UPDATE_FAILED",
+              "NOTIFICATION_TYPE_UPDATE_SUCCESS",
+              "NOTIFICATION_TYPE_USER_LOGIN",
+              "NOTIFICATION_TYPE_USER_LOGOUT",
+              "NOTIFICATION_TYPE_USER_REGISTERED",
+              "NOTIFICATION_TYPE_USER_BLOCKED",
+              "NOTIFICATION_TYPE_USER_UNBLOCKED",
+              "NOTIFICATION_TYPE_PASSWORD_RESET",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED",
+              "NOTIFICATION_TYPE_VPN_CONNECTED",
+              "NOTIFICATION_TYPE_VPN_DISCONNECTED",
+              "NOTIFICATION_TYPE_VPN_ERROR",
+              "NOTIFICATION_TYPE_BYPASS_BLOCKED",
+              "NOTIFICATION_TYPE_BYPASS_SUCCESS",
+              "NOTIFICATION_TYPE_METRICS_ALERT",
+              "NOTIFICATION_TYPE_ANOMALY_DETECTED",
+              "NOTIFICATION_TYPE_THRESHOLD_EXCEEDED"
+            ],
+            "default": "NOTIFICATION_TYPE_UNSPECIFIED"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/templates": {
+      "get": {
+        "operationId": "NotificationsService_ListTemplates",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsListTemplatesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type",
+            "description": " - NOTIFICATION_TYPE_SYSTEM_ALERT: System notifications\n - NOTIFICATION_TYPE_USER_LOGIN: User notifications\n - NOTIFICATION_TYPE_VPN_CONNECTED: VPN notifications\n - NOTIFICATION_TYPE_METRICS_ALERT: Analytics notifications",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NOTIFICATION_TYPE_UNSPECIFIED",
+              "NOTIFICATION_TYPE_SYSTEM_ALERT",
+              "NOTIFICATION_TYPE_SERVER_DOWN",
+              "NOTIFICATION_TYPE_SERVER_UP",
+              "NOTIFICATION_TYPE_HIGH_LOAD",
+              "NOTIFICATION_TYPE_LOW_DISK_SPACE",
+              "NOTIFICATION_TYPE_BACKUP_FAILED",
+              "NOTIFICATION_TYPE_BACKUP_SUCCESS",
+              "NOTIFICATION_TYPE_UPDATE_FAILED",
+              "NOTIFICATION_TYPE_UPDATE_SUCCESS",
+              "NOTIFICATION_TYPE_USER_LOGIN",
+              "NOTIFICATION_TYPE_USER_LOGOUT",
+              "NOTIFICATION_TYPE_USER_REGISTERED",
+              "NOTIFICATION_TYPE_USER_BLOCKED",
+              "NOTIFICATION_TYPE_USER_UNBLOCKED",
+              "NOTIFICATION_TYPE_PASSWORD_RESET",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED",
+              "NOTIFICATION_TYPE_VPN_CONNECTED",
+              "NOTIFICATION_TYPE_VPN_DISCONNECTED",
+              "NOTIFICATION_TYPE_VPN_ERROR",
+              "NOTIFICATION_TYPE_BYPASS_BLOCKED",
+              "NOTIFICATION_TYPE_BYPASS_SUCCESS",
+              "NOTIFICATION_TYPE_METRICS_ALERT",
+              "NOTIFICATION_TYPE_ANOMALY_DETECTED",
+              "NOTIFICATION_TYPE_THRESHOLD_EXCEEDED"
+            ],
+            "default": "NOTIFICATION_TYPE_UNSPECIFIED"
+          },
+          {
+            "name": "enabled",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      },
+      "post": {
+        "summary": "Templates",
+        "operationId": "NotificationsService_CreateTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotificationTemplate"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/notificationsCreateTemplateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/templates/{id}": {
+      "get": {
+        "operationId": "NotificationsService_GetTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotificationTemplate"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      },
+      "delete": {
+        "operationId": "NotificationsService_DeleteTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsDeleteTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      },
+      "put": {
+        "operationId": "NotificationsService_UpdateTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotificationTemplate"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NotificationsServiceUpdateTemplateBody"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/{id}": {
+      "get": {
+        "summary": "Notification management",
+        "operationId": "NotificationsService_GetNotification",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotification"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/{id}/status": {
+      "put": {
+        "operationId": "NotificationsService_UpdateNotificationStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotification"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NotificationsServiceUpdateNotificationStatusBody"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "NotificationsServiceUpdateNotificationStatusBody": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/notificationsNotificationStatus"
+        },
+        "error": {
+          "type": "string"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "NotificationsServiceUpdateTemplateBody": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "priority": {
+          "$ref": "#/definitions/notificationsNotificationPriority"
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "NotificationsServiceUpdateUserPreferencesBody": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "schedule": {
+          "$ref": "#/definitions/notificationsNotificationSchedule"
+        }
+      }
+    },
+    "notificationsCreateTemplateRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "priority": {
+          "$ref": "#/definitions/notificationsNotificationPriority"
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "notificationsDeleteTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "notificationsDispatchNotificationRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "priority": {
+          "$ref": "#/definitions/notificationsNotificationPriority"
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "recipients": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": "string"
+        },
+        "sourceId": {
+          "type": "string"
+        },
+        "maxAttempts": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "scheduledAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Request/Response messages"
+    },
+    "notificationsDispatchNotificationResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "notificationId": {
+          "type": "string"
+        }
+      }
+    },
+    "notificationsHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "notificationsListNotificationsResponse": {
+      "type": "object",
+      "properties": {
+        "notifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/notificationsNotification"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "notificationsListTemplatesResponse": {
+      "type": "object",
+      "properties": {
+        "templates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/notificationsNotificationTemplate"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "notificationsNotification": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "priority": {
+          "$ref": "#/definitions/notificationsNotificationPriority"
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "recipients": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": "string"
+        },
+        "sourceId": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/notificationsNotificationStatus"
+        },
+        "attempts": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxAttempts": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "scheduledAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "title": "Main Notification message"
+    },
+    "notificationsNotificationChannel": {
+      "type": "string",
+      "enum": [
+        "NOTIFICATION_CHANNEL_UNSPECIFIED",
+        "NOTIFICATION_CHANNEL_EMAIL",
+        "NOTIFICATION_CHANNEL_SMS",
+        "NOTIFICATION_CHANNEL_PUSH",
+        "NOTIFICATION_CHANNEL_TELEGRAM",
+        "NOTIFICATION_CHANNEL_WEBHOOK",
+        "NOTIFICATION_CHANNEL_SLACK"
+      ],
+      "default": "NOTIFICATION_CHANNEL_UNSPECIFIED"
+    },
+    "notificationsNotificationPreference": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "schedule": {
+          "$ref": "#/definitions/notificationsNotificationSchedule"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Notification Preference"
+    },
+    "notificationsNotificationPriority": {
+      "type": "string",
+      "enum": [
+        "NOTIFICATION_PRIORITY_UNSPECIFIED",
+        "NOTIFICATION_PRIORITY_LOW",
+        "NOTIFICATION_PRIORITY_NORMAL",
+        "NOTIFICATION_PRIORITY_HIGH",
+        "NOTIFICATION_PRIORITY_URGENT"
+      ],
+      "default": "NOTIFICATION_PRIORITY_UNSPECIFIED"
+    },
+    "notificationsNotificationSchedule": {
+      "type": "object",
+      "properties": {
+        "startTime": {
+          "type": "string",
+          "title": "HH:MM"
+        },
+        "endTime": {
+          "type": "string",
+          "title": "HH:MM"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "days": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "description": "0=Sunday, 1=Monday, etc."
+        }
+      },
+      "title": "Notification Schedule"
+    },
+    "notificationsNotificationStats": {
+      "type": "object",
+      "properties": {
+        "totalSent": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalFailed": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalPending": {
+          "type": "string",
+          "format": "int64"
+        },
+        "byType": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "int64"
+          }
+        },
+        "byChannel": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "int64"
+          }
+        },
+        "byPriority": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "int64"
+          }
+        },
+        "successRate": {
+          "type": "number",
+          "format": "double"
+        },
+        "averageDelay": {
+          "type": "number",
+          "format": "double",
+          "title": "in seconds"
+        }
+      },
+      "title": "Notification Stats"
+    },
+    "notificationsNotificationStatus": {
+      "type": "string",
+      "enum": [
+        "NOTIFICATION_STATUS_UNSPECIFIED",
+        "NOTIFICATION_STATUS_PENDING",
+        "NOTIFICATION_STATUS_SENDING",
+        "NOTIFICATION_STATUS_SENT",
+        "NOTIFICATION_STATUS_DELIVERED",
+        "NOTIFICATION_STATUS_FAILED",
+        "NOTIFICATION_STATUS_CANCELLED"
+      ],
+      "default": "NOTIFICATION_STATUS_UNSPECIFIED"
+    },
+    "notificationsNotificationTemplate": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "priority": {
+          "$ref": "#/definitions/notificationsNotificationPriority"
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Notification Template"
+    },
+    "notificationsNotificationType": {
+      "type": "string",
+      "enum": [
+        "NOTIFICATION_TYPE_UNSPECIFIED",
+        "NOTIFICATION_TYPE_SYSTEM_ALERT",
+        "NOTIFICATION_TYPE_SERVER_DOWN",
+        "NOTIFICATION_TYPE_SERVER_UP",
+        "NOTIFICATION_TYPE_HIGH_LOAD",
+        "NOTIFICATION_TYPE_LOW_DISK_SPACE",
+        "NOTIFICATION_TYPE_BACKUP_FAILED",
+        "NOTIFICATION_TYPE_BACKUP_SUCCESS",
+        "NOTIFICATION_TYPE_UPDATE_FAILED",
+        "NOTIFICATION_TYPE_UPDATE_SUCCESS",
+        "NOTIFICATION_TYPE_USER_LOGIN",
+        "NOTIFICATION_TYPE_USER_LOGOUT",
+        "NOTIFICATION_TYPE_USER_REGISTERED",
+        "NOTIFICATION_TYPE_USER_BLOCKED",
+        "NOTIFICATION_TYPE_USER_UNBLOCKED",
+        "NOTIFICATION_TYPE_PASSWORD_RESET",
+        "NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED",
+        "NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED",
+        "NOTIFICATION_TYPE_VPN_CONNECTED",
+        "NOTIFICATION_TYPE_VPN_DISCONNECTED",
+        "NOTIFICATION_TYPE_VPN_ERROR",
+        "NOTIFICATION_TYPE_BYPASS_BLOCKED",
+        "NOTIFICATION_TYPE_BYPASS_SUCCESS",
+        "NOTIFICATION_TYPE_METRICS_ALERT",
+        "NOTIFICATION_TYPE_ANOMALY_DETECTED",
+        "NOTIFICATION_TYPE_THRESHOLD_EXCEEDED"
+      ],
+      "default": "NOTIFICATION_TYPE_UNSPECIFIED",
+      "description": "- NOTIFICATION_TYPE_SYSTEM_ALERT: System notifications\n - NOTIFICATION_TYPE_USER_LOGIN: User notifications\n - NOTIFICATION_TYPE_VPN_CONNECTED: VPN notifications\n - NOTIFICATION_TYPE_METRICS_ALERT: Analytics notifications",
+      "title": "Notification Types"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

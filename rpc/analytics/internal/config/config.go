@@ -8,6 +8,7 @@ import (
 // Config конфигурация analytics сервиса
 type Config struct {
 	HTTP     HTTPConfig
+	GRPC     GRPCConfig
 	InfluxDB InfluxDBConfig
 	Log      LogConfig
 }
@@ -26,6 +27,10 @@ type InfluxDBConfig struct {
 	Bucket string
 }
 
+type GRPCConfig struct {
+	Address string
+}
+
 type LogConfig struct {
 	Level string
 }
@@ -38,6 +43,9 @@ func Load() (*Config, error) {
 			ReadTimeout:  getDuration("HTTP_READ_TIMEOUT", 30*time.Second),
 			WriteTimeout: getDuration("HTTP_WRITE_TIMEOUT", 30*time.Second),
 			IdleTimeout:  getDuration("HTTP_IDLE_TIMEOUT", 60*time.Second),
+		},
+		GRPC: GRPCConfig{
+			Address: getEnv("GRPC_ADDRESS", ":9090"),
 		},
 		InfluxDB: InfluxDBConfig{
 			URL:    getEnv("INFLUXDB_URL", "http://localhost:8086"),

@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	httpserver "github.com/par1ram/silence/rpc/notifications/internal/adapters/http"
+	grpcserver "github.com/par1ram/silence/rpc/notifications/internal/adapters/grpc"
 	"github.com/par1ram/silence/rpc/notifications/internal/adapters/rabbitmq"
 	"github.com/par1ram/silence/rpc/notifications/internal/config"
 	"github.com/par1ram/silence/rpc/notifications/internal/domain"
@@ -58,11 +58,11 @@ func main() {
 	)
 	consumer := logic.NewNotificationConsumer(dispatcher)
 
-	// HTTP сервер
-	httpSrv := httpserver.NewServer(":"+cfg.Server.Port, dispatcher)
+	// gRPC сервер
+	grpcSrv := grpcserver.NewServer(cfg.Server.Port, dispatcher)
 	go func() {
-		if err := httpSrv.Start(); err != nil {
-			log.Fatalf("[main] http server error: %v", err)
+		if err := grpcSrv.Start(); err != nil {
+			log.Fatalf("[main] grpc server error: %v", err)
 		}
 	}()
 

@@ -14,7 +14,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/par1ram/silence/rpc/server-manager/internal/adapters/database"
 	"github.com/par1ram/silence/rpc/server-manager/internal/adapters/docker"
-	httpadapter "github.com/par1ram/silence/rpc/server-manager/internal/adapters/http"
+	grpcadapter "github.com/par1ram/silence/rpc/server-manager/internal/adapters/grpc"
 	"github.com/par1ram/silence/rpc/server-manager/internal/config"
 	"github.com/par1ram/silence/rpc/server-manager/internal/ports"
 	"github.com/par1ram/silence/rpc/server-manager/internal/services"
@@ -26,7 +26,7 @@ import (
 type App struct {
 	config          *config.Config
 	logger          *zap.Logger
-	httpServer      *httpadapter.Server
+	grpcServer      *grpcadapter.Server
 	serverService   ports.ServerService
 	shutdownTimeout time.Duration
 }
@@ -103,7 +103,6 @@ func New(logger *zap.Logger) (*App, error) {
 	// updateRepo := database.NewUpdateRepository(db, logger)
 
 	// Создаем сервисы
-	healthService := services.NewHealthService("server-manager", cfg.Version)
 	serverService := services.NewServerService(
 		serverRepo,
 		nil, // statsRepo
@@ -115,16 +114,13 @@ func New(logger *zap.Logger) (*App, error) {
 		logger,
 	)
 
-	// Создаем HTTP обработчики
-	handlers := httpadapter.NewHandlers(healthService, serverService, logger)
-
-	// Создаем HTTP сервер
-	httpServer := httpadapter.NewServer(cfg.HTTPPort, handlers, logger)
+	// Создаем gRPC сервер
+	grpcServer := grpcadapter.NewServer(serverService, logger, cfg)
 
 	return &App{
 		config:          cfg,
 		logger:          logger,
-		httpServer:      httpServer,
+		grpcServer:      grpcServer,
 		serverService:   serverService,
 		shutdownTimeout: 30 * time.Second,
 	}, nil
@@ -133,14 +129,13 @@ func New(logger *zap.Logger) (*App, error) {
 // Start запускает приложение
 func (a *App) Start() error {
 	a.logger.Info("Starting Server Manager service",
-		zap.String("http_port", a.config.HTTPPort),
-		zap.String("grpc_port", a.config.GRPCPort),
+		zap.String("grpc_address", a.config.GRPC.Address),
 		zap.String("version", a.config.Version),
 	)
 
-	// Запускаем HTTP сервер
-	if err := a.httpServer.Start(context.Background()); err != nil {
-		return fmt.Errorf("failed to start HTTP server: %w", err)
+	// Запускаем gRPC сервер
+	if err := a.grpcServer.Start(context.Background()); err != nil {
+		return fmt.Errorf("failed to start gRPC server: %w", err)
 	}
 
 	a.logger.Info("Server Manager service started successfully")
@@ -151,9 +146,9 @@ func (a *App) Start() error {
 func (a *App) Shutdown(ctx context.Context) error {
 	a.logger.Info("Shutting down Server Manager service...")
 
-	// Останавливаем HTTP сервер
-	if err := a.httpServer.Stop(ctx); err != nil {
-		a.logger.Error("Failed to stop HTTP server", zap.Error(err))
+	// Останавливаем gRPC сервер
+	if err := a.grpcServer.Stop(ctx); err != nil {
+		a.logger.Error("Failed to stop gRPC server", zap.Error(err))
 	}
 
 	a.logger.Info("Server Manager service stopped gracefully")

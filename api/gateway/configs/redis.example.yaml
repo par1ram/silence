@@ -1,0 +1,161 @@
+# Redis Configuration Example for Gateway Service
+# Copy this file to redis.yaml and modify as needed
+
+redis:
+  # Redis server connection settings
+  host: "localhost"
+  port: 6379
+  password: ""  # Leave empty if no password
+  database: 0   # Redis database number (0-15)
+  prefix: "gateway"  # Key prefix for all Redis operations
+
+  # Connection pool settings
+  pool:
+    max_idle: 10
+    max_active: 100
+    idle_timeout: 300s
+    wait: true
+
+  # Connection timeouts
+  timeouts:
+    connect: 5s
+    read: 3s
+    write: 3s
+
+# Rate Limiting Configuration
+rate_limiting:
+  enabled: true
+  default_rps: 100        # Default requests per second
+  default_burst: 200      # Default burst capacity
+  window: 60s             # Rate limit window duration
+  cleanup_interval: 300s  # How often to clean up old rate limit data
+
+  # Per-endpoint rate limits
+  endpoints:
+    "auth":
+      rps: 50
+      burst: 100
+    "vpn":
+      rps: 200
+      burst: 400
+    "analytics":
+      rps: 30
+      burst: 60
+    "notifications":
+      rps: 100
+      burst: 200
+
+  # IP whitelist (these IPs bypass rate limiting)
+  whitelist:
+    - "127.0.0.1"
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+
+# WebSocket Session Management
+websocket:
+  enabled: true
+  session_ttl: 24h        # How long sessions are kept
+  cleanup_interval: 600s  # How often to clean up expired sessions
+  max_sessions: 10000     # Maximum number of concurrent sessions
+
+  # Session storage settings
+  storage:
+    key_prefix: "websocket"
+    compress: true
+
+# Statistics and Monitoring
+statistics:
+  enabled: true
+  retention_period: 7d    # How long to keep statistics
+  aggregation_interval: 60s  # How often to aggregate stats
+
+  # What metrics to collect
+  metrics:
+    - "request_count"
+    - "response_time"
+    - "error_rate"
+    - "connection_count"
+    - "websocket_sessions"
+
+# Caching Configuration
+caching:
+  enabled: true
+  default_ttl: 300s       # Default cache TTL
+  max_memory: "256mb"     # Maximum memory for cache
+
+  # Cache policies for different data types
+  policies:
+    auth_tokens:
+      ttl: 900s           # 15 minutes
+      max_size: 1000
+    user_sessions:
+      ttl: 1800s          # 30 minutes
+      max_size: 5000
+    api_responses:
+      ttl: 60s            # 1 minute
+      max_size: 10000
+
+# High Availability Settings
+ha:
+  enabled: false          # Enable Redis cluster/sentinel support
+  mode: "cluster"         # Options: "cluster", "sentinel", "standalone"
+
+  # Cluster configuration (if mode is "cluster")
+  cluster:
+    nodes:
+      - "redis-1:6379"
+      - "redis-2:6379"
+      - "redis-3:6379"
+    read_only: false
+
+  # Sentinel configuration (if mode is "sentinel")
+  sentinel:
+    master_name: "mymaster"
+    sentinels:
+      - "sentinel-1:26379"
+      - "sentinel-2:26379"
+      - "sentinel-3:26379"
+
+# Health Check Configuration
+health_check:
+  enabled: true
+  interval: 30s           # How often to check Redis health
+  timeout: 5s             # Health check timeout
+  failure_threshold: 3    # Failures before marking unhealthy
+
+# Security Settings
+security:
+  tls:
+    enabled: false        # Enable TLS connection to Redis
+    cert_file: ""         # Path to TLS certificate
+    key_file: ""          # Path to TLS private key
+    ca_file: ""           # Path to CA certificate
+    skip_verify: false    # Skip TLS certificate verification
+
+  # Access control
+  acl:
+    enabled: false        # Enable Redis ACL
+    username: ""          # Redis ACL username
+    password: ""          # Redis ACL password
+
+# Logging Configuration
+logging:
+  level: "info"           # Options: "debug", "info", "warn", "error"
+  redis_operations: false # Log all Redis operations (debug only)
+  slow_queries: true      # Log slow Redis queries
+  slow_threshold: 100ms   # Threshold for slow query logging
+
+# Development/Testing Settings
+development:
+  mock_redis: false       # Use in-memory mock instead of real Redis
+  flush_on_start: false   # Flush Redis database on service start
+  populate_test_data: false # Populate with test data on start
+
+# Backup Configuration
+backup:
+  enabled: false          # Enable periodic backups
+  interval: 24h           # Backup interval
+  retention: 7            # Number of backups to keep
+  path: "/tmp/redis-backup" # Backup directory
+  compress: true          # Compress backup files

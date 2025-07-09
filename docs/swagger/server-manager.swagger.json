@@ -1,0 +1,446 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "server-manager/server.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "ServerManagerService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "serverCreateBackupResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "backupId": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverDeleteServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "serverGetServersByRegionResponse": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverServer"
+          }
+        }
+      }
+    },
+    "serverGetServersByStatusResponse": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverServer"
+          }
+        }
+      }
+    },
+    "serverGetServersByTypeResponse": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverServer"
+          }
+        }
+      }
+    },
+    "serverHealthCheck": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "responseTime": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "serverHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "serverListServersResponse": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverServer"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "serverRestartServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverRestoreBackupResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverScaleAction": {
+      "type": "string",
+      "enum": [
+        "SCALE_ACTION_UNSPECIFIED",
+        "SCALE_ACTION_UP",
+        "SCALE_ACTION_DOWN",
+        "SCALE_ACTION_AUTO"
+      ],
+      "default": "SCALE_ACTION_UNSPECIFIED"
+    },
+    "serverScaleServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverScaleSpec": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": "number",
+          "format": "double"
+        },
+        "memory": {
+          "type": "number",
+          "format": "double"
+        },
+        "disk": {
+          "type": "number",
+          "format": "double"
+        },
+        "replicas": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "serverServer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/serverServerType"
+        },
+        "status": {
+          "$ref": "#/definitions/serverServerStatus"
+        },
+        "region": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "cpu": {
+          "type": "number",
+          "format": "double"
+        },
+        "memory": {
+          "type": "number",
+          "format": "double"
+        },
+        "disk": {
+          "type": "number",
+          "format": "double"
+        },
+        "network": {
+          "type": "number",
+          "format": "double"
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Server"
+    },
+    "serverServerHealth": {
+      "type": "object",
+      "properties": {
+        "serverId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverHealthCheck"
+          }
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "serverServerMonitorEvent": {
+      "type": "object",
+      "properties": {
+        "serverId": {
+          "type": "string"
+        },
+        "eventType": {
+          "type": "string"
+        },
+        "stats": {
+          "$ref": "#/definitions/serverServerStats"
+        },
+        "health": {
+          "$ref": "#/definitions/serverServerHealth"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "serverServerStats": {
+      "type": "object",
+      "properties": {
+        "serverId": {
+          "type": "string"
+        },
+        "cpuUsage": {
+          "type": "number",
+          "format": "double"
+        },
+        "memoryUsage": {
+          "type": "number",
+          "format": "double"
+        },
+        "diskUsage": {
+          "type": "number",
+          "format": "double"
+        },
+        "networkUsage": {
+          "type": "number",
+          "format": "double"
+        },
+        "connections": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "uptime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Server Monitoring"
+    },
+    "serverServerStatus": {
+      "type": "string",
+      "enum": [
+        "SERVER_STATUS_UNSPECIFIED",
+        "SERVER_STATUS_CREATING",
+        "SERVER_STATUS_RUNNING",
+        "SERVER_STATUS_STOPPED",
+        "SERVER_STATUS_ERROR",
+        "SERVER_STATUS_DELETING"
+      ],
+      "default": "SERVER_STATUS_UNSPECIFIED"
+    },
+    "serverServerType": {
+      "type": "string",
+      "enum": [
+        "SERVER_TYPE_UNSPECIFIED",
+        "SERVER_TYPE_VPN",
+        "SERVER_TYPE_DPI",
+        "SERVER_TYPE_GATEWAY",
+        "SERVER_TYPE_ANALYTICS"
+      ],
+      "default": "SERVER_TYPE_UNSPECIFIED"
+    },
+    "serverStartServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverStopServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverUpdateServerSoftwareResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/serverUpdateStatus"
+        }
+      }
+    },
+    "serverUpdateStatus": {
+      "type": "object",
+      "properties": {
+        "serverId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "progress": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

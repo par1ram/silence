@@ -17,7 +17,7 @@ type Config struct {
 	HTTPIdleTimeout  time.Duration
 
 	// gRPC сервер
-	GRPCPort string
+	GRPC GRPCConfig
 
 	// Версия сервиса
 	Version string
@@ -69,6 +69,11 @@ type MonitoringConfig struct {
 	AlertThreshold      float64
 }
 
+// GRPCConfig конфигурация gRPC сервера
+type GRPCConfig struct {
+	Address string
+}
+
 // GeographicConfig конфигурация географического распределения
 type GeographicConfig struct {
 	DefaultRegion string
@@ -86,8 +91,10 @@ func Load() *Config {
 		HTTPReadTimeout:  getEnvDuration("HTTP_READ_TIMEOUT", 30*time.Second),
 		HTTPWriteTimeout: getEnvDuration("HTTP_WRITE_TIMEOUT", 30*time.Second),
 		HTTPIdleTimeout:  getEnvDuration("HTTP_IDLE_TIMEOUT", 60*time.Second),
-		GRPCPort:         getEnv("GRPC_PORT", "50055"),
-		Version:          getEnv("VERSION", "1.0.0"),
+		GRPC: GRPCConfig{
+			Address: getEnv("GRPC_ADDRESS", ":50055"),
+		},
+		Version: getEnv("VERSION", "1.0.0"),
 
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),

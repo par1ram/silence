@@ -53,8 +53,14 @@ func (o *Obfs4Adapter) Start(config *domain.BypassConfig) error {
 	// Создаем контекст для управления жизненным циклом
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// Получаем параметры из конфигурации
+	localPort := config.Parameters["local_port"]
+	if localPort == "" {
+		localPort = "1080"
+	}
+
 	// Создаем listener
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", config.LocalPort))
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", localPort))
 	if err != nil {
 		cancel()
 		return fmt.Errorf("failed to create listener: %w", err)
@@ -73,12 +79,14 @@ func (o *Obfs4Adapter) Start(config *domain.BypassConfig) error {
 		ctx:      ctx,
 		cancel:   cancel,
 		stats: &domain.BypassStats{
-			ID:           config.ID,
-			BytesRx:      0,
-			BytesTx:      0,
-			Connections:  0,
-			LastActivity: time.Now(),
-			ErrorCount:   0,
+			ID:                     config.ID,
+			ConfigID:               config.ID,
+			SessionID:              config.ID,
+			BytesReceived:          0,
+			BytesSent:              0,
+			ConnectionsEstablished: 0,
+			StartTime:              time.Now(),
+			EndTime:                time.Now(),
 		},
 		iatMode:    iatMode,
 		iatDist:    iatDist,
@@ -92,11 +100,14 @@ func (o *Obfs4Adapter) Start(config *domain.BypassConfig) error {
 	// Запускаем обработку соединений
 	go o.handleConnections(conn)
 
+	remoteHost := config.Parameters["remote_host"]
+	remotePort := config.Parameters["remote_port"]
+
 	o.logger.Info("obfs4 server started",
 		zap.String("id", config.ID),
-		zap.Int("local_port", config.LocalPort),
-		zap.String("remote", config.RemoteHost),
-		zap.Int("remote_port", config.RemotePort),
+		zap.String("local_port", localPort),
+		zap.String("remote", remoteHost),
+		zap.String("remote_port", remotePort),
 		zap.Bool("iat_mode", iatMode))
 
 	return nil

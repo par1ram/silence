@@ -122,13 +122,17 @@ func (d *DockerAdapter) GetContainerStats(ctx context.Context, containerID strin
 	// Парсим статистику (упрощенно)
 	// В реальной реализации нужно парсить JSON из stats.Body
 	statsData := &domain.ServerStats{
-		ServerID:    containerID,
-		CPU:         0.0, // TODO: парсить из stats
-		Memory:      0.0, // TODO: парсить из stats
-		Disk:        0.0, // TODO: парсить из stats
-		Network:     0.0, // TODO: парсить из stats
-		Connections: 0,   // TODO: парсить из stats
-		Timestamp:   time.Now(),
+		ServerID:     containerID,
+		CPUUsage:     0.0, // TODO: парсить из stats
+		MemoryUsage:  0.0, // TODO: парсить из stats
+		StorageUsage: 0.0, // TODO: парсить из stats
+		NetworkIn:    0,   // TODO: парсить из stats
+		NetworkOut:   0,   // TODO: парсить из stats
+		Uptime:       0,   // TODO: парсить из stats
+		RequestCount: 0,   // TODO: парсить из stats
+		ResponseTime: 0.0, // TODO: парсить из stats
+		ErrorRate:    0.0, // TODO: парсить из stats
+		Timestamp:    time.Now(),
 	}
 
 	return statsData, nil
@@ -142,10 +146,11 @@ func (d *DockerAdapter) GetContainerHealth(ctx context.Context, containerID stri
 	}
 
 	health := &domain.ServerHealth{
-		ServerID:  containerID,
-		Status:    string(inspect.State.Status),
-		Message:   inspect.State.Error,
-		Timestamp: time.Now(),
+		ServerID:    containerID,
+		Status:      domain.ServerStatus(inspect.State.Status),
+		Message:     inspect.State.Status,
+		LastCheckAt: time.Now(),
+		Checks:      []map[string]interface{}{},
 	}
 
 	return health, nil

@@ -110,7 +110,7 @@ var _ = Describe("PeerService", func() {
 				PublicKey:  "public-key-123",
 				AllowedIPs: []string{"10.0.0.2/32"},
 			}
-			peerService.AddPeer(ctx, request)
+			_, _ = peerService.AddPeer(ctx, request)
 
 			peer, err := peerService.GetPeer(ctx, "tunnel-123", "nonexistent-peer")
 
@@ -134,8 +134,8 @@ var _ = Describe("PeerService", func() {
 				PublicKey:  "public-key-2",
 				AllowedIPs: []string{"10.0.0.3/32"},
 			}
-			peerService.AddPeer(ctx, request1)
-			peerService.AddPeer(ctx, request2)
+			_, _ = peerService.AddPeer(ctx, request1)
+			_, _ = peerService.AddPeer(ctx, request2)
 
 			peers, err := peerService.ListPeers(ctx, "tunnel-123")
 
@@ -195,7 +195,7 @@ var _ = Describe("PeerService", func() {
 				PublicKey:  "public-key-123",
 				AllowedIPs: []string{"10.0.0.2/32"},
 			}
-			peerService.AddPeer(ctx, request)
+			_, _ = peerService.AddPeer(ctx, request)
 
 			err := peerService.RemovePeer(ctx, "tunnel-123", "nonexistent-peer")
 
@@ -307,7 +307,7 @@ var _ = Describe("PeerService", func() {
 			createdPeer, _ := peerService.AddPeer(ctx, request)
 
 			// First enable the peer
-			peerService.EnablePeer(ctx, request.TunnelID, createdPeer.ID)
+			_ = peerService.EnablePeer(ctx, request.TunnelID, createdPeer.ID)
 
 			// Then disable it
 			err := peerService.DisablePeer(ctx, request.TunnelID, createdPeer.ID)
