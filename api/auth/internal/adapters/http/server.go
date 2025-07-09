@@ -23,6 +23,7 @@ func NewServer(port string, handlers *Handlers, userHandlers *UserHandlers, cfg 
 	// Регистрируем маршруты аутентификации
 	mux.HandleFunc("/register", handlers.RegisterHandler)
 	mux.HandleFunc("/login", handlers.LoginHandler)
+	mux.HandleFunc("/me", handlers.GetMeHandler)
 	mux.HandleFunc("/health", handlers.HealthHandler)
 
 	// Мидлварь для внутренних сервисов

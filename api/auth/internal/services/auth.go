@@ -120,6 +120,27 @@ func (a *AuthService) ValidateToken(token string) (*domain.Claims, error) {
 	return a.tokenGenerator.ValidateToken(token)
 }
 
+// GetProfile получает профиль пользователя по ID
+func (a *AuthService) GetProfile(ctx context.Context, userID string) (*domain.User, error) {
+	user, err := a.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user profile: %w", err)
+	}
+
+	// Проверяем статус пользователя
+	if user.Status == domain.StatusBlocked {
+		return nil, fmt.Errorf("user account is blocked")
+	}
+
+	if user.Status == domain.StatusInactive {
+		return nil, fmt.Errorf("user account is inactive")
+	}
+
+	a.logger.Info("user profile retrieved successfully", zap.String("user_id", userID))
+
+	return user, nil
+}
+
 // generateID генерирует уникальный ID
 func generateID() string {
 	bytes := make([]byte, 16)

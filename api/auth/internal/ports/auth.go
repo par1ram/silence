@@ -6,7 +6,7 @@ import (
 	"github.com/par1ram/silence/api/auth/internal/domain"
 )
 
-//go:generate mockgen -destination=../adapters/http/mocks_test.go -package=http_test github.com/par1ram/silence/api/auth/internal/ports AuthService,UserRepository,UserService,PasswordHasher,TokenGenerator
+//go:generate mockgen -destination=../mocks/mocks.go -package=mocks github.com/par1ram/silence/api/auth/internal/ports AuthService,UserRepository,UserService,PasswordHasher,TokenGenerator
 
 // UserRepository интерфейс для работы с пользователями
 type UserRepository interface {
@@ -25,6 +25,7 @@ type AuthService interface {
 	Register(ctx context.Context, req *domain.RegisterRequest) (*domain.AuthResponse, error)
 	Login(ctx context.Context, req *domain.LoginRequest) (*domain.AuthResponse, error)
 	ValidateToken(token string) (*domain.Claims, error)
+	GetProfile(ctx context.Context, userID string) (*domain.User, error)
 }
 
 // UserService интерфейс для управления пользователями

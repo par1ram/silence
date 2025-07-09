@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/par1ram/silence/api/auth/internal/domain"
 	"github.com/par1ram/silence/api/auth/internal/ports"
@@ -89,6 +90,52 @@ func (h *Handlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("failed to encode login response", zap.Error(err))
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+// GetMeHandler обработчик получения профиля пользователя
+func (h *Handlers) GetMeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Получаем токен из заголовка Authorization
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header required", http.StatusUnauthorized)
+		return
+	}
+
+	// Извлекаем токен (убираем "Bearer " префикс)
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+	if token == authHeader {
+		http.Error(w, "Invalid authorization header format", http.StatusUnauthorized)
+		return
+	}
+
+	// Валидируем токен
+	claims, err := h.authService.ValidateToken(token)
+	if err != nil {
+		h.logger.Error("failed to validate token", zap.Error(err))
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	// Получаем профиль пользователя
+	user, err := h.authService.GetProfile(r.Context(), claims.UserID)
+	if err != nil {
+		h.logger.Error("failed to get user profile", zap.String("user_id", claims.UserID), zap.Error(err))
+		http.Error(w, "Failed to get profile", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		h.logger.Error("failed to encode profile response", zap.Error(err))
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
