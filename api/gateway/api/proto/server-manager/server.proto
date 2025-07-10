@@ -5,28 +5,79 @@ package server;
 option go_package = "github.com/par1ram/silence/api/gateway/api/proto/server-manager";
 
 import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 // Server Manager Service
 service ServerManagerService {
   // Health check
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc Health(HealthRequest) returns (HealthResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/server-manager/health"
+    };
+  }
 
   // Server management
-  rpc CreateServer(CreateServerRequest) returns (Server);
-  rpc GetServer(GetServerRequest) returns (Server);
-  rpc ListServers(ListServersRequest) returns (ListServersResponse);
-  rpc UpdateServer(UpdateServerRequest) returns (Server);
-  rpc DeleteServer(DeleteServerRequest) returns (DeleteServerResponse);
+  rpc CreateServer(CreateServerRequest) returns (Server) {
+    option (google.api.http) = {
+      post: "/api/v1/server-manager/servers"
+      body: "*"
+    };
+  }
+  rpc GetServer(GetServerRequest) returns (Server) {
+    option (google.api.http) = {
+      get: "/api/v1/server-manager/servers/{id}"
+    };
+  }
+  rpc ListServers(ListServersRequest) returns (ListServersResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/server-manager/servers"
+    };
+  }
+  rpc UpdateServer(UpdateServerRequest) returns (Server) {
+    option (google.api.http) = {
+      put: "/api/v1/server-manager/servers/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteServer(DeleteServerRequest) returns (DeleteServerResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/server-manager/servers/{id}"
+    };
+  }
 
   // Server operations
-  rpc StartServer(StartServerRequest) returns (StartServerResponse);
-  rpc StopServer(StopServerRequest) returns (StopServerResponse);
-  rpc RestartServer(RestartServerRequest) returns (RestartServerResponse);
+  rpc StartServer(StartServerRequest) returns (StartServerResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/server-manager/servers/{id}/start"
+    };
+  }
+  rpc StopServer(StopServerRequest) returns (StopServerResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/server-manager/servers/{id}/stop"
+    };
+  }
+  rpc RestartServer(RestartServerRequest) returns (RestartServerResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/server-manager/servers/{id}/restart"
+    };
+  }
 
   // Server monitoring
-  rpc GetServerStats(GetServerStatsRequest) returns (ServerStats);
-  rpc GetServerHealth(GetServerHealthRequest) returns (ServerHealth);
-  rpc MonitorServer(MonitorServerRequest) returns (stream ServerMonitorEvent);
+  rpc GetServerStats(GetServerStatsRequest) returns (ServerStats) {
+    option (google.api.http) = {
+      get: "/api/v1/server-manager/servers/{id}/stats"
+    };
+  }
+  rpc GetServerHealth(GetServerHealthRequest) returns (ServerHealth) {
+    option (google.api.http) = {
+      get: "/api/v1/server-manager/servers/{id}/health"
+    };
+  }
+  rpc MonitorServer(MonitorServerRequest) returns (stream ServerMonitorEvent) {
+    option (google.api.http) = {
+      get: "/api/v1/server-manager/servers/{id}/monitor"
+    };
+  }
 
   // Server filtering
   rpc GetServersByType(GetServersByTypeRequest) returns (GetServersByTypeResponse);

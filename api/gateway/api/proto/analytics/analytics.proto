@@ -5,28 +5,72 @@ package analytics;
 option go_package = "github.com/par1ram/silence/api/gateway/api/proto/analytics";
 
 import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 // Analytics Service
 service AnalyticsService {
   // Health check
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc Health(HealthRequest) returns (HealthResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/analytics/health"
+    };
+  }
 
   // Metrics collection
-  rpc CollectMetric(CollectMetricRequest) returns (CollectMetricResponse);
-  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
-  rpc GetMetricsHistory(GetMetricsHistoryRequest) returns (GetMetricsHistoryResponse);
+  rpc CollectMetric(CollectMetricRequest) returns (CollectMetricResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/analytics/metrics"
+      body: "*"
+    };
+  }
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/analytics/metrics"
+    };
+  }
+  rpc GetMetricsHistory(GetMetricsHistoryRequest) returns (GetMetricsHistoryResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/analytics/metrics/history"
+    };
+  }
 
   // Statistics
-  rpc GetStatistics(GetStatisticsRequest) returns (GetStatisticsResponse);
-  rpc GetSystemStats(GetSystemStatsRequest) returns (GetSystemStatsResponse);
-  rpc GetUserStats(GetUserStatsRequest) returns (GetUserStatsResponse);
+  rpc GetStatistics(GetStatisticsRequest) returns (GetStatisticsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/analytics/statistics"
+    };
+  }
+  rpc GetSystemStats(GetSystemStatsRequest) returns (GetSystemStatsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/analytics/statistics/system"
+    };
+  }
+  rpc GetUserStats(GetUserStatsRequest) returns (GetUserStatsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/analytics/statistics/users/{user_id}"
+    };
+  }
 
   // Dashboard
-  rpc GetDashboardData(GetDashboardDataRequest) returns (GetDashboardDataResponse);
+  rpc GetDashboardData(GetDashboardDataRequest) returns (GetDashboardDataResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/analytics/dashboard"
+    };
+  }
 
   // Predictions
-  rpc PredictLoad(PredictLoadRequest) returns (PredictLoadResponse);
-  rpc PredictTrend(PredictTrendRequest) returns (PredictTrendResponse);
+  rpc PredictLoad(PredictLoadRequest) returns (PredictLoadResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/analytics/predictions/load"
+      body: "*"
+    };
+  }
+  rpc PredictTrend(PredictTrendRequest) returns (PredictTrendResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/analytics/predictions/trend"
+      body: "*"
+    };
+  }
 }
 
 // Health

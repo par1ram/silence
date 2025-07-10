@@ -5,27 +5,74 @@ package dpi;
 option go_package = "github.com/par1ram/silence/api/gateway/api/proto/dpi-bypass";
 
 import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 // DPI Bypass Service
 service DpiBypassService {
   // Health check
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc Health(HealthRequest) returns (HealthResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi-bypass/health"
+    };
+  }
 
   // Bypass configuration management
-  rpc CreateBypassConfig(CreateBypassConfigRequest) returns (BypassConfig);
-  rpc GetBypassConfig(GetBypassConfigRequest) returns (BypassConfig);
-  rpc ListBypassConfigs(ListBypassConfigsRequest) returns (ListBypassConfigsResponse);
-  rpc UpdateBypassConfig(UpdateBypassConfigRequest) returns (BypassConfig);
-  rpc DeleteBypassConfig(DeleteBypassConfigRequest) returns (DeleteBypassConfigResponse);
+  rpc CreateBypassConfig(CreateBypassConfigRequest) returns (BypassConfig) {
+    option (google.api.http) = {
+      post: "/api/v1/dpi-bypass/configs"
+      body: "*"
+    };
+  }
+  rpc GetBypassConfig(GetBypassConfigRequest) returns (BypassConfig) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi-bypass/configs/{id}"
+    };
+  }
+  rpc ListBypassConfigs(ListBypassConfigsRequest) returns (ListBypassConfigsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi-bypass/configs"
+    };
+  }
+  rpc UpdateBypassConfig(UpdateBypassConfigRequest) returns (BypassConfig) {
+    option (google.api.http) = {
+      put: "/api/v1/dpi-bypass/configs/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteBypassConfig(DeleteBypassConfigRequest) returns (DeleteBypassConfigResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/dpi-bypass/configs/{id}"
+    };
+  }
 
   // Bypass operations
-  rpc StartBypass(StartBypassRequest) returns (StartBypassResponse);
-  rpc StopBypass(StopBypassRequest) returns (StopBypassResponse);
-  rpc GetBypassStatus(GetBypassStatusRequest) returns (GetBypassStatusResponse);
+  rpc StartBypass(StartBypassRequest) returns (StartBypassResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/dpi-bypass/configs/{id}/start"
+    };
+  }
+  rpc StopBypass(StopBypassRequest) returns (StopBypassResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/dpi-bypass/configs/{id}/stop"
+    };
+  }
+  rpc GetBypassStatus(GetBypassStatusRequest) returns (GetBypassStatusResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi-bypass/configs/{id}/status"
+    };
+  }
 
   // Statistics and monitoring
-  rpc GetBypassStats(GetBypassStatsRequest) returns (BypassStats);
-  rpc GetBypassHistory(GetBypassHistoryRequest) returns (GetBypassHistoryResponse);
+  rpc GetBypassStats(GetBypassStatsRequest) returns (BypassStats) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi-bypass/configs/{id}/stats"
+    };
+  }
+  rpc GetBypassHistory(GetBypassHistoryRequest) returns (GetBypassHistoryResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi-bypass/configs/{id}/history"
+    };
+  }
 
   // Rule management
   rpc AddBypassRule(AddBypassRuleRequest) returns (BypassRule);

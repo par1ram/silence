@@ -40,5 +40,28 @@ tmp_dir = "tmp"
   clean_on_exit = false
 
 [screen]
-  clear_on_rebuild = false
-  keep_scroll = true 
+  clear_on_rebuild = true
+  keep_scroll = true
+
+[env]
+  HTTP_PORT = "8081"
+  GRPC_PORT = "9081"
+  DB_HOST = "localhost"
+  DB_PORT = "5432"
+  DB_USER = "postgres"
+  DB_PASSWORD = "password"
+  DB_NAME = "silence_auth"
+  DB_SSLMODE = "disable"
+  REDIS_HOST = "localhost"
+  REDIS_PORT = "6379"
+  JWT_SECRET = "development-jwt-secret-key-change-this-in-production"
+  JWT_EXPIRATION = "24h"
+  JWT_REFRESH_EXPIRATION = "168h"
+  BCRYPT_COST = "12"
+  INTERNAL_API_TOKEN = "super-secret-internal-token"
+  RATE_LIMIT_REQUESTS = "100"
+  RATE_LIMIT_WINDOW = "1m"
+  MIGRATIONS_DIR = "internal/adapters/database/migrations"
+  LOG_LEVEL = "info"
+  LOG_FORMAT = "json"
+  VERSION = "1.0.0"

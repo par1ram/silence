@@ -83,6 +83,37 @@ services:
       - silence_network
     restart: unless-stopped
 
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.1-alpine
+    container_name: silence_clickhouse
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-silence_analytics}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-admin}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: ${CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT:-1}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-password}
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"
+      - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./deployments/docker/clickhouse/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8123/ping",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - silence_network
+    restart: unless-stopped
+
   # =============================================================================
   # APPLICATION SERVICES
   # =============================================================================
@@ -98,7 +129,7 @@ services:
     environment:
       HTTP_PORT: 8080
       GRPC_PORT: 9080
-      DB_HOST: ${DB_HOST:-postgres}
+      DB_HOST: postgres
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-password}
@@ -166,9 +197,14 @@ services:
     environment:
       GRPC_PORT: 8080
       INFLUXDB_URL: ${ANALYTICS_INFLUXDB_URL:-http://influxdb:8086}
-      INFLUXDB_TOKEN: ${ANALYTICS_INFLUXDB_TOKEN:-your-influxdb-token}
-      INFLUXDB_ORG: ${ANALYTICS_INFLUXDB_ORG:-silence}
-      INFLUXDB_BUCKET: ${ANALYTICS_INFLUXDB_BUCKET:-analytics}
+      ANALYTICS_INFLUXDB_TOKEN: ${ANALYTICS_INFLUXDB_TOKEN:-your-influxdb-token}
+      ANALYTICS_INFLUXDB_ORG: ${ANALYTICS_INFLUXDB_ORG:-silence}
+      ANALYTICS_INFLUXDB_BUCKET: ${ANALYTICS_INFLUXDB_BUCKET:-analytics}
+      CLICKHOUSE_HOST: ${ANALYTICS_CLICKHOUSE_HOST:-clickhouse}
+      CLICKHOUSE_PORT: ${ANALYTICS_CLICKHOUSE_PORT:-9000}
+      CLICKHOUSE_DB: ${ANALYTICS_CLICKHOUSE_DB:-silence_analytics}
+      CLICKHOUSE_USER: ${ANALYTICS_CLICKHOUSE_USER:-admin}
+      CLICKHOUSE_PASSWORD: ${ANALYTICS_CLICKHOUSE_PASSWORD:-password}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
       influxdb:
@@ -186,7 +222,7 @@ services:
       - "${SERVER_MANAGER_GRPC_PORT:-8085}:8085"
     environment:
       GRPC_PORT: 8085
-      DB_HOST: ${DB_HOST:-postgres}
+      DB_HOST: postgres
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-password}
@@ -236,7 +272,7 @@ services:
       HTTP_PORT: 8080
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
-      DB_HOST: ${DB_HOST:-postgres}
+      DB_HOST: postgres
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-password}
@@ -261,7 +297,12 @@ services:
       - "${NOTIFICATIONS_GRPC_PORT:-8087}:8080"
     environment:
       GRPC_PORT: 8080
-      NOTIFICATIONS_RABBITMQ_URL: ${NOTIFICATIONS_RABBITMQ_URL:-amqp://admin:admin@rabbitmq:5672/}
+      RABBITMQ_URL: ${NOTIFICATIONS_RABBITMQ_URL:-amqp://admin:admin@rabbitmq:5672/}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: admin
+      RABBITMQ_PASSWORD: admin
+      RABBITMQ_VHOST: /
       RABBITMQ_EXCHANGE: ${NOTIFICATIONS_RABBITMQ_EXCHANGE:-notifications}
       RABBITMQ_QUEUE: ${NOTIFICATIONS_RABBITMQ_QUEUE:-notifications_queue}
       RABBITMQ_ROUTING_KEY: ${NOTIFICATIONS_RABBITMQ_ROUTING_KEY:-notifications.*}
@@ -291,6 +332,8 @@ volumes:
     name: ${RABBITMQ_VOLUME:-rabbitmq_data}
   influxdb_data:
     name: ${INFLUXDB_VOLUME:-influxdb_data}
+  clickhouse_data:
+    name: ${CLICKHOUSE_VOLUME:-clickhouse_data}
 
 # =============================================================================
 # NETWORKS

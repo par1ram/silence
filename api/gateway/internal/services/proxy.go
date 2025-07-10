@@ -15,11 +15,12 @@ type ProxyService struct {
 	dpiProxy           *DPIProxy
 	analyticsProxy     *AnalyticsProxy
 	serverManagerProxy *ServerManagerProxy
+	notificationsProxy *NotificationsProxy
 	logger             *zap.Logger
 }
 
 // NewProxyService создает новый сервис проксирования
-func NewProxyService(authURL, vpnCoreURL, dpiBypassURL, analyticsURL, serverManagerURL, internalToken string, logger *zap.Logger) *ProxyService {
+func NewProxyService(authURL, vpnCoreURL, dpiBypassURL, analyticsURL, serverManagerURL, notificationsURL, internalToken string, logger *zap.Logger) *ProxyService {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
@@ -30,6 +31,7 @@ func NewProxyService(authURL, vpnCoreURL, dpiBypassURL, analyticsURL, serverMana
 		dpiProxy:           NewDPIProxy(dpiBypassURL, logger, client),
 		analyticsProxy:     NewAnalyticsProxy(analyticsURL, logger, client),
 		serverManagerProxy: NewServerManagerProxy(serverManagerURL, logger, client),
+		notificationsProxy: NewNotificationsProxy(notificationsURL, logger, client),
 		logger:             logger,
 	}
 }
@@ -57,6 +59,11 @@ func (p *ProxyService) ProxyToAnalytics(w http.ResponseWriter, r *http.Request) 
 // ProxyToServerManager проксирует запрос к Server Manager сервису
 func (p *ProxyService) ProxyToServerManager(w http.ResponseWriter, r *http.Request) {
 	p.serverManagerProxy.Proxy(w, r)
+}
+
+// ProxyToNotifications проксирует запрос к Notifications сервису
+func (p *ProxyService) ProxyToNotifications(w http.ResponseWriter, r *http.Request) {
+	p.notificationsProxy.Proxy(w, r)
 }
 
 // HealthCheck проверяет доступность auth сервиса

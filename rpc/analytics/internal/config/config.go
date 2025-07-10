@@ -12,6 +12,8 @@ type Config struct {
 	GRPC          GRPCConfig
 	OpenTelemetry OTelConfig
 	Redis         RedisConfig
+	ClickHouse    ClickHouseConfig
+	InfluxDB      InfluxDBConfig
 	Log           LogConfig
 }
 
@@ -61,6 +63,21 @@ type RedisConfig struct {
 	Address  string
 	Password string
 	DB       int
+}
+
+type ClickHouseConfig struct {
+	Host     string
+	Port     int
+	Database string
+	Username string
+	Password string
+}
+
+type InfluxDBConfig struct {
+	URL    string
+	Token  string
+	Org    string
+	Bucket string
 }
 
 type LogConfig struct {
@@ -118,6 +135,19 @@ func Load() (*Config, error) {
 			Address:  getEnv("REDIS_ADDRESS", "localhost:6379"),
 			Password: getEnv("REDIS_PASSWORD", ""),
 			DB:       getInt("REDIS_DB", 0),
+		},
+		ClickHouse: ClickHouseConfig{
+			Host:     getEnv("CLICKHOUSE_HOST", "localhost"),
+			Port:     getInt("CLICKHOUSE_PORT", 9000),
+			Database: getEnv("CLICKHOUSE_DB", "silence_analytics"),
+			Username: getEnv("CLICKHOUSE_USER", "admin"),
+			Password: getEnv("CLICKHOUSE_PASSWORD", "password"),
+		},
+		InfluxDB: InfluxDBConfig{
+			URL:    getEnv("INFLUXDB_URL", "http://localhost:8086"),
+			Token:  getEnv("ANALYTICS_INFLUXDB_TOKEN", "your-influxdb-token"),
+			Org:    getEnv("ANALYTICS_INFLUXDB_ORG", "silence"),
+			Bucket: getEnv("ANALYTICS_INFLUXDB_BUCKET", "analytics"),
 		},
 		Log: LogConfig{
 			Level:  getEnv("LOG_LEVEL", "info"),

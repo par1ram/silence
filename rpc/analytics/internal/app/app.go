@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/par1ram/silence/rpc/analytics/internal/adapters"
+	"github.com/par1ram/silence/rpc/analytics/internal/adapters/database"
 	"github.com/par1ram/silence/rpc/analytics/internal/config"
 	"github.com/par1ram/silence/rpc/analytics/internal/ports"
 	"github.com/par1ram/silence/rpc/analytics/internal/services"
@@ -21,6 +22,8 @@ type App struct {
 	config          *config.Config
 	logger          *zap.Logger
 	redisClient     *redis.Client
+	clickhouseRepo  ports.MetricsRepository
+	influxdbRepo    ports.MetricsRepository
 	metricsRepo     ports.MetricsRepository
 	analyticsSvc    ports.AnalyticsService
 	shutdownTimeout time.Duration
@@ -42,6 +45,31 @@ func New(logger *zap.Logger) (*App, error) {
 	}, logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create redis client: %w", err)
+	}
+
+	// Создаем ClickHouse репозиторий
+	clickhouseRepo, err := database.NewClickHouseRepository(
+		cfg.ClickHouse.Host,
+		cfg.ClickHouse.Port,
+		cfg.ClickHouse.Database,
+		cfg.ClickHouse.Username,
+		cfg.ClickHouse.Password,
+		logger,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create clickhouse repository: %w", err)
+	}
+
+	// Создаем InfluxDB репозиторий
+	influxdbRepo, err := database.NewInfluxDBRepository(
+		cfg.InfluxDB.URL,
+		cfg.InfluxDB.Token,
+		cfg.InfluxDB.Org,
+		cfg.InfluxDB.Bucket,
+		logger,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create influxdb repository: %w", err)
 	}
 
 	// Создаем репозитории и сервисы
@@ -72,7 +100,7 @@ func New(logger *zap.Logger) (*App, error) {
 	}
 
 	analyticsSvc := services.NewAnalyticsService(
-		metricsRepo,
+		clickhouseRepo, // Используем ClickHouse как основной репозиторий
 		dashboardRepo,
 		metricsCollector,
 		alertService,
@@ -85,6 +113,8 @@ func New(logger *zap.Logger) (*App, error) {
 		config:          cfg,
 		logger:          logger,
 		redisClient:     redisClient,
+		clickhouseRepo:  clickhouseRepo,
+		influxdbRepo:    influxdbRepo,
 		metricsRepo:     metricsRepo,
 		analyticsSvc:    analyticsSvc,
 		shutdownTimeout: 30 * time.Second,
@@ -110,6 +140,16 @@ func (a *App) Shutdown(ctx context.Context) error {
 	// Закрываем Redis клиент
 	if err := a.redisClient.Close(); err != nil {
 		a.logger.Error("Error closing redis client", zap.Error(err))
+	}
+
+	// Закрываем ClickHouse репозиторий
+	if closer, ok := a.clickhouseRepo.(interface{ Close() }); ok {
+		closer.Close()
+	}
+
+	// Закрываем InfluxDB репозиторий
+	if closer, ok := a.influxdbRepo.(interface{ Close() }); ok {
+		closer.Close()
 	}
 
 	// Закрываем другие ресурсы

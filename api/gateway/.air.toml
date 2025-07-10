@@ -7,22 +7,22 @@ tmp_dir = "tmp"
   bin = "./tmp/gateway"
   cmd = "go build -o ./tmp/gateway ./cmd"
   delay = 1000
-  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", ".git", "node_modules"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
   follow_symlink = false
   full_bin = ""
   include_dir = []
-  include_ext = ["go", "tpl", "tmpl", "html"]
+  include_ext = ["go", "tpl", "tmpl", "html", "yaml", "yml", "json"]
   include_file = []
-  kill_delay = "0s"
+  kill_delay = "2s"
   log = "build-errors.log"
   poll = false
   poll_interval = 0
   rerun = false
   rerun_delay = 500
-  send_interrupt = false
+  send_interrupt = true
   stop_on_root = false
 
 [color]
@@ -40,5 +40,23 @@ tmp_dir = "tmp"
   clean_on_exit = false
 
 [screen]
-  clear_on_rebuild = false
-  keep_scroll = true 
+  clear_on_rebuild = true
+  keep_scroll = true
+
+[env]
+  HTTP_PORT = "8080"
+  LOG_LEVEL = "info"
+  LOG_FORMAT = "json"
+  AUTH_SERVICE_URL = "http://localhost:8081"
+  AUTH_GRPC_SERVICE_URL = "localhost:9081"
+  ANALYTICS_SERVICE_URL = "localhost:8082"
+  SERVER_MANAGER_SERVICE_URL = "localhost:8085"
+  DPI_BYPASS_SERVICE_URL = "localhost:8083"
+  VPN_CORE_SERVICE_URL = "http://localhost:8084"
+  NOTIFICATIONS_SERVICE_URL = "localhost:8087"
+  JWT_SECRET = "development-jwt-secret-key-change-this-in-production"
+  INTERNAL_API_TOKEN = "super-secret-internal-token"
+  CORS_ALLOWED_ORIGINS = "http://localhost:3000,http://localhost:8080"
+  CORS_ALLOWED_METHODS = "GET,POST,PUT,DELETE,OPTIONS"
+  CORS_ALLOWED_HEADERS = "Content-Type,Authorization,X-Requested-With"
+  CORS_ALLOW_CREDENTIALS = "true"

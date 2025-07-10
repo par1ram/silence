@@ -3,6 +3,9 @@ package http
 import (
 	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/par1ram/silence/api/gateway/internal/ports"
@@ -121,6 +124,11 @@ func (h *Handlers) AnalyticsHandler(w http.ResponseWriter, r *http.Request) {
 // ServerManagerHandler обработчик для Server Manager сервиса
 func (h *Handlers) ServerManagerHandler(w http.ResponseWriter, r *http.Request) {
 	h.proxyService.ProxyToServerManager(w, r)
+}
+
+// NotificationsHandler обработчик для Notifications сервиса
+func (h *Handlers) NotificationsHandler(w http.ResponseWriter, r *http.Request) {
+	h.proxyService.ProxyToNotifications(w, r)
 }
 
 // ===== VPN + Bypass Connect =====
@@ -265,4 +273,154 @@ func (h *Handlers) StatsHandler(w http.ResponseWriter, r *http.Request, redisCli
 	h.rateLimiter.statsMu.RUnlock()
 
 	writeJSON(w, http.StatusOK, stats, h.logger, "failed to encode stats response")
+}
+
+// ===== Swagger Documentation Handlers =====
+
+// SwaggerUIHandler обработчик для Swagger UI
+func (h *Handlers) SwaggerUIHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	// Получаем путь к документации
+	docsPath := filepath.Join("docs", "swagger")
+
+	// Проверяем, что файл существует
+	if _, err := os.Stat(docsPath); os.IsNotExist(err) {
+		writeError(w, http.StatusNotFound, "Documentation not found")
+		return
+	}
+
+	// Обслуживаем файлы документации
+	fs := http.FileServer(http.Dir(docsPath))
+
+	// Удаляем префикс /docs из URL
+	stripPrefix := "/docs"
+	r.URL.Path = strings.TrimPrefix(r.URL.Path, stripPrefix)
+
+	// Если запрашивается корень /docs/, перенаправляем на index.html
+	if r.URL.Path == "/" || r.URL.Path == "" {
+		r.URL.Path = "/swagger/index.html"
+	}
+
+	fs.ServeHTTP(w, r)
+}
+
+// SwaggerJSONHandler обработчик для отдачи JSON спецификаций
+func (h *Handlers) SwaggerJSONHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	// Извлекаем имя сервиса из URL
+	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(pathParts) < 3 {
+		writeError(w, http.StatusBadRequest, "Invalid service name")
+		return
+	}
+
+	serviceName := pathParts[2] // /swagger/json/{service}
+
+	// Список доступных сервисов
+	validServices := map[string]string{
+		"auth":           "auth.swagger.json",
+		"analytics":      "analytics.swagger.json",
+		"vpn-core":       "vpn-core.swagger.json",
+		"server-manager": "server-manager.swagger.json",
+		"notifications":  "notifications.swagger.json",
+		"dpi-bypass":     "dpi-bypass.swagger.json",
+	}
+
+	fileName, exists := validServices[serviceName]
+	if !exists {
+		writeError(w, http.StatusNotFound, "Service not found")
+		return
+	}
+
+	// Путь к файлу спецификации
+	filePath := filepath.Join("docs", "swagger", fileName)
+
+	// Проверяем существование файла
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		writeError(w, http.StatusNotFound, "Swagger specification not found")
+		return
+	}
+
+	// Читаем и отдаем файл
+	http.ServeFile(w, r, filePath)
+}
+
+// SwaggerAPIListHandler обработчик для получения списка доступных API
+func (h *Handlers) SwaggerAPIListHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	services := map[string]interface{}{
+		"services": []map[string]interface{}{
+			{
+				"name":        "auth",
+				"title":       "Authentication Service",
+				"description": "API для аутентификации и управления пользователями",
+				"version":     "1.0.0",
+				"spec_url":    "/swagger/json/auth",
+				"ui_url":      "https://petstore.swagger.io/?url=/swagger/json/auth",
+			},
+			{
+				"name":        "analytics",
+				"title":       "Analytics Service",
+				"description": "API для сбора и анализа метрик",
+				"version":     "1.0.0",
+				"spec_url":    "/swagger/json/analytics",
+				"ui_url":      "https://petstore.swagger.io/?url=/swagger/json/analytics",
+			},
+			{
+				"name":        "vpn-core",
+				"title":       "VPN Core Service",
+				"description": "API для управления VPN туннелями и пирами",
+				"version":     "1.0.0",
+				"spec_url":    "/swagger/json/vpn-core",
+				"ui_url":      "https://petstore.swagger.io/?url=/swagger/json/vpn-core",
+			},
+			{
+				"name":        "server-manager",
+				"title":       "Server Manager Service",
+				"description": "API для управления серверами и инфраструктурой",
+				"version":     "1.0.0",
+				"spec_url":    "/swagger/json/server-manager",
+				"ui_url":      "https://petstore.swagger.io/?url=/swagger/json/server-manager",
+			},
+			{
+				"name":        "notifications",
+				"title":       "Notifications Service",
+				"description": "API для отправки и управления уведомлениями",
+				"version":     "1.0.0",
+				"spec_url":    "/swagger/json/notifications",
+				"ui_url":      "https://petstore.swagger.io/?url=/swagger/json/notifications",
+			},
+			{
+				"name":        "dpi-bypass",
+				"title":       "DPI Bypass Service",
+				"description": "API для обхода блокировок DPI",
+				"version":     "1.0.0",
+				"spec_url":    "/swagger/json/dpi-bypass",
+				"ui_url":      "https://petstore.swagger.io/?url=/swagger/json/dpi-bypass",
+			},
+		},
+		"info": map[string]interface{}{
+			"title":       "Silence VPN API",
+			"description": "Comprehensive API documentation for Silence VPN services",
+			"version":     "1.0.0",
+			"contact": map[string]interface{}{
+				"name":  "Silence VPN Team",
+				"email": "support@silence-vpn.com",
+			},
+		},
+	}
+
+	writeJSON(w, http.StatusOK, services, h.logger, "failed to encode API list response")
 }

@@ -100,9 +100,24 @@ func NewServer(port string, handlers *Handlers, logger *zap.Logger, jwtSecret st
 	mux.Handle("/api/v1/server-manager/backups/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.ServerManagerHandler))))
 	mux.Handle("/api/v1/server-manager/", wrap(http.HandlerFunc(handlers.ServerManagerHandler)))
 
+	// Notifications Service routes
+	mux.Handle("/api/v1/notifications/health", wrap(http.HandlerFunc(handlers.NotificationsHandler)))
+	mux.Handle("/api/v1/notifications/dispatch", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.NotificationsHandler))))
+	mux.Handle("/api/v1/notifications/templates", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.NotificationsHandler))))
+	mux.Handle("/api/v1/notifications/templates/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.NotificationsHandler))))
+	mux.Handle("/api/v1/notifications/preferences/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.NotificationsHandler))))
+	mux.Handle("/api/v1/notifications/stats", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.NotificationsHandler))))
+	mux.Handle("/api/v1/notifications/", wrap(NewAuthMiddleware(jwtSecret)(http.HandlerFunc(handlers.NotificationsHandler))))
+
 	// WebSocket endpoint
 	wsHandler := NewWebSocketHandler(logger)
 	mux.Handle("/ws", http.HandlerFunc(wsHandler.HandleWebSocket))
+
+	// Swagger documentation endpoints
+	mux.Handle("/docs/", wrap(http.HandlerFunc(handlers.SwaggerUIHandler)))
+	mux.Handle("/swagger/", wrap(http.HandlerFunc(handlers.SwaggerUIHandler)))
+	mux.Handle("/swagger/json/", wrap(http.HandlerFunc(handlers.SwaggerJSONHandler)))
+	mux.Handle("/api/docs", wrap(http.HandlerFunc(handlers.SwaggerAPIListHandler)))
 
 	mux.Handle("/", wrap(http.HandlerFunc(handlers.RootHandler)))
 

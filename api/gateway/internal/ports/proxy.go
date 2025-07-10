@@ -12,6 +12,7 @@ type ProxyService interface {
 	ProxyToDPIBypass(w http.ResponseWriter, r *http.Request)
 	ProxyToAnalytics(w http.ResponseWriter, r *http.Request)
 	ProxyToServerManager(w http.ResponseWriter, r *http.Request)
+	ProxyToNotifications(w http.ResponseWriter, r *http.Request)
 	HealthCheck(ctx context.Context) error
 
 	// Методы для интеграции VPN + обфускация

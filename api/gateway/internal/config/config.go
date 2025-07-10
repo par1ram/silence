@@ -15,6 +15,7 @@ type Config struct {
 	DPIBypassURL     string
 	AnalyticsURL     string
 	ServerManagerURL string
+	NotificationsURL string
 	JWTSecret        string
 	InternalAPIToken string
 
@@ -44,6 +45,7 @@ func Load() *Config {
 		DPIBypassURL:     getEnv("DPI_BYPASS_URL", "http://localhost:8083"),
 		AnalyticsURL:     getEnv("ANALYTICS_URL", "http://localhost:8084"),
 		ServerManagerURL: getEnv("SERVER_MANAGER_URL", "http://localhost:8085"),
+		NotificationsURL: getEnv("NOTIFICATIONS_URL", "http://localhost:8087"),
 		JWTSecret:        getEnv("JWT_SECRET", "your-jwt-secret-key-change-this-in-production"),
 		InternalAPIToken: getEnv("INTERNAL_API_TOKEN", "super-secret-internal-token"),
 
