@@ -1,0 +1,105 @@
+# OpenTelemetry Collector configuration for Silence VPN Analytics
+
+receivers:
+  # OTLP receiver for traces, metrics, and logs
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # Prometheus receiver for scraping metrics
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: "prometheus"
+          static_configs:
+            - targets: ["prometheus:9090"]
+        - job_name: "node-exporter"
+          static_configs:
+            - targets: ["node-exporter:9100"]
+
+  # Zipkin receiver for Zipkin traces
+  zipkin:
+    endpoint: 0.0.0.0:9411
+
+processors:
+  # Batch processor for efficient data sending
+  batch:
+    send_batch_size: 1024
+    timeout: 10s
+
+  # Memory limiter to prevent OOM
+  memory_limiter:
+    limit_mib: 500
+    check_interval: 1s
+
+  # Resource processor to add resource attributes
+  resource:
+    attributes:
+      - key: service.name
+        value: silence-analytics
+        action: upsert
+      - key: service.version
+        value: 1.0.0
+        action: upsert
+
+exporters:
+  # Zipkin exporter for distributed tracing
+  zipkin:
+    endpoint: "http://zipkin:9411/api/v2/spans"
+    format: json
+
+  # OTLP exporter for Tempo
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+  # Prometheus exporter for metrics
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: silence
+
+  # Loki exporter for logs
+  loki:
+    endpoint: "http://loki:3100/loki/api/v1/push"
+
+  # Logging exporter for debugging
+  debug:
+    verbosity: detailed
+
+extensions:
+  # Health check extension
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+
+  pipelines:
+    # Traces pipeline
+    traces:
+      receivers: [otlp, zipkin]
+      processors: [memory_limiter, batch, resource]
+      exporters: [zipkin, otlp/tempo, debug]
+
+    # Metrics pipeline
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [memory_limiter, batch, resource]
+      exporters: [prometheus, debug]
+
+    # Logs pipeline
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [loki, debug]
+
+  # Telemetry configuration
+  telemetry:
+    logs:
+      level: "info"
+    metrics:
+      level: "basic"

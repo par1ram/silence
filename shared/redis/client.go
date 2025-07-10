@@ -464,6 +464,16 @@ func (c *Client) Health(ctx context.Context) error {
 	return c.rdb.Ping(ctx).Err()
 }
 
+// Ping проверяет соединение с Redis
+func (c *Client) Ping(ctx context.Context) error {
+	return c.rdb.Ping(ctx).Err()
+}
+
+// GetClient возвращает внутренний Redis клиент для совместимости с адаптерами
+func (c *Client) GetClient() *redis.Client {
+	return c.rdb
+}
+
 // Keys получает все ключи по шаблону
 func (c *Client) Keys(ctx context.Context, pattern string) ([]string, error) {
 	keys, err := c.rdb.Keys(ctx, c.key(pattern)).Result()

@@ -1,0 +1,46 @@
+apiVersion: 1
+
+providers:
+  - name: 'silence-dashboards'
+    orgId: 1
+    folder: 'Silence VPN'
+    folderUid: 'silence-vpn'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/silence
+
+  - name: 'infrastructure-dashboards'
+    orgId: 1
+    folder: 'Infrastructure'
+    folderUid: 'infrastructure'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/infrastructure
+
+  - name: 'observability-dashboards'
+    orgId: 1
+    folder: 'Observability'
+    folderUid: 'observability'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/observability
+
+  - name: 'analytics-dashboards'
+    orgId: 1
+    folder: 'Analytics'
+    folderUid: 'analytics'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/analytics

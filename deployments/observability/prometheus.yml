@@ -1,0 +1,203 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: "silence-vpn"
+    replica: "1"
+
+rule_files:
+  - "alert_rules.yml"
+  - "recording_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # OpenTelemetry Collector metrics
+  - job_name: "otel-collector"
+    static_configs:
+      - targets: ["otel-collector:8888", "otel-collector:8889"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # Silence Analytics Service
+  - job_name: "silence-analytics"
+    static_configs:
+      - targets: ["host.docker.internal:8081"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: host.docker.internal:8081
+
+  # Silence Gateway Service
+  - job_name: "silence-gateway"
+    static_configs:
+      - targets: ["host.docker.internal:8080"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # Silence VPN Core Service
+  - job_name: "silence-vpn-core"
+    static_configs:
+      - targets: ["host.docker.internal:8082"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # Silence DPI Bypass Service
+  - job_name: "silence-dpi-bypass"
+    static_configs:
+      - targets: ["host.docker.internal:8083"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # Silence Server Manager Service
+  - job_name: "silence-server-manager"
+    static_configs:
+      - targets: ["host.docker.internal:8084"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # Silence Notifications Service
+  - job_name: "silence-notifications"
+    static_configs:
+      - targets: ["host.docker.internal:8085"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # Node Exporter for system metrics
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+):\d+'
+        replacement: "${1}"
+
+  # cAdvisor for container metrics
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+):\d+'
+        replacement: "${1}"
+
+  # Redis metrics
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis:6379"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # Jaeger metrics
+  - job_name: "jaeger"
+    static_configs:
+      - targets: ["jaeger:14269"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # Loki metrics
+  - job_name: "loki"
+    static_configs:
+      - targets: ["loki:3100"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # Tempo metrics
+  - job_name: "tempo"
+    static_configs:
+      - targets: ["tempo:3200"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # Grafana metrics
+  - job_name: "grafana"
+    static_configs:
+      - targets: ["grafana:3000"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # AlertManager metrics
+  - job_name: "alertmanager"
+    static_configs:
+      - targets: ["alertmanager:9093"]
+    scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # Silence application-specific metrics with custom labels
+  - job_name: "silence-custom-metrics"
+    static_configs:
+      - targets: ["host.docker.internal:8081"]
+    scrape_interval: 10s
+    metrics_path: "/metrics"
+    params:
+      format: ["prometheus"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: "analytics"
+      - source_labels: [__address__]
+        target_label: component
+        replacement: "backend"
+    metric_relabel_configs:
+      # Add service label to all Silence metrics
+      - source_labels: [__name__]
+        regex: "silence_.*"
+        target_label: service
+        replacement: "silence-vpn"
+
+      # Rename some metrics for consistency
+      - source_labels: [__name__]
+        regex: "silence_active_connections"
+        target_label: __name__
+        replacement: "silence_vpn_active_connections"
+
+      # Add region label based on server_id
+      - source_labels: [server_id]
+        regex: ".*-us-.*"
+        target_label: region
+        replacement: "us"
+      - source_labels: [server_id]
+        regex: ".*-eu-.*"
+        target_label: region
+        replacement: "eu"
+      - source_labels: [server_id]
+        regex: ".*-asia-.*"
+        target_label: region
+        replacement: "asia"
+
+remote_write:
+  - url: "http://tempo:3200/api/prom/push"
+    queue_config:
+      max_samples_per_send: 1000
+      max_shards: 200
+      capacity: 2500
+    metadata_config:
+      send: true
+      send_interval: 30s
+      max_samples_per_send: 500
+
+remote_read:
+  - url: "http://tempo:3200/api/prom/read"
+    read_recent: true

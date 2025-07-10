@@ -1,0 +1,281 @@
+{{ define "__silence_title" }}
+[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.SortedPairs.Values | join " " }}
+{{ end }}
+
+{{ define "__silence_description" }}
+{{ if gt (len .Alerts.Firing) 0 }}
+**Firing Alerts:**
+{{ range .Alerts.Firing }}
+- **{{ .Annotations.summary }}**
+  - Description: {{ .Annotations.description }}
+  - Labels: {{ range .Labels.SortedPairs }}{{ .Name }}={{ .Value }} {{ end }}
+  - Started: {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+{{ end }}
+{{ end }}
+
+{{ if gt (len .Alerts.Resolved) 0 }}
+**Resolved Alerts:**
+{{ range .Alerts.Resolved }}
+- **{{ .Annotations.summary }}**
+  - Description: {{ .Annotations.description }}
+  - Labels: {{ range .Labels.SortedPairs }}{{ .Name }}={{ .Value }} {{ end }}
+  - Started: {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+  - Resolved: {{ .EndsAt.Format "2006-01-02 15:04:05" }}
+{{ end }}
+{{ end }}
+{{ end }}
+
+{{ define "__silence_slack_title" }}
+{{ if eq .Status "firing" }}🔥{{ else }}✅{{ end }} {{ .GroupLabels.alertname | title }}
+{{ end }}
+
+{{ define "__silence_slack_text" }}
+{{ if gt (len .Alerts.Firing) 0 }}
+*Firing:*
+{{ range .Alerts.Firing }}
+• {{ .Annotations.summary }}
+{{ if .Labels.server_id }}  Server: `{{ .Labels.server_id }}`{{ end }}
+{{ if .Labels.region }}  Region: `{{ .Labels.region }}`{{ end }}
+{{ if .Labels.service }}  Service: `{{ .Labels.service }}`{{ end }}
+{{ end }}
+{{ end }}
+
+{{ if gt (len .Alerts.Resolved) 0 }}
+*Resolved:*
+{{ range .Alerts.Resolved }}
+• {{ .Annotations.summary }}
+{{ end }}
+{{ end }}
+{{ end }}
+
+{{ define "__silence_email_subject" }}
+{{ template "__silence_title" . }}
+{{ end }}
+
+{{ define "__silence_email_body" }}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Silence VPN Alert</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .status-firing {
+            color: #d32f2f;
+            background-color: #ffebee;
+            border-left: 4px solid #d32f2f;
+        }
+        .status-resolved {
+            color: #388e3c;
+            background-color: #e8f5e8;
+            border-left: 4px solid #388e3c;
+        }
+        .alert-box {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .alert-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .alert-description {
+            margin-bottom: 10px;
+        }
+        .alert-labels {
+            font-size: 12px;
+            color: #666;
+            background-color: #f5f5f5;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+        }
+        .alert-time {
+            font-size: 12px;
+            color: #888;
+        }
+        .footer {
+            border-top: 1px solid #e0e0e0;
+            margin-top: 20px;
+            padding-top: 15px;
+            font-size: 12px;
+            color: #666;
+        }
+        .severity-critical {
+            background-color: #ffebee;
+            border-left-color: #d32f2f;
+        }
+        .severity-warning {
+            background-color: #fff3e0;
+            border-left-color: #f57c00;
+        }
+        .severity-info {
+            background-color: #e3f2fd;
+            border-left-color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Silence VPN Alert Notification</h1>
+            <p><strong>Status:</strong> {{ .Status | toUpper }}</p>
+            <p><strong>Time:</strong> {{ .Alerts.Firing | len }} firing, {{ .Alerts.Resolved | len }} resolved</p>
+        </div>
+
+        {{ if gt (len .Alerts.Firing) 0 }}
+        <h2 style="color: #d32f2f;">🔥 Firing Alerts</h2>
+        {{ range .Alerts.Firing }}
+        <div class="alert-box status-firing severity-{{ .Labels.severity }}">
+            <div class="alert-title">{{ .Annotations.summary }}</div>
+            <div class="alert-description">{{ .Annotations.description }}</div>
+
+            <div class="alert-labels">
+                <strong>Labels:</strong>
+                {{ range .Labels.SortedPairs }}
+                <span style="background-color: #e0e0e0; padding: 2px 6px; margin: 2px; border-radius: 3px; display: inline-block;">
+                    {{ .Name }}={{ .Value }}
+                </span>
+                {{ end }}
+            </div>
+
+            <div class="alert-time">
+                <strong>Started:</strong> {{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}
+            </div>
+
+            {{ if .Annotations.runbook_url }}
+            <div style="margin-top: 10px;">
+                <a href="{{ .Annotations.runbook_url }}" style="color: #1976d2; text-decoration: none;">
+                    📖 View Runbook
+                </a>
+            </div>
+            {{ end }}
+        </div>
+        {{ end }}
+        {{ end }}
+
+        {{ if gt (len .Alerts.Resolved) 0 }}
+        <h2 style="color: #388e3c;">✅ Resolved Alerts</h2>
+        {{ range .Alerts.Resolved }}
+        <div class="alert-box status-resolved">
+            <div class="alert-title">{{ .Annotations.summary }}</div>
+            <div class="alert-description">{{ .Annotations.description }}</div>
+
+            <div class="alert-labels">
+                <strong>Labels:</strong>
+                {{ range .Labels.SortedPairs }}
+                <span style="background-color: #e0e0e0; padding: 2px 6px; margin: 2px; border-radius: 3px; display: inline-block;">
+                    {{ .Name }}={{ .Value }}
+                </span>
+                {{ end }}
+            </div>
+
+            <div class="alert-time">
+                <strong>Started:</strong> {{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}<br>
+                <strong>Resolved:</strong> {{ .EndsAt.Format "2006-01-02 15:04:05 MST" }}
+            </div>
+        </div>
+        {{ end }}
+        {{ end }}
+
+        <div class="footer">
+            <p>This alert was generated by Silence VPN monitoring system.</p>
+            <p>For more information, visit the <a href="http://grafana:3000">Grafana Dashboard</a></p>
+            <p>Alert sent at: {{ now.Format "2006-01-02 15:04:05 MST" }}</p>
+        </div>
+    </div>
+</body>
+</html>
+{{ end }}
+
+{{ define "__silence_webhook_payload" }}
+{
+  "receiver": "{{ .Receiver }}",
+  "status": "{{ .Status }}",
+  "alerts": [
+    {{ range $i, $alert := .Alerts }}
+    {{ if $i }},{{ end }}
+    {
+      "status": "{{ $alert.Status }}",
+      "labels": {
+        {{ range $j, $label := $alert.Labels.SortedPairs }}
+        {{ if $j }},{{ end }}
+        "{{ $label.Name }}": "{{ $label.Value }}"
+        {{ end }}
+      },
+      "annotations": {
+        {{ range $j, $annotation := $alert.Annotations.SortedPairs }}
+        {{ if $j }},{{ end }}
+        "{{ $annotation.Name }}": "{{ $annotation.Value }}"
+        {{ end }}
+      },
+      "startsAt": "{{ $alert.StartsAt.Format "2006-01-02T15:04:05Z" }}",
+      "endsAt": "{{ $alert.EndsAt.Format "2006-01-02T15:04:05Z" }}",
+      "generatorURL": "{{ $alert.GeneratorURL }}",
+      "fingerprint": "{{ $alert.Fingerprint }}"
+    }
+    {{ end }}
+  ],
+  "groupLabels": {
+    {{ range $i, $label := .GroupLabels.SortedPairs }}
+    {{ if $i }},{{ end }}
+    "{{ $label.Name }}": "{{ $label.Value }}"
+    {{ end }}
+  },
+  "commonLabels": {
+    {{ range $i, $label := .CommonLabels.SortedPairs }}
+    {{ if $i }},{{ end }}
+    "{{ $label.Name }}": "{{ $label.Value }}"
+    {{ end }}
+  },
+  "commonAnnotations": {
+    {{ range $i, $annotation := .CommonAnnotations.SortedPairs }}
+    {{ if $i }},{{ end }}
+    "{{ $annotation.Name }}": "{{ $annotation.Value }}"
+    {{ end }}
+  },
+  "externalURL": "{{ .ExternalURL }}",
+  "version": "4",
+  "groupKey": "{{ .GroupKey }}",
+  "truncatedAlerts": {{ .TruncatedAlerts }}
+}
+{{ end }}
+
+{{ define "silence.slack.title" }}
+{{ template "__silence_slack_title" . }}
+{{ end }}
+
+{{ define "silence.slack.text" }}
+{{ template "__silence_slack_text" . }}
+{{ end }}
+
+{{ define "silence.email.subject" }}
+{{ template "__silence_email_subject" . }}
+{{ end }}
+
+{{ define "silence.email.html" }}
+{{ template "__silence_email_body" . }}
+{{ end }}
+
+{{ define "silence.webhook.payload" }}
+{{ template "__silence_webhook_payload" . }}
+{{ end }}

@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/par1ram/silence/rpc/analytics/internal/adapters/database"
-	grpcadapter "github.com/par1ram/silence/rpc/analytics/internal/adapters/grpc"
+	"github.com/par1ram/silence/rpc/analytics/internal/adapters"
 	"github.com/par1ram/silence/rpc/analytics/internal/config"
 	"github.com/par1ram/silence/rpc/analytics/internal/ports"
 	"github.com/par1ram/silence/rpc/analytics/internal/services"
+	"github.com/par1ram/silence/rpc/analytics/internal/telemetry"
+	"github.com/par1ram/silence/shared/redis"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +20,7 @@ import (
 type App struct {
 	config          *config.Config
 	logger          *zap.Logger
-	grpcServer      *grpcadapter.Server
+	redisClient     *redis.Client
 	metricsRepo     ports.MetricsRepository
 	analyticsSvc    ports.AnalyticsService
 	shutdownTimeout time.Duration
@@ -32,31 +33,58 @@ func New(logger *zap.Logger) (*App, error) {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
-	metricsRepo, err := database.NewInfluxDBRepository(
-		cfg.InfluxDB.URL,
-		cfg.InfluxDB.Token,
-		cfg.InfluxDB.Org,
-		cfg.InfluxDB.Bucket,
+	// Создаем Redis клиент
+	redisClient, err := redis.NewClient(&redis.Config{
+		Host:     "localhost",
+		Port:     6379,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	}, logger)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create redis client: %w", err)
+	}
+
+	// Создаем репозитории и сервисы
+	metricsRepo := adapters.NewRedisMetricsRepository(redisClient.GetClient(), logger)
+	dashboardRepo := adapters.NewRedisDashboardRepository(redisClient.GetClient(), logger)
+	metricsCollector := adapters.NewRedisMetricsCollector(redisClient.GetClient(), logger)
+	alertService := adapters.NewRedisAlertService(redisClient.GetClient(), logger)
+
+	// Создаем telemetry менеджер
+	telemetryManager, err := telemetry.NewTelemetryManager(cfg.OpenTelemetry, logger)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create telemetry manager: %w", err)
+	}
+
+	// Создаем tracing менеджер
+	tracingManager := telemetry.NewTracingManager(
+		telemetryManager.GetTracer(),
+		logger,
+	)
+
+	// Создаем telemetry metrics collector
+	telemetryMetricsCollector, err := telemetry.NewMetricsCollector(
+		telemetryManager.GetMeter(),
 		logger,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create metrics repository: %w", err)
+		return nil, fmt.Errorf("failed to create telemetry metrics collector: %w", err)
 	}
 
 	analyticsSvc := services.NewAnalyticsService(
 		metricsRepo,
-		nil, // TODO: dashboard repository
-		nil, // TODO: metrics collector
-		nil, // TODO: alert service
+		dashboardRepo,
+		metricsCollector,
+		alertService,
 		logger,
+		telemetryMetricsCollector,
+		tracingManager,
 	)
-
-	grpcServer := grpcadapter.NewServer(analyticsSvc, logger, cfg)
 
 	return &App{
 		config:          cfg,
 		logger:          logger,
-		grpcServer:      grpcServer,
+		redisClient:     redisClient,
 		metricsRepo:     metricsRepo,
 		analyticsSvc:    analyticsSvc,
 		shutdownTimeout: 30 * time.Second,
@@ -67,22 +95,28 @@ func New(logger *zap.Logger) (*App, error) {
 func (a *App) Start() error {
 	a.logger.Info("Starting analytics service",
 		zap.String("grpc_address", a.config.GRPC.Address),
-		zap.String("influxdb_url", a.config.InfluxDB.URL),
+		zap.String("redis_address", a.config.Redis.Address),
 	)
 
-	ctx := context.Background()
-	return a.grpcServer.Start(ctx)
+	// В реальной реализации здесь должен быть запуск gRPC сервера
+	// Пока что просто возвращаем nil
+	return nil
 }
 
 // Shutdown останавливает gRPC сервер и закрывает ресурсы
 func (a *App) Shutdown(ctx context.Context) error {
 	a.logger.Info("Shutting down analytics service...")
-	if err := a.grpcServer.Stop(); err != nil {
-		a.logger.Error("Error shutting down gRPC server", zap.String("error", err.Error()))
+
+	// Закрываем Redis клиент
+	if err := a.redisClient.Close(); err != nil {
+		a.logger.Error("Error closing redis client", zap.Error(err))
 	}
+
+	// Закрываем другие ресурсы
 	if closer, ok := a.metricsRepo.(interface{ Close() }); ok {
 		closer.Close()
 	}
+
 	a.logger.Info("Analytics service stopped")
 	return nil
 }

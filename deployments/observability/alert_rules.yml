@@ -1,0 +1,344 @@
+groups:
+  - name: silence_vpn_critical_alerts
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} on {{ $labels.instance }} has been down for more than 1 minute."
+          runbook_url: "https://docs.silence-vpn.com/runbooks/service-down"
+
+      - alert: HighErrorRate
+        expr: rate(silence_system_errors[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High error rate detected in {{ $labels.service }}"
+          description: "Error rate is {{ $value }} errors per second in {{ $labels.service }}"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/high-error-rate"
+
+      - alert: VPNServiceUnavailable
+        expr: silence_vpn:service_availability{job="silence-vpn-core"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: vpn-core
+        annotations:
+          summary: "VPN Core service is unavailable"
+          description: "VPN Core service has been unavailable for more than 2 minutes"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/vpn-unavailable"
+
+      - alert: AnalyticsServiceDown
+        expr: silence_vpn:service_availability{job="silence-analytics"} == 0
+        for: 3m
+        labels:
+          severity: critical
+          service: analytics
+        annotations:
+          summary: "Analytics service is down"
+          description: "Analytics service has been down for more than 3 minutes"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/analytics-down"
+
+  - name: silence_vpn_performance_alerts
+    rules:
+      - alert: VPNHighLatency
+        expr: histogram_quantile(0.95, rate(silence_bypass_latency_seconds_bucket[5m])) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          service: vpn
+        annotations:
+          summary: "High VPN latency detected"
+          description: "95th percentile latency is {{ $value }}s for bypass type {{ $labels.bypass_type }}"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/high-latency"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(silence_system_response_time_seconds_bucket[5m])) > 5.0
+        for: 10m
+        labels:
+          severity: warning
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High response time in {{ $labels.service }}"
+          description: "95th percentile response time is {{ $value }}s for {{ $labels.endpoint }}"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/high-response-time"
+
+      - alert: ServerOverloaded
+        expr: silence_server_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: server-manager
+        annotations:
+          summary: "Server {{ $labels.server_id }} is overloaded"
+          description: "Server {{ $labels.server_id }} in {{ $labels.region }} has CPU usage of {{ $value }}%"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/server-overloaded"
+
+      - alert: HighMemoryUsage
+        expr: silence_server_memory_usage_percent > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: server-manager
+        annotations:
+          summary: "High memory usage on server {{ $labels.server_id }}"
+          description: "Server {{ $labels.server_id }} in {{ $labels.region }} has memory usage of {{ $value }}%"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/high-memory-usage"
+
+      - alert: LowBypassSuccessRate
+        expr: silence_vpn:bypass_success_rate_5m < 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: dpi-bypass
+        annotations:
+          summary: "Low bypass success rate for {{ $labels.bypass_type }}"
+          description: "Bypass success rate is {{ $value }} for {{ $labels.bypass_type }} in {{ $labels.region }}"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/low-bypass-success"
+
+  - name: silence_vpn_capacity_alerts
+    rules:
+      - alert: TooManyActiveConnections
+        expr: silence_active_connections > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: vpn-core
+        annotations:
+          summary: "Too many active connections on server {{ $labels.server_id }}"
+          description: "Server {{ $labels.server_id }} has {{ $value }} active connections"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/too-many-connections"
+
+      - alert: HighDataTransferRate
+        expr: silence_vpn:data_transfer_rate_1m > 1000000000
+        for: 5m
+        labels:
+          severity: info
+          service: vpn-core
+        annotations:
+          summary: "High data transfer rate detected"
+          description: "Data transfer rate is {{ $value }} bytes per second"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/high-data-transfer"
+
+      - alert: UnusualUserActivity
+        expr: silence_vpn:active_users_by_region > 10000
+        for: 10m
+        labels:
+          severity: info
+          service: analytics
+        annotations:
+          summary: "Unusual user activity in {{ $labels.region }}"
+          description: "{{ $value }} active users in {{ $labels.region }}"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/unusual-user-activity"
+
+  - name: silence_vpn_infrastructure_alerts
+    rules:
+      - alert: NodeDown
+        expr: up{job="node-exporter"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Node {{ $labels.instance }} is down"
+          description: "Node {{ $labels.instance }} has been down for more than 2 minutes"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/node-down"
+
+      - alert: NodeHighCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) by (instance) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High CPU usage on node {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% on node {{ $labels.instance }}"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/high-cpu-usage"
+
+      - alert: NodeHighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High memory usage on node {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}% on node {{ $labels.instance }}"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/high-memory-usage"
+
+      - alert: NodeDiskSpaceLow
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Low disk space on node {{ $labels.instance }}"
+          description: "Disk usage is {{ $value }}% on {{ $labels.mountpoint }} of node {{ $labels.instance }}"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/low-disk-space"
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Redis is down"
+          description: "Redis instance has been down for more than 1 minute"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/redis-down"
+
+  - name: silence_vpn_application_alerts
+    rules:
+      - alert: MetricsProcessingDelay
+        expr: increase(silence_metrics_latency_seconds_sum[5m]) / increase(silence_metrics_latency_seconds_count[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: analytics
+        annotations:
+          summary: "Metrics processing delay in analytics service"
+          description: "Average metrics processing time is {{ $value }}s"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/metrics-delay"
+
+      - alert: DashboardErrors
+        expr: rate(silence_metrics_errors{metric_type="dashboard"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: analytics
+        annotations:
+          summary: "High dashboard error rate"
+          description: "Dashboard error rate is {{ $value }} errors per second"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/dashboard-errors"
+
+      - alert: PredictionServiceDown
+        expr: rate(silence_predictions_generated[5m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+          service: analytics
+        annotations:
+          summary: "Prediction service appears to be down"
+          description: "No predictions generated in the last 15 minutes"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/prediction-service-down"
+
+      - alert: AuthenticationFailures
+        expr: rate(silence_system_errors{error_type="auth_failure"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: gateway
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failure rate is {{ $value }} failures per second"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/auth-failures"
+
+  - name: silence_vpn_observability_alerts
+    rules:
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Prometheus is down"
+          description: "Prometheus monitoring system is down"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/prometheus-down"
+
+      - alert: GrafanaDown
+        expr: up{job="grafana"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Grafana is down"
+          description: "Grafana dashboard system is down"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/grafana-down"
+
+      - alert: JaegerDown
+        expr: up{job="jaeger"} == 0
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Jaeger tracing system is down"
+          description: "Jaeger tracing system has been down for more than 5 minutes"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/jaeger-down"
+
+      - alert: LokiDown
+        expr: up{job="loki"} == 0
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Loki logging system is down"
+          description: "Loki logging system has been down for more than 5 minutes"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/loki-down"
+
+      - alert: OtelCollectorDown
+        expr: up{job="otel-collector"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "OpenTelemetry Collector is down"
+          description: "OpenTelemetry Collector has been down for more than 1 minute"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/otel-collector-down"
+
+      - alert: HighTraceIngestionRate
+        expr: rate(traces_received_total[5m]) > 10000
+        for: 5m
+        labels:
+          severity: info
+          team: infrastructure
+        annotations:
+          summary: "High trace ingestion rate"
+          description: "Trace ingestion rate is {{ $value }} traces per second"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/high-trace-ingestion"
+
+  - name: silence_vpn_business_alerts
+    rules:
+      - alert: NoNewUserRegistrations
+        expr: increase(silence_total_users[1h]) == 0
+        for: 2h
+        labels:
+          severity: info
+          team: business
+        annotations:
+          summary: "No new user registrations"
+          description: "No new users registered in the last 2 hours"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/no-new-users"
+
+      - alert: UnusualConnectionPattern
+        expr: abs(silence_vpn:connection_rate_1m - silence_vpn:connection_rate_1m offset 1w) > 100
+        for: 15m
+        labels:
+          severity: info
+          team: business
+        annotations:
+          summary: "Unusual connection pattern detected"
+          description: "Connection rate differs by {{ $value }} from last week"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/unusual-connection-pattern"
+
+      - alert: LowUserActivityInRegion
+        expr: silence_vpn:active_users_by_region < 10
+        for: 30m
+        labels:
+          severity: info
+          team: business
+        annotations:
+          summary: "Low user activity in {{ $labels.region }}"
+          description: "Only {{ $value }} active users in {{ $labels.region }}"
+          runbook_url: "https://docs.silence-vpn.com/runbooks/low-user-activity"

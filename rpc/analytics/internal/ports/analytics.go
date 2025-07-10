@@ -32,6 +32,31 @@ type MetricsRepository interface {
 
 	// Временные серии
 	GetTimeSeries(ctx context.Context, metricName string, opts domain.QueryOptions) ([]domain.Metric, error)
+
+	// Дополнительные методы для gRPC handler
+	SaveMetric(ctx context.Context, metric *domain.Metric) error
+	GetMetrics(ctx context.Context, filters *domain.MetricFilters) ([]*domain.Metric, int, error)
+	GetMetricsHistory(ctx context.Context, req *domain.MetricHistoryRequest) ([]domain.TimeSeriesPoint, error)
+	GetStatistics(ctx context.Context, req *domain.StatisticsRequest) ([]*domain.Statistics, error)
+	GetSystemStats(ctx context.Context) (*domain.SystemStats, error)
+	GetUserStats(ctx context.Context, req *domain.UserStatsRequest) (*domain.UserStats, error)
+	PredictLoad(ctx context.Context, req *domain.PredictionRequest) ([]domain.PredictionPoint, error)
+	PredictTrend(ctx context.Context, req *domain.TrendRequest) ([]domain.PredictionPoint, error)
+	PredictBypassEffectiveness(ctx context.Context, bypassType string, hours int) ([]domain.Metric, error)
+
+	// Методы для записи метрик
+	RecordConnectionMetric(ctx context.Context, metric domain.ConnectionMetric) error
+	RecordBypassEffectivenessMetric(ctx context.Context, metric domain.BypassEffectivenessMetric) error
+	RecordUserActivityMetric(ctx context.Context, metric domain.UserActivityMetric) error
+	RecordServerLoadMetric(ctx context.Context, metric domain.ServerLoadMetric) error
+	RecordErrorMetric(ctx context.Context, metric domain.ErrorMetric) error
+
+	// Методы для получения аналитики
+	GetConnectionAnalytics(ctx context.Context, opts domain.QueryOptions) (*domain.MetricResponse, error)
+	GetBypassEffectivenessAnalytics(ctx context.Context, opts domain.QueryOptions) (*domain.MetricResponse, error)
+	GetUserActivityAnalytics(ctx context.Context, opts domain.QueryOptions) (*domain.MetricResponse, error)
+	GetServerLoadAnalytics(ctx context.Context, opts domain.QueryOptions) (*domain.MetricResponse, error)
+	GetErrorAnalytics(ctx context.Context, opts domain.QueryOptions) (*domain.MetricResponse, error)
 }
 
 // DashboardRepository интерфейс для работы с дашбордами
@@ -41,6 +66,7 @@ type DashboardRepository interface {
 	UpdateDashboard(ctx context.Context, dashboard domain.DashboardConfig) error
 	DeleteDashboard(ctx context.Context, id string) error
 	ListDashboards(ctx context.Context) ([]domain.DashboardConfig, error)
+	GetDashboardData(ctx context.Context, timeRange string) (*domain.DashboardData, error)
 }
 
 // AnalyticsService основной сервис аналитики

@@ -1,0 +1,91 @@
+groups:
+  - name: silence_vpn_recording_rules
+    interval: 30s
+    rules:
+      # Connection rate per minute
+      - record: silence_vpn:connection_rate_1m
+        expr: rate(silence_total_connections[1m])
+
+      # Average connection duration
+      - record: silence_vpn:avg_connection_duration_5m
+        expr: rate(silence_connection_duration_seconds_sum[5m]) / rate(silence_connection_duration_seconds_count[5m])
+
+      # Data transfer rate
+      - record: silence_vpn:data_transfer_rate_1m
+        expr: rate(silence_connection_data_in_bytes[1m]) + rate(silence_connection_data_out_bytes[1m])
+
+      # Server CPU utilization by region
+      - record: silence_vpn:server_cpu_utilization_by_region
+        expr: avg(silence_server_cpu_usage_percent) by (region)
+
+      # Active users by region
+      - record: silence_vpn:active_users_by_region
+        expr: sum(silence_active_users) by (region)
+
+      # Bypass success rate
+      - record: silence_vpn:bypass_success_rate_5m
+        expr: rate(silence_bypass_success[5m]) / rate(silence_bypass_attempts[5m])
+
+      # Error rate
+      - record: silence_vpn:error_rate_1m
+        expr: rate(silence_system_errors[1m])
+
+      # System load average
+      - record: silence_vpn:system_load_avg_5m
+        expr: avg_over_time(silence_system_load[5m])
+
+  - name: silence_vpn_performance_rules
+    interval: 60s
+    rules:
+      # High-level aggregations
+      - record: silence_vpn:total_data_transfer_rate_5m
+        expr: sum(rate(silence_connection_data_in_bytes[5m]) + rate(silence_connection_data_out_bytes[5m]))
+
+      # Server performance metrics
+      - record: silence_vpn:server_memory_utilization_by_region
+        expr: avg(silence_server_memory_usage_percent) by (region)
+
+      - record: silence_vpn:server_network_utilization_by_region
+        expr: avg(rate(silence_server_network_in_bytes[5m]) + rate(silence_server_network_out_bytes[5m])) by (region)
+
+      # User activity metrics
+      - record: silence_vpn:avg_user_session_duration_1h
+        expr: avg_over_time(silence_user_activity_time_seconds[1h])
+
+      - record: silence_vpn:user_data_transfer_rate_by_region
+        expr: sum(rate(silence_user_data_transferred_bytes[5m])) by (region)
+
+      # Bypass effectiveness
+      - record: silence_vpn:bypass_latency_p95_5m
+        expr: histogram_quantile(0.95, rate(silence_bypass_latency_seconds_bucket[5m]))
+
+      - record: silence_vpn:bypass_throughput_avg_5m
+        expr: avg(silence_bypass_throughput_mbps) by (bypass_type)
+
+  - name: silence_vpn_availability_rules
+    interval: 30s
+    rules:
+      # Service availability
+      - record: silence_vpn:service_availability
+        expr: up
+
+      # Response time percentiles
+      - record: silence_vpn:response_time_p50_5m
+        expr: histogram_quantile(0.50, rate(silence_system_response_time_seconds_bucket[5m]))
+
+      - record: silence_vpn:response_time_p95_5m
+        expr: histogram_quantile(0.95, rate(silence_system_response_time_seconds_bucket[5m]))
+
+      - record: silence_vpn:response_time_p99_5m
+        expr: histogram_quantile(0.99, rate(silence_system_response_time_seconds_bucket[5m]))
+
+      # Error rates by service
+      - record: silence_vpn:error_rate_by_service_5m
+        expr: sum(rate(silence_system_errors[5m])) by (service)
+
+      # Request rates
+      - record: silence_vpn:request_rate_5m
+        expr: rate(silence_system_requests[5m])
+
+      - record: silence_vpn:request_rate_by_endpoint_5m
+        expr: sum(rate(silence_system_requests[5m])) by (endpoint)
