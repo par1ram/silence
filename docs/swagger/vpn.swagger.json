@@ -1,0 +1,953 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "vpn.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "VpnCoreService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/vpn/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "VpnCoreService_Health",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnHealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels": {
+      "get": {
+        "operationId": "VpnCoreService_ListTunnels",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnListTunnelsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "VpnCoreService"
+        ]
+      },
+      "post": {
+        "summary": "Tunnel management",
+        "operationId": "VpnCoreService_CreateTunnel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnTunnel"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/vpnCreateTunnelRequest"
+            }
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{id}": {
+      "get": {
+        "operationId": "VpnCoreService_GetTunnel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnTunnel"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      },
+      "delete": {
+        "operationId": "VpnCoreService_DeleteTunnel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnDeleteTunnelResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{id}/start": {
+      "post": {
+        "operationId": "VpnCoreService_StartTunnel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnStartTunnelResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VpnCoreServiceStartTunnelBody"
+            }
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{id}/stats": {
+      "get": {
+        "operationId": "VpnCoreService_GetTunnelStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnTunnelStats"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{id}/stop": {
+      "post": {
+        "operationId": "VpnCoreService_StopTunnel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnStopTunnelResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VpnCoreServiceStopTunnelBody"
+            }
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{tunnel_id}/auto-recovery/disable": {
+      "post": {
+        "operationId": "VpnCoreService_DisableAutoRecovery",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnDisableAutoRecoveryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnel_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VpnCoreServiceDisableAutoRecoveryBody"
+            }
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{tunnel_id}/auto-recovery/enable": {
+      "post": {
+        "operationId": "VpnCoreService_EnableAutoRecovery",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnEnableAutoRecoveryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnel_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VpnCoreServiceEnableAutoRecoveryBody"
+            }
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{tunnel_id}/health": {
+      "get": {
+        "summary": "Новые методы для мониторинга и восстановления",
+        "operationId": "VpnCoreService_HealthCheck",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnHealthCheckResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnel_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{tunnel_id}/peers": {
+      "get": {
+        "operationId": "VpnCoreService_ListPeers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnListPeersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnel_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      },
+      "post": {
+        "summary": "Peer management",
+        "operationId": "VpnCoreService_AddPeer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnPeer"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnel_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VpnCoreServiceAddPeerBody"
+            }
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{tunnel_id}/peers/{peer_id}": {
+      "get": {
+        "operationId": "VpnCoreService_GetPeer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnPeer"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnel_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "peer_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      },
+      "delete": {
+        "operationId": "VpnCoreService_RemovePeer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnRemovePeerResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnel_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "peer_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{tunnel_id}/recover": {
+      "post": {
+        "operationId": "VpnCoreService_RecoverTunnel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnRecoverTunnelResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnel_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VpnCoreServiceRecoverTunnelBody"
+            }
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "VpnCoreServiceAddPeerBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "public_key": {
+          "type": "string"
+        },
+        "allowed_ips": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "keepalive": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "VpnCoreServiceDisableAutoRecoveryBody": {
+      "type": "object"
+    },
+    "VpnCoreServiceEnableAutoRecoveryBody": {
+      "type": "object"
+    },
+    "VpnCoreServiceRecoverTunnelBody": {
+      "type": "object"
+    },
+    "VpnCoreServiceStartTunnelBody": {
+      "type": "object"
+    },
+    "VpnCoreServiceStopTunnelBody": {
+      "type": "object"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "vpnCreateTunnelRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "listen_port": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "mtu": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "auto_recovery": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnDeleteTunnelResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnDisableAutoRecoveryResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnEnableAutoRecoveryResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnHealthCheckResponse": {
+      "type": "object",
+      "properties": {
+        "tunnel_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "last_check": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "peers_health": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/vpnPeerHealth"
+          }
+        },
+        "uptime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "error_count": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "vpnHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "vpnListPeersResponse": {
+      "type": "object",
+      "properties": {
+        "peers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/vpnPeer"
+          }
+        }
+      }
+    },
+    "vpnListTunnelsResponse": {
+      "type": "object",
+      "properties": {
+        "tunnels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/vpnTunnel"
+          }
+        }
+      }
+    },
+    "vpnPeer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "tunnel_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "public_key": {
+          "type": "string"
+        },
+        "allowed_ips": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "keepalive": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "status": {
+          "$ref": "#/definitions/vpnPeerStatus"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_seen": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Новые поля для мониторинга"
+        },
+        "connection_quality": {
+          "type": "number",
+          "format": "double"
+        },
+        "latency": {
+          "type": "string",
+          "format": "int64"
+        },
+        "packet_loss": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "title": "Peer"
+    },
+    "vpnPeerHealth": {
+      "type": "object",
+      "properties": {
+        "peer_id": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/vpnPeerStatus"
+        },
+        "last_handshake": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "latency": {
+          "type": "string",
+          "format": "int64"
+        },
+        "packet_loss": {
+          "type": "number",
+          "format": "double"
+        },
+        "connection_quality": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "vpnPeerStatus": {
+      "type": "string",
+      "enum": [
+        "PEER_STATUS_UNSPECIFIED",
+        "PEER_STATUS_INACTIVE",
+        "PEER_STATUS_ACTIVE",
+        "PEER_STATUS_ERROR",
+        "PEER_STATUS_OFFLINE"
+      ],
+      "default": "PEER_STATUS_UNSPECIFIED"
+    },
+    "vpnRecoverTunnelResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnRemovePeerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnStartTunnelResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnStopTunnelResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnTunnel": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "interface": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/vpnTunnelStatus"
+        },
+        "public_key": {
+          "type": "string"
+        },
+        "private_key": {
+          "type": "string"
+        },
+        "listen_port": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "mtu": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_health_check": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Новые поля для мониторинга"
+        },
+        "health_status": {
+          "type": "string"
+        },
+        "auto_recovery": {
+          "type": "boolean"
+        },
+        "recovery_attempts": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Tunnel"
+    },
+    "vpnTunnelStats": {
+      "type": "object",
+      "properties": {
+        "tunnel_id": {
+          "type": "string"
+        },
+        "bytes_rx": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bytes_tx": {
+          "type": "string",
+          "format": "int64"
+        },
+        "peers_count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "active_peers": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "last_updated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "uptime": {
+          "type": "string",
+          "format": "int64",
+          "title": "Новые поля для детальной статистики"
+        },
+        "error_count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "recovery_count": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "vpnTunnelStatus": {
+      "type": "string",
+      "enum": [
+        "TUNNEL_STATUS_UNSPECIFIED",
+        "TUNNEL_STATUS_INACTIVE",
+        "TUNNEL_STATUS_ACTIVE",
+        "TUNNEL_STATUS_ERROR",
+        "TUNNEL_STATUS_RECOVERING"
+      ],
+      "default": "TUNNEL_STATUS_UNSPECIFIED"
+    }
+  }
+}

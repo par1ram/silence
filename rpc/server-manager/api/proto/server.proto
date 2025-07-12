@@ -5,39 +5,125 @@ package server;
 option go_package = "github.com/par1ram/silence/rpc/server-manager/api/proto";
 
 import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 // Server Manager Service
 service ServerManagerService {
   // Health check
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc Health(HealthRequest) returns (HealthResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/servers/health"
+    };
+  }
 
   // Server management
-  rpc CreateServer(CreateServerRequest) returns (Server);
-  rpc GetServer(GetServerRequest) returns (Server);
-  rpc ListServers(ListServersRequest) returns (ListServersResponse);
-  rpc UpdateServer(UpdateServerRequest) returns (Server);
-  rpc DeleteServer(DeleteServerRequest) returns (DeleteServerResponse);
+  rpc CreateServer(CreateServerRequest) returns (Server) {
+    option (google.api.http) = {
+      post: "/api/v1/servers"
+      body: "*"
+    };
+  }
+  rpc GetServer(GetServerRequest) returns (Server) {
+    option (google.api.http) = {
+      get: "/api/v1/servers/{id}"
+    };
+  }
+  rpc ListServers(ListServersRequest) returns (ListServersResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/servers"
+    };
+  }
+  rpc UpdateServer(UpdateServerRequest) returns (Server) {
+    option (google.api.http) = {
+      put: "/api/v1/servers/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteServer(DeleteServerRequest) returns (DeleteServerResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/servers/{id}"
+    };
+  }
 
   // Server operations
-  rpc StartServer(StartServerRequest) returns (StartServerResponse);
-  rpc StopServer(StopServerRequest) returns (StopServerResponse);
-  rpc RestartServer(RestartServerRequest) returns (RestartServerResponse);
+  rpc StartServer(StartServerRequest) returns (StartServerResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/servers/{id}/start"
+      body: "*"
+    };
+  }
+  rpc StopServer(StopServerRequest) returns (StopServerResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/servers/{id}/stop"
+      body: "*"
+    };
+  }
+  rpc RestartServer(RestartServerRequest) returns (RestartServerResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/servers/{id}/restart"
+      body: "*"
+    };
+  }
 
   // Server monitoring
-  rpc GetServerStats(GetServerStatsRequest) returns (ServerStats);
-  rpc GetServerHealth(GetServerHealthRequest) returns (ServerHealth);
-  rpc MonitorServer(MonitorServerRequest) returns (stream ServerMonitorEvent);
+  rpc GetServerStats(GetServerStatsRequest) returns (ServerStats) {
+    option (google.api.http) = {
+      get: "/api/v1/servers/{id}/stats"
+    };
+  }
+  rpc GetServerHealth(GetServerHealthRequest) returns (ServerHealth) {
+    option (google.api.http) = {
+      get: "/api/v1/servers/{id}/health"
+    };
+  }
+  rpc MonitorServer(MonitorServerRequest) returns (stream ServerMonitorEvent) {
+    option (google.api.http) = {
+      get: "/api/v1/servers/{id}/monitor"
+    };
+  }
 
   // Server filtering
-  rpc GetServersByType(GetServersByTypeRequest) returns (GetServersByTypeResponse);
-  rpc GetServersByRegion(GetServersByRegionRequest) returns (GetServersByRegionResponse);
-  rpc GetServersByStatus(GetServersByStatusRequest) returns (GetServersByStatusResponse);
+  rpc GetServersByType(GetServersByTypeRequest) returns (GetServersByTypeResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/servers/type/{type}"
+    };
+  }
+  rpc GetServersByRegion(GetServersByRegionRequest) returns (GetServersByRegionResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/servers/region/{region}"
+    };
+  }
+  rpc GetServersByStatus(GetServersByStatusRequest) returns (GetServersByStatusResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/servers/status/{status}"
+    };
+  }
 
   // Scaling and management
-  rpc ScaleServer(ScaleServerRequest) returns (ScaleServerResponse);
-  rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
-  rpc RestoreBackup(RestoreBackupRequest) returns (RestoreBackupResponse);
-  rpc UpdateServerSoftware(UpdateServerSoftwareRequest) returns (UpdateServerSoftwareResponse);
+  rpc ScaleServer(ScaleServerRequest) returns (ScaleServerResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/servers/{id}/scale"
+      body: "*"
+    };
+  }
+  rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/servers/{server_id}/backups"
+      body: "*"
+    };
+  }
+  rpc RestoreBackup(RestoreBackupRequest) returns (RestoreBackupResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/servers/{server_id}/backups/{backup_id}/restore"
+      body: "*"
+    };
+  }
+  rpc UpdateServerSoftware(UpdateServerSoftwareRequest) returns (UpdateServerSoftwareResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/servers/{server_id}/update"
+      body: "*"
+    };
+  }
 }
 
 // Health

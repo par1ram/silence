@@ -5,32 +5,104 @@ package vpn;
 option go_package = "github.com/par1ram/silence/rpc/vpn-core/api/proto";
 
 import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 // VPN Core Service
 service VpnCoreService {
   // Health check
-  rpc Health(HealthRequest) returns (HealthResponse);
-  
+  rpc Health(HealthRequest) returns (HealthResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/vpn/health"
+    };
+  }
+
   // Tunnel management
-  rpc CreateTunnel(CreateTunnelRequest) returns (Tunnel);
-  rpc GetTunnel(GetTunnelRequest) returns (Tunnel);
-  rpc ListTunnels(ListTunnelsRequest) returns (ListTunnelsResponse);
-  rpc DeleteTunnel(DeleteTunnelRequest) returns (DeleteTunnelResponse);
-  rpc StartTunnel(StartTunnelRequest) returns (StartTunnelResponse);
-  rpc StopTunnel(StopTunnelRequest) returns (StopTunnelResponse);
-  rpc GetTunnelStats(GetTunnelStatsRequest) returns (TunnelStats);
-  
+  rpc CreateTunnel(CreateTunnelRequest) returns (Tunnel) {
+    option (google.api.http) = {
+      post: "/api/v1/vpn/tunnels"
+      body: "*"
+    };
+  }
+  rpc GetTunnel(GetTunnelRequest) returns (Tunnel) {
+    option (google.api.http) = {
+      get: "/api/v1/vpn/tunnels/{id}"
+    };
+  }
+  rpc ListTunnels(ListTunnelsRequest) returns (ListTunnelsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/vpn/tunnels"
+    };
+  }
+  rpc DeleteTunnel(DeleteTunnelRequest) returns (DeleteTunnelResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/vpn/tunnels/{id}"
+    };
+  }
+  rpc StartTunnel(StartTunnelRequest) returns (StartTunnelResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/vpn/tunnels/{id}/start"
+      body: "*"
+    };
+  }
+  rpc StopTunnel(StopTunnelRequest) returns (StopTunnelResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/vpn/tunnels/{id}/stop"
+      body: "*"
+    };
+  }
+  rpc GetTunnelStats(GetTunnelStatsRequest) returns (TunnelStats) {
+    option (google.api.http) = {
+      get: "/api/v1/vpn/tunnels/{id}/stats"
+    };
+  }
+
   // Новые методы для мониторинга и восстановления
-  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
-  rpc EnableAutoRecovery(EnableAutoRecoveryRequest) returns (EnableAutoRecoveryResponse);
-  rpc DisableAutoRecovery(DisableAutoRecoveryRequest) returns (DisableAutoRecoveryResponse);
-  rpc RecoverTunnel(RecoverTunnelRequest) returns (RecoverTunnelResponse);
-  
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/vpn/tunnels/{tunnel_id}/health"
+    };
+  }
+  rpc EnableAutoRecovery(EnableAutoRecoveryRequest) returns (EnableAutoRecoveryResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/vpn/tunnels/{tunnel_id}/auto-recovery/enable"
+      body: "*"
+    };
+  }
+  rpc DisableAutoRecovery(DisableAutoRecoveryRequest) returns (DisableAutoRecoveryResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/vpn/tunnels/{tunnel_id}/auto-recovery/disable"
+      body: "*"
+    };
+  }
+  rpc RecoverTunnel(RecoverTunnelRequest) returns (RecoverTunnelResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/vpn/tunnels/{tunnel_id}/recover"
+      body: "*"
+    };
+  }
+
   // Peer management
-  rpc AddPeer(AddPeerRequest) returns (Peer);
-  rpc GetPeer(GetPeerRequest) returns (Peer);
-  rpc ListPeers(ListPeersRequest) returns (ListPeersResponse);
-  rpc RemovePeer(RemovePeerRequest) returns (RemovePeerResponse);
+  rpc AddPeer(AddPeerRequest) returns (Peer) {
+    option (google.api.http) = {
+      post: "/api/v1/vpn/tunnels/{tunnel_id}/peers"
+      body: "*"
+    };
+  }
+  rpc GetPeer(GetPeerRequest) returns (Peer) {
+    option (google.api.http) = {
+      get: "/api/v1/vpn/tunnels/{tunnel_id}/peers/{peer_id}"
+    };
+  }
+  rpc ListPeers(ListPeersRequest) returns (ListPeersResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/vpn/tunnels/{tunnel_id}/peers"
+    };
+  }
+  rpc RemovePeer(RemovePeerRequest) returns (RemovePeerResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/vpn/tunnels/{tunnel_id}/peers/{peer_id}"
+    };
+  }
 }
 
 // Health
@@ -230,4 +302,4 @@ message RemovePeerRequest {
 
 message RemovePeerResponse {
   bool success = 1;
-} 
+}

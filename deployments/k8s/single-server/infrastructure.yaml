@@ -1,0 +1,600 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "15"
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "15"
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: POSTGRES_DB
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: init-sql
+          mountPath: /docker-entrypoint-initdb.d
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: silence-postgres-pvc
+      - name: init-sql
+        configMap:
+          name: postgres-init-sql
+          defaultMode: 0755
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "15"
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: silence
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "7"
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "7"
+        app.kubernetes.io/component: cache
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+      volumes:
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: silence-redis-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "7"
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: silence
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "3"
+    app.kubernetes.io/component: messaging
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rabbitmq
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: rabbitmq
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "3"
+        app.kubernetes.io/component: messaging
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3-management-alpine
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: RABBITMQ_DEFAULT_USER
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: RABBITMQ_DEFAULT_PASS
+        volumeMounts:
+        - name: rabbitmq-storage
+          mountPath: /var/lib/rabbitmq
+        livenessProbe:
+          exec:
+            command:
+            - rabbitmq-diagnostics
+            - ping
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - rabbitmq-diagnostics
+            - ping
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: rabbitmq-storage
+        persistentVolumeClaim:
+          claimName: silence-rabbitmq-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "3"
+    app.kubernetes.io/component: messaging
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/instance: silence
+  ports:
+  - name: amqp
+    port: 5672
+    targetPort: 5672
+    protocol: TCP
+  - name: management
+    port: 15672
+    targetPort: 15672
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: influxdb
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: influxdb
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "2.7"
+    app.kubernetes.io/component: timeseries-db
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: influxdb
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: influxdb
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "2.7"
+        app.kubernetes.io/component: timeseries-db
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: influxdb
+        image: influxdb:2.7-alpine
+        ports:
+        - containerPort: 8086
+        env:
+        - name: DOCKER_INFLUXDB_INIT_MODE
+          value: "setup"
+        - name: DOCKER_INFLUXDB_INIT_USERNAME
+          value: "admin"
+        - name: DOCKER_INFLUXDB_INIT_PASSWORD
+          value: "adminpassword"
+        - name: DOCKER_INFLUXDB_INIT_ORG
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: INFLUXDB_ORG
+        - name: DOCKER_INFLUXDB_INIT_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: INFLUXDB_BUCKET
+        - name: DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: INFLUXDB_TOKEN
+        volumeMounts:
+        - name: influxdb-storage
+          mountPath: /var/lib/influxdb2
+        livenessProbe:
+          exec:
+            command:
+            - influx
+            - ping
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - influx
+            - ping
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      volumes:
+      - name: influxdb-storage
+        persistentVolumeClaim:
+          claimName: silence-influxdb-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: influxdb
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: influxdb
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "2.7"
+    app.kubernetes.io/component: timeseries-db
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: influxdb
+    app.kubernetes.io/instance: silence
+  ports:
+  - port: 8086
+    targetPort: 8086
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clickhouse
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: clickhouse
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "24.1"
+    app.kubernetes.io/component: analytics-db
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: clickhouse
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: clickhouse
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "24.1"
+        app.kubernetes.io/component: analytics-db
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: clickhouse
+        image: clickhouse/clickhouse-server:24.1-alpine
+        ports:
+        - containerPort: 8123
+        - containerPort: 9000
+        env:
+        - name: CLICKHOUSE_DB
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: CLICKHOUSE_DB
+        - name: CLICKHOUSE_USER
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: CLICKHOUSE_USER
+        - name: CLICKHOUSE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: CLICKHOUSE_PASSWORD
+        - name: CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT
+          value: "1"
+        volumeMounts:
+        - name: clickhouse-storage
+          mountPath: /var/lib/clickhouse
+        - name: clickhouse-init
+          mountPath: /docker-entrypoint-initdb.d
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: 8123
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ping
+            port: 8123
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+      volumes:
+      - name: clickhouse-storage
+        persistentVolumeClaim:
+          claimName: silence-clickhouse-pvc
+      - name: clickhouse-init
+        configMap:
+          name: clickhouse-init-sql
+          defaultMode: 0755
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clickhouse
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: clickhouse
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "24.1"
+    app.kubernetes.io/component: analytics-db
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: clickhouse
+    app.kubernetes.io/instance: silence
+  ports:
+  - name: http
+    port: 8123
+    targetPort: 8123
+    protocol: TCP
+  - name: native
+    port: 9000
+    targetPort: 9000
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "15"
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+data:
+  init.sql: |
+    -- Create databases for different services
+    CREATE DATABASE IF NOT EXISTS silence_auth;
+    CREATE DATABASE IF NOT EXISTS silence_server_manager;
+    CREATE DATABASE IF NOT EXISTS silence_vpn;
+
+    -- Create users and grant permissions
+    CREATE USER IF NOT EXISTS silence_auth_user WITH PASSWORD 'auth_password';
+    CREATE USER IF NOT EXISTS silence_server_manager_user WITH PASSWORD 'server_manager_password';
+    CREATE USER IF NOT EXISTS silence_vpn_user WITH PASSWORD 'vpn_password';
+
+    GRANT ALL PRIVILEGES ON DATABASE silence_auth TO silence_auth_user;
+    GRANT ALL PRIVILEGES ON DATABASE silence_server_manager TO silence_server_manager_user;
+    GRANT ALL PRIVILEGES ON DATABASE silence_vpn TO silence_vpn_user;
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-init-sql
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: clickhouse
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "24.1"
+    app.kubernetes.io/component: analytics-db
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+data:
+  init.sql: |
+    -- Create analytics database
+    CREATE DATABASE IF NOT EXISTS silence_analytics;
+
+    -- Create tables for analytics
+    CREATE TABLE IF NOT EXISTS silence_analytics.connection_events (
+        id UUID DEFAULT generateUUIDv4(),
+        user_id String,
+        server_id String,
+        event_type String,
+        timestamp DateTime64(3),
+        metadata String
+    ) ENGINE = MergeTree()
+    ORDER BY (timestamp, user_id, server_id);
+
+    CREATE TABLE IF NOT EXISTS silence_analytics.user_activities (
+        id UUID DEFAULT generateUUIDv4(),
+        user_id String,
+        activity_type String,
+        timestamp DateTime64(3),
+        duration_seconds UInt32,
+        data_transferred_bytes UInt64,
+        metadata String
+    ) ENGINE = MergeTree()
+    ORDER BY (timestamp, user_id);
+
+    CREATE TABLE IF NOT EXISTS silence_analytics.server_metrics (
+        id UUID DEFAULT generateUUIDv4(),
+        server_id String,
+        metric_type String,
+        value Float64,
+        timestamp DateTime64(3),
+        metadata String
+    ) ENGINE = MergeTree()
+    ORDER BY (timestamp, server_id, metric_type);

@@ -5,24 +5,80 @@ package auth;
 option go_package = "github.com/par1ram/silence/api/auth/api/proto";
 
 import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 // Auth Service
 service AuthService {
   // Authentication
-  rpc Login(LoginRequest) returns (AuthResponse);
-  rpc Register(RegisterRequest) returns (AuthResponse);
-  rpc GetMe(GetMeRequest) returns (User);
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc Login(LoginRequest) returns (AuthResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/auth/login"
+      body: "*"
+    };
+  }
+  rpc Register(RegisterRequest) returns (AuthResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/auth/register"
+      body: "*"
+    };
+  }
+  rpc GetMe(GetMeRequest) returns (User) {
+    option (google.api.http) = {
+      get: "/api/v1/auth/me"
+    };
+  }
+  rpc Health(HealthRequest) returns (HealthResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/auth/health"
+    };
+  }
 
   // User Management
-  rpc CreateUser(CreateUserRequest) returns (User);
-  rpc GetUser(GetUserRequest) returns (User);
-  rpc UpdateUser(UpdateUserRequest) returns (User);
-  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
-  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
-  rpc BlockUser(BlockUserRequest) returns (BlockUserResponse);
-  rpc UnblockUser(UnblockUserRequest) returns (UnblockUserResponse);
-  rpc ChangeUserRole(ChangeUserRoleRequest) returns (ChangeUserRoleResponse);
+  rpc CreateUser(CreateUserRequest) returns (User) {
+    option (google.api.http) = {
+      post: "/api/v1/users"
+      body: "*"
+    };
+  }
+  rpc GetUser(GetUserRequest) returns (User) {
+    option (google.api.http) = {
+      get: "/api/v1/users/{id}"
+    };
+  }
+  rpc UpdateUser(UpdateUserRequest) returns (User) {
+    option (google.api.http) = {
+      put: "/api/v1/users/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/users/{id}"
+    };
+  }
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/users"
+    };
+  }
+  rpc BlockUser(BlockUserRequest) returns (BlockUserResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/users/{id}/block"
+      body: "*"
+    };
+  }
+  rpc UnblockUser(UnblockUserRequest) returns (UnblockUserResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/users/{id}/unblock"
+      body: "*"
+    };
+  }
+  rpc ChangeUserRole(ChangeUserRoleRequest) returns (ChangeUserRoleResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/users/{id}/role"
+      body: "*"
+    };
+  }
 }
 
 // User roles

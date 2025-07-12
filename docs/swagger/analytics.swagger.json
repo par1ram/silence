@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "analytics/analytics.proto",
+    "title": "analytics.proto",
     "version": "version not set"
   },
   "tags": [
@@ -15,7 +15,392 @@
   "produces": [
     "application/json"
   ],
-  "paths": {},
+  "paths": {
+    "/api/v1/analytics/dashboard": {
+      "get": {
+        "summary": "Dashboard",
+        "operationId": "AnalyticsService_GetDashboardData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsGetDashboardDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "time_range",
+            "description": "1h, 6h, 24h, 7d, 30d",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "AnalyticsService_Health",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsHealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/metrics": {
+      "get": {
+        "operationId": "AnalyticsService_GetMetrics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsGetMetricsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filters[string]",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      },
+      "post": {
+        "summary": "Metrics collection",
+        "operationId": "AnalyticsService_CollectMetric",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsCollectMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/analyticsCollectMetricRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/metrics/history": {
+      "get": {
+        "operationId": "AnalyticsService_GetMetricsHistory",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsGetMetricsHistoryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "interval",
+            "description": "1m, 5m, 1h, 1d",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/predictions/load": {
+      "post": {
+        "summary": "Predictions",
+        "operationId": "AnalyticsService_PredictLoad",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsPredictLoadResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/analyticsPredictLoadRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/predictions/trend": {
+      "post": {
+        "operationId": "AnalyticsService_PredictTrend",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsPredictTrendResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/analyticsPredictTrendRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/statistics": {
+      "get": {
+        "summary": "Statistics",
+        "operationId": "AnalyticsService_GetStatistics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsGetStatisticsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "period",
+            "description": "hourly, daily, weekly, monthly",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/statistics/system": {
+      "get": {
+        "operationId": "AnalyticsService_GetSystemStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsGetSystemStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/statistics/users/{user_id}": {
+      "get": {
+        "operationId": "AnalyticsService_GetUserStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsGetUserStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    }
+  },
   "definitions": {
     "analyticsAlert": {
       "type": "object",
@@ -35,12 +420,36 @@
         "message": {
           "type": "string"
         },
-        "createdAt": {
+        "created_at": {
           "type": "string",
           "format": "date-time"
         },
         "acknowledged": {
           "type": "boolean"
+        }
+      }
+    },
+    "analyticsCollectMetricRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },
@@ -50,7 +459,7 @@
         "success": {
           "type": "boolean"
         },
-        "metricId": {
+        "metric_id": {
           "type": "string"
         }
       }
@@ -58,31 +467,31 @@
     "analyticsDashboardData": {
       "type": "object",
       "properties": {
-        "systemStats": {
+        "system_stats": {
           "$ref": "#/definitions/analyticsSystemStats"
         },
-        "connectionsOverTime": {
+        "connections_over_time": {
           "type": "array",
           "items": {
             "type": "object",
             "$ref": "#/definitions/analyticsTimeSeriesPoint"
           }
         },
-        "dataTransferOverTime": {
+        "data_transfer_over_time": {
           "type": "array",
           "items": {
             "type": "object",
             "$ref": "#/definitions/analyticsTimeSeriesPoint"
           }
         },
-        "serverUsage": {
+        "server_usage": {
           "type": "array",
           "items": {
             "type": "object",
             "$ref": "#/definitions/analyticsServerUsage"
           }
         },
-        "regionStats": {
+        "region_stats": {
           "type": "array",
           "items": {
             "type": "object",
@@ -209,6 +618,19 @@
       },
       "title": "Metrics"
     },
+    "analyticsPredictLoadRequest": {
+      "type": "object",
+      "properties": {
+        "server_id": {
+          "type": "string"
+        },
+        "hours_ahead": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Predictions"
+    },
     "analyticsPredictLoadResponse": {
       "type": "object",
       "properties": {
@@ -218,6 +640,18 @@
             "type": "object",
             "$ref": "#/definitions/analyticsPredictionPoint"
           }
+        }
+      }
+    },
+    "analyticsPredictTrendRequest": {
+      "type": "object",
+      "properties": {
+        "metric_name": {
+          "type": "string"
+        },
+        "days_ahead": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -240,7 +674,7 @@
           "type": "string",
           "format": "date-time"
         },
-        "predictedValue": {
+        "predicted_value": {
           "type": "number",
           "format": "double"
         },
@@ -256,19 +690,19 @@
         "region": {
           "type": "string"
         },
-        "userCount": {
+        "user_count": {
           "type": "string",
           "format": "int64"
         },
-        "connectionCount": {
+        "connection_count": {
           "type": "string",
           "format": "int64"
         },
-        "dataTransferred": {
+        "data_transferred": {
           "type": "string",
           "format": "int64"
         },
-        "avgLatency": {
+        "avg_latency": {
           "type": "number",
           "format": "double"
         }
@@ -277,25 +711,25 @@
     "analyticsServerUsage": {
       "type": "object",
       "properties": {
-        "serverId": {
+        "server_id": {
           "type": "string"
         },
-        "serverName": {
+        "server_name": {
           "type": "string"
         },
-        "activeConnections": {
+        "active_connections": {
           "type": "string",
           "format": "int64"
         },
-        "cpuUsage": {
+        "cpu_usage": {
           "type": "number",
           "format": "double"
         },
-        "memoryUsage": {
+        "memory_usage": {
           "type": "number",
           "format": "double"
         },
-        "networkUsage": {
+        "network_usage": {
           "type": "number",
           "format": "double"
         }
@@ -320,7 +754,7 @@
         "unit": {
           "type": "string"
         },
-        "calculatedAt": {
+        "calculated_at": {
           "type": "string",
           "format": "date-time"
         },
@@ -333,43 +767,43 @@
     "analyticsSystemStats": {
       "type": "object",
       "properties": {
-        "totalUsers": {
+        "total_users": {
           "type": "string",
           "format": "int64"
         },
-        "activeUsers": {
+        "active_users": {
           "type": "string",
           "format": "int64"
         },
-        "totalConnections": {
+        "total_connections": {
           "type": "string",
           "format": "int64"
         },
-        "activeConnections": {
+        "active_connections": {
           "type": "string",
           "format": "int64"
         },
-        "totalDataTransferred": {
+        "total_data_transferred": {
           "type": "string",
           "format": "int64"
         },
-        "serversCount": {
+        "servers_count": {
           "type": "string",
           "format": "int64"
         },
-        "activeServers": {
+        "active_servers": {
           "type": "string",
           "format": "int64"
         },
-        "avgConnectionTime": {
+        "avg_connection_time": {
           "type": "number",
           "format": "double"
         },
-        "systemLoad": {
+        "system_load": {
           "type": "number",
           "format": "double"
         },
-        "lastUpdated": {
+        "last_updated": {
           "type": "string",
           "format": "date-time"
         }
@@ -391,34 +825,34 @@
     "analyticsUserStats": {
       "type": "object",
       "properties": {
-        "userId": {
+        "user_id": {
           "type": "string"
         },
-        "totalConnections": {
+        "total_connections": {
           "type": "string",
           "format": "int64"
         },
-        "totalDataTransferred": {
+        "total_data_transferred": {
           "type": "string",
           "format": "int64"
         },
-        "totalSessionTime": {
+        "total_session_time": {
           "type": "string",
           "format": "int64"
         },
-        "favoriteServersCount": {
+        "favorite_servers_count": {
           "type": "integer",
           "format": "int32"
         },
-        "avgConnectionTime": {
+        "avg_connection_time": {
           "type": "number",
           "format": "double"
         },
-        "firstConnection": {
+        "first_connection": {
           "type": "string",
           "format": "date-time"
         },
-        "lastConnection": {
+        "last_connection": {
           "type": "string",
           "format": "date-time"
         }

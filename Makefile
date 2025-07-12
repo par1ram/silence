@@ -4,8 +4,8 @@
 # Variables
 PROJECT_NAME := silence
 SERVICES := gateway auth vpn-core dpi-bypass server-manager analytics notifications
-DOCKER_COMPOSE := docker-compose -f docker-compose.unified.yml
-DOCKER_COMPOSE_DEV := docker-compose -f docker-compose.unified.yml
+DOCKER_COMPOSE := COMPOSE_DOCKER_CLI_BUILD=0 DOCKER_BUILDKIT=0 docker-compose -f docker-compose.unified.yml
+DOCKER_COMPOSE_DEV := COMPOSE_DOCKER_CLI_BUILD=0 DOCKER_BUILDKIT=0 docker-compose -f docker-compose.unified.yml
 
 # Colors for output
 RED := \033[31m
@@ -209,7 +209,7 @@ dev-auth: ## Start Auth service with hot reload
 	LOG_LEVEL=info \
 	LOG_FORMAT=json \
 	VERSION=1.0.0 \
-	air
+	go run cmd/main.go
 
 .PHONY: dev-gateway
 dev-gateway: ## Start Gateway service with hot reload
@@ -229,7 +229,7 @@ dev-gateway: ## Start Gateway service with hot reload
 	LOG_LEVEL=info \
 	LOG_FORMAT=json \
 	VERSION=1.0.0 \
-	air
+	go run cmd/main.go
 
 .PHONY: dev-vpn-core
 dev-vpn-core: ## Start VPN Core service with hot reload
@@ -254,7 +254,7 @@ dev-vpn-core: ## Start VPN Core service with hot reload
 	LOG_LEVEL=info \
 	LOG_FORMAT=json \
 	VERSION=1.0.0 \
-	air
+	go run cmd/main.go
 
 .PHONY: dev-dpi-bypass
 dev-dpi-bypass: ## Start DPI Bypass service with hot reload
@@ -268,7 +268,7 @@ dev-dpi-bypass: ## Start DPI Bypass service with hot reload
 	LOG_LEVEL=info \
 	LOG_FORMAT=json \
 	VERSION=1.0.0 \
-	air
+	go run cmd/main.go
 
 .PHONY: dev-server-manager
 dev-server-manager: ## Start Server Manager service with hot reload
@@ -288,7 +288,7 @@ dev-server-manager: ## Start Server Manager service with hot reload
 	LOG_LEVEL=info \
 	LOG_FORMAT=json \
 	VERSION=1.0.0 \
-	air
+	go run cmd/main.go
 
 .PHONY: dev-analytics
 dev-analytics: ## Start Analytics service with hot reload
@@ -310,7 +310,7 @@ dev-analytics: ## Start Analytics service with hot reload
 	LOG_LEVEL=info \
 	LOG_FORMAT=json \
 	VERSION=1.0.0 \
-	air
+	go run cmd/main.go
 
 .PHONY: dev-notifications
 dev-notifications: ## Start Notifications service with hot reload
@@ -330,7 +330,7 @@ dev-notifications: ## Start Notifications service with hot reload
 	LOG_LEVEL=info \
 	LOG_FORMAT=json \
 	VERSION=1.0.0 \
-	air
+	go run cmd/main.go
 
 # =============================================================================
 # BUILD COMMANDS
@@ -634,18 +634,18 @@ status: ## Show service status
 	@echo "$(CYAN)Application Services:$(RESET)"
 	@nc -z localhost 8080 2>/dev/null && echo "$(GREEN)✅ Gateway (8080)$(RESET)" || echo "$(RED)❌ Gateway (8080)$(RESET)"
 	@nc -z localhost 8081 2>/dev/null && echo "$(GREEN)✅ Auth (8081)$(RESET)" || echo "$(RED)❌ Auth (8081)$(RESET)"
-	@nc -z localhost 8082 2>/dev/null && echo "$(GREEN)✅ Analytics (8082)$(RESET)" || echo "$(RED)❌ Analytics (8082)$(RESET)"
-	@nc -z localhost 8083 2>/dev/null && echo "$(GREEN)✅ DPI Bypass (8083)$(RESET)" || echo "$(RED)❌ DPI Bypass (8083)$(RESET)"
+	@nc -z localhost 9082 2>/dev/null && echo "$(GREEN)✅ Analytics (9082)$(RESET)" || echo "$(RED)❌ Analytics (9082)$(RESET)"
+	@nc -z localhost 9083 2>/dev/null && echo "$(GREEN)✅ DPI Bypass (9083)$(RESET)" || echo "$(RED)❌ DPI Bypass (9083)$(RESET)"
 	@nc -z localhost 8084 2>/dev/null && echo "$(GREEN)✅ VPN Core (8084)$(RESET)" || echo "$(RED)❌ VPN Core (8084)$(RESET)"
-	@nc -z localhost 8085 2>/dev/null && echo "$(GREEN)✅ Server Manager (8085)$(RESET)" || echo "$(RED)❌ Server Manager (8085)$(RESET)"
-	@nc -z localhost 8087 2>/dev/null && echo "$(GREEN)✅ Notifications (8087)$(RESET)" || echo "$(RED)❌ Notifications (8087)$(RESET)"
+	@nc -z localhost 9085 2>/dev/null && echo "$(GREEN)✅ Server Manager (9085)$(RESET)" || echo "$(RED)❌ Server Manager (9085)$(RESET)"
+	@nc -z localhost 9087 2>/dev/null && echo "$(GREEN)✅ Notifications (9087)$(RESET)" || echo "$(RED)❌ Notifications (9087)$(RESET)"
 	@echo "$(CYAN)Infrastructure Services:$(RESET)"
 	@nc -z localhost 5432 2>/dev/null && echo "$(GREEN)✅ PostgreSQL (5432)$(RESET)" || echo "$(RED)❌ PostgreSQL (5432)$(RESET)"
 	@nc -z localhost 6379 2>/dev/null && echo "$(GREEN)✅ Redis (6379)$(RESET)" || echo "$(RED)❌ Redis (6379)$(RESET)"
 	@nc -z localhost 5672 2>/dev/null && echo "$(GREEN)✅ RabbitMQ (5672)$(RESET)" || echo "$(RED)❌ RabbitMQ (5672)$(RESET)"
 	@nc -z localhost 8086 2>/dev/null && echo "$(GREEN)✅ InfluxDB (8086)$(RESET)" || echo "$(RED)❌ InfluxDB (8086)$(RESET)"
 	@nc -z localhost 9000 2>/dev/null && echo "$(GREEN)✅ ClickHouse (9000)$(RESET)" || echo "$(RED)❌ ClickHouse (9000)$(RESET)"
-	@nc -z localhost 1025 2>/dev/null && echo "$(GREEN)✅ MailHog (1025)$(RESET)" || echo "$(RED)❌ MailHog (1025)$(RESET)"
+
 
 .PHONY: logs
 logs: ## Show Docker logs
@@ -832,13 +832,100 @@ docs: ## Generate documentation
 	@echo "$(YELLOW)Visit http://localhost:6060 for documentation$(RESET)"
 	@godoc -http=:6060
 
+.PHONY: generate-client-sdk
+generate-client-sdk: swagger ## Generate client SDK from swagger files
+	@echo "$(GREEN)🚀 Generating client SDK...$(RESET)"
+	@./scripts/generate-client-sdk.sh
+	@echo "$(GREEN)✅ Client SDK generated successfully$(RESET)"
+
 .PHONY: swagger
-swagger: ## Generate Swagger documentation
-	@echo "$(GREEN)📖 Generating Swagger documentation...$(RESET)"
-	@go install github.com/swaggo/swag/cmd/swag@latest
-	@cd api/gateway && swag init
-	@cd api/auth && swag init
-	@echo "$(GREEN)✅ Swagger documentation generated$(RESET)"
+swagger: ## Generate Swagger documentation from proto files
+	@echo "$(GREEN)📖 Generating Swagger documentation from proto files...$(RESET)"
+	@echo "$(YELLOW)Installing protoc-gen-openapiv2...$(RESET)"
+	@go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
+	@mkdir -p docs/swagger
+	@echo "$(YELLOW)Generating Swagger for auth service...$(RESET)"
+	@protoc -I api/auth/api/proto \
+		-I api/gateway/third_party/googleapis \
+		--openapiv2_out=docs/swagger \
+		--openapiv2_opt=logtostderr=true \
+		--openapiv2_opt=json_names_for_fields=false \
+		api/auth/api/proto/auth.proto
+	@echo "$(YELLOW)Generating Swagger for analytics service...$(RESET)"
+	@protoc -I rpc/analytics/api/proto \
+		-I api/gateway/third_party/googleapis \
+		--openapiv2_out=docs/swagger \
+		--openapiv2_opt=logtostderr=true \
+		--openapiv2_opt=json_names_for_fields=false \
+		rpc/analytics/api/proto/analytics.proto
+	@echo "$(YELLOW)Generating Swagger for server-manager service...$(RESET)"
+	@protoc -I rpc/server-manager/api/proto \
+		-I api/gateway/third_party/googleapis \
+		--openapiv2_out=docs/swagger \
+		--openapiv2_opt=logtostderr=true \
+		--openapiv2_opt=json_names_for_fields=false \
+		rpc/server-manager/api/proto/server.proto
+	@echo "$(YELLOW)Generating Swagger for vpn-core service...$(RESET)"
+	@protoc -I rpc/vpn-core/api/proto \
+		-I api/gateway/third_party/googleapis \
+		--openapiv2_out=docs/swagger \
+		--openapiv2_opt=logtostderr=true \
+		--openapiv2_opt=json_names_for_fields=false \
+		rpc/vpn-core/api/proto/vpn.proto
+	@echo "$(YELLOW)Generating Swagger for dpi-bypass service...$(RESET)"
+	@protoc -I rpc/dpi-bypass/api/proto \
+		-I api/gateway/third_party/googleapis \
+		--openapiv2_out=docs/swagger \
+		--openapiv2_opt=logtostderr=true \
+		--openapiv2_opt=json_names_for_fields=false \
+		rpc/dpi-bypass/api/proto/dpi.proto
+	@echo "$(YELLOW)Generating Swagger for notifications service...$(RESET)"
+	@protoc -I rpc/notifications/api/proto \
+		-I api/gateway/third_party/googleapis \
+		--openapiv2_out=docs/swagger \
+		--openapiv2_opt=logtostderr=true \
+		--openapiv2_opt=json_names_for_fields=false \
+		rpc/notifications/api/proto/notifications.proto
+	@echo "$(GREEN)✅ Swagger documentation generated in docs/swagger/$(RESET)"
+	@echo "$(YELLOW)Merging Swagger files into unified API...$(RESET)"
+	@node scripts/merge-swagger.js
+	@echo "$(GREEN)✅ Unified API documentation created$(RESET)"
+
+.PHONY: frontend-deps
+frontend-deps: ## Install frontend dependencies
+	@echo "$(GREEN)📦 Installing frontend dependencies...$(RESET)"
+	@cd frontend && npm install
+	@echo "$(GREEN)✅ Frontend dependencies installed$(RESET)"
+
+.PHONY: frontend-dev
+frontend-dev: ## Start frontend development server
+	@echo "$(GREEN)🚀 Starting frontend development server...$(RESET)"
+	@cd frontend && npm run dev
+
+.PHONY: frontend-build
+frontend-build: ## Build frontend for production
+	@echo "$(GREEN)🏗️ Building frontend for production...$(RESET)"
+	@cd frontend && npm run build
+	@echo "$(GREEN)✅ Frontend built successfully$(RESET)"
+
+.PHONY: frontend-test
+frontend-test: ## Run frontend tests
+	@echo "$(GREEN)🧪 Running frontend tests...$(RESET)"
+	@cd frontend && npm test
+
+.PHONY: frontend-lint
+frontend-lint: ## Lint frontend code
+	@echo "$(GREEN)🔍 Linting frontend code...$(RESET)"
+	@cd frontend && npm run lint
+
+.PHONY: frontend-format
+frontend-format: ## Format frontend code
+	@echo "$(GREEN)✨ Formatting frontend code...$(RESET)"
+	@cd frontend && npm run format
+
+.PHONY: setup-frontend
+setup-frontend: frontend-deps generate-client-sdk ## Setup frontend development environment
+	@echo "$(GREEN)✅ Frontend development environment ready$(RESET)"
 
 # Make sure to use tabs instead of spaces for indentation
 .DEFAULT_GOAL := help

@@ -5,33 +5,100 @@ package dpi;
 option go_package = "github.com/par1ram/silence/rpc/dpi-bypass/api/proto";
 
 import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 // DPI Bypass Service
 service DpiBypassService {
   // Health check
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc Health(HealthRequest) returns (HealthResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi/health"
+    };
+  }
 
   // Bypass configuration management
-  rpc CreateBypassConfig(CreateBypassConfigRequest) returns (BypassConfig);
-  rpc GetBypassConfig(GetBypassConfigRequest) returns (BypassConfig);
-  rpc ListBypassConfigs(ListBypassConfigsRequest) returns (ListBypassConfigsResponse);
-  rpc UpdateBypassConfig(UpdateBypassConfigRequest) returns (BypassConfig);
-  rpc DeleteBypassConfig(DeleteBypassConfigRequest) returns (DeleteBypassConfigResponse);
+  rpc CreateBypassConfig(CreateBypassConfigRequest) returns (BypassConfig) {
+    option (google.api.http) = {
+      post: "/api/v1/dpi/configs"
+      body: "*"
+    };
+  }
+  rpc GetBypassConfig(GetBypassConfigRequest) returns (BypassConfig) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi/configs/{id}"
+    };
+  }
+  rpc ListBypassConfigs(ListBypassConfigsRequest) returns (ListBypassConfigsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi/configs"
+    };
+  }
+  rpc UpdateBypassConfig(UpdateBypassConfigRequest) returns (BypassConfig) {
+    option (google.api.http) = {
+      put: "/api/v1/dpi/configs/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteBypassConfig(DeleteBypassConfigRequest) returns (DeleteBypassConfigResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/dpi/configs/{id}"
+    };
+  }
 
   // Bypass operations
-  rpc StartBypass(StartBypassRequest) returns (StartBypassResponse);
-  rpc StopBypass(StopBypassRequest) returns (StopBypassResponse);
-  rpc GetBypassStatus(GetBypassStatusRequest) returns (GetBypassStatusResponse);
+  rpc StartBypass(StartBypassRequest) returns (StartBypassResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/dpi/bypass/start"
+      body: "*"
+    };
+  }
+  rpc StopBypass(StopBypassRequest) returns (StopBypassResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/dpi/bypass/stop"
+      body: "*"
+    };
+  }
+  rpc GetBypassStatus(GetBypassStatusRequest) returns (GetBypassStatusResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi/bypass/{session_id}/status"
+    };
+  }
 
   // Statistics and monitoring
-  rpc GetBypassStats(GetBypassStatsRequest) returns (BypassStats);
-  rpc GetBypassHistory(GetBypassHistoryRequest) returns (GetBypassHistoryResponse);
+  rpc GetBypassStats(GetBypassStatsRequest) returns (BypassStats) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi/bypass/{session_id}/stats"
+    };
+  }
+  rpc GetBypassHistory(GetBypassHistoryRequest) returns (GetBypassHistoryResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi/configs/{config_id}/history"
+    };
+  }
 
   // Rule management
-  rpc AddBypassRule(AddBypassRuleRequest) returns (BypassRule);
-  rpc UpdateBypassRule(UpdateBypassRuleRequest) returns (BypassRule);
-  rpc DeleteBypassRule(DeleteBypassRuleRequest) returns (DeleteBypassRuleResponse);
-  rpc ListBypassRules(ListBypassRulesRequest) returns (ListBypassRulesResponse);
+  rpc AddBypassRule(AddBypassRuleRequest) returns (BypassRule) {
+    option (google.api.http) = {
+      post: "/api/v1/dpi/configs/{config_id}/rules"
+      body: "*"
+    };
+  }
+  rpc UpdateBypassRule(UpdateBypassRuleRequest) returns (BypassRule) {
+    option (google.api.http) = {
+      put: "/api/v1/dpi/rules/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteBypassRule(DeleteBypassRuleRequest) returns (DeleteBypassRuleResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/dpi/rules/{id}"
+    };
+  }
+  rpc ListBypassRules(ListBypassRulesRequest) returns (ListBypassRulesResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/dpi/configs/{config_id}/rules"
+    };
+  }
 }
 
 // Health

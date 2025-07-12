@@ -19,7 +19,6 @@ services:
     depends_on:
       - jaeger
       - prometheus
-      - tempo
     networks:
       - observability
 
@@ -36,17 +35,6 @@ services:
       - COLLECTOR_ZIPKIN_HOST_PORT=:9411
     volumes:
       - jaeger_data:/badger
-    networks:
-      - observability
-
-  # Zipkin
-  zipkin:
-    image: openzipkin/zipkin:latest
-    container_name: zipkin
-    ports:
-      - "9411:9411"
-    environment:
-      - STORAGE_TYPE=mem
     networks:
       - observability
 
@@ -87,7 +75,7 @@ services:
     depends_on:
       - prometheus
       - loki
-      - tempo
+      - jaeger
     networks:
       - observability
 
@@ -116,33 +104,6 @@ services:
     command: -config.file=/etc/promtail/config.yml
     depends_on:
       - loki
-    networks:
-      - observability
-
-  # Tempo (для трейсов)
-  tempo:
-    image: grafana/tempo:latest
-    container_name: tempo
-    ports:
-      - "3200:3200" # Tempo HTTP
-      - "4317:4317" # OTLP gRPC
-      - "4318:4318" # OTLP HTTP
-    volumes:
-      - ./tempo-data:/var/tempo
-      - ./tempo-config.yaml:/etc/tempo/tempo.yaml
-    command: -config.file=/etc/tempo/tempo.yaml
-    networks:
-      - observability
-
-  # Redis (для кэширования и сессий)
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    ports:
-      - "6380:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
     networks:
       - observability
 
@@ -229,11 +190,7 @@ volumes:
     driver: local
   loki_data:
     driver: local
-  tempo_data:
-    driver: local
   jaeger_data:
-    driver: local
-  redis_data:
     driver: local
   alertmanager_data:
     driver: local

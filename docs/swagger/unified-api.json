@@ -1,0 +1,4315 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Silence VPN API",
+    "version": "1.0.0",
+    "description": "Unified API documentation for Silence VPN platform",
+    "contact": {
+      "name": "Silence VPN Team",
+      "email": "support@silence-vpn.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "host": "localhost:8080",
+  "basePath": "/api/v1",
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "securityDefinitions": {
+    "bearerAuth": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "Authorization",
+      "description": "Bearer token authorization header"
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/v1/auth/health": {
+      "get": {
+        "operationId": "AuthService_Health",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authHealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "Authentication",
+        "operationId": "AuthService_Login",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authAuthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authLoginRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthService_GetMe",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authUser"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "AuthService_Register",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authAuthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authRegisterRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "operationId": "AuthService_ListUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authListUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "USER_ROLE_UNSPECIFIED",
+              "USER_ROLE_USER",
+              "USER_ROLE_MODERATOR",
+              "USER_ROLE_ADMIN"
+            ],
+            "default": "USER_ROLE_UNSPECIFIED"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "USER_STATUS_UNSPECIFIED",
+              "USER_STATUS_ACTIVE",
+              "USER_STATUS_INACTIVE",
+              "USER_STATUS_BLOCKED"
+            ],
+            "default": "USER_STATUS_UNSPECIFIED"
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      },
+      "post": {
+        "summary": "User Management",
+        "operationId": "AuthService_CreateUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authUser"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authCreateUserRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "operationId": "AuthService_GetUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authUser"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      },
+      "delete": {
+        "operationId": "AuthService_DeleteUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authDeleteUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      },
+      "put": {
+        "operationId": "AuthService_UpdateUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authUser"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AuthServiceUpdateUserBody"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/block": {
+      "post": {
+        "operationId": "AuthService_BlockUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authBlockUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AuthServiceBlockUserBody"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/role": {
+      "post": {
+        "operationId": "AuthService_ChangeUserRole",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authChangeUserRoleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AuthServiceChangeUserRoleBody"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/unblock": {
+      "post": {
+        "operationId": "AuthService_UnblockUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authUnblockUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AuthServiceUnblockUserBody"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/analytics/dashboard": {
+      "get": {
+        "summary": "Dashboard",
+        "operationId": "AnalyticsService_GetDashboardData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsGetDashboardDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "time_range",
+            "description": "1h, 6h, 24h, 7d, 30d",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "AnalyticsService_Health",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsHealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/metrics": {
+      "get": {
+        "operationId": "AnalyticsService_GetMetrics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsGetMetricsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filters[string]",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      },
+      "post": {
+        "summary": "Metrics collection",
+        "operationId": "AnalyticsService_CollectMetric",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsCollectMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/analyticsCollectMetricRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/metrics/history": {
+      "get": {
+        "operationId": "AnalyticsService_GetMetricsHistory",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsGetMetricsHistoryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "interval",
+            "description": "1m, 5m, 1h, 1d",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/predictions/load": {
+      "post": {
+        "summary": "Predictions",
+        "operationId": "AnalyticsService_PredictLoad",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsPredictLoadResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/analyticsPredictLoadRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/predictions/trend": {
+      "post": {
+        "operationId": "AnalyticsService_PredictTrend",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsPredictTrendResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/analyticsPredictTrendRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/statistics": {
+      "get": {
+        "summary": "Statistics",
+        "operationId": "AnalyticsService_GetStatistics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsGetStatisticsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "period",
+            "description": "hourly, daily, weekly, monthly",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/statistics/system": {
+      "get": {
+        "operationId": "AnalyticsService_GetSystemStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsGetSystemStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/analytics/statistics/users/{user_id}": {
+      "get": {
+        "operationId": "AnalyticsService_GetUserStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/analyticsGetUserStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "AnalyticsService"
+        ]
+      }
+    },
+    "/api/v1/vpn/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "VpnCoreService_Health",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnHealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels": {
+      "get": {
+        "operationId": "VpnCoreService_ListTunnels",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnListTunnelsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "VpnCoreService"
+        ]
+      },
+      "post": {
+        "summary": "Tunnel management",
+        "operationId": "VpnCoreService_CreateTunnel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnTunnel"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/vpnCreateTunnelRequest"
+            }
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{id}": {
+      "get": {
+        "operationId": "VpnCoreService_GetTunnel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnTunnel"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      },
+      "delete": {
+        "operationId": "VpnCoreService_DeleteTunnel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnDeleteTunnelResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{id}/start": {
+      "post": {
+        "operationId": "VpnCoreService_StartTunnel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnStartTunnelResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{id}/stats": {
+      "get": {
+        "operationId": "VpnCoreService_GetTunnelStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnTunnelStats"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{id}/stop": {
+      "post": {
+        "operationId": "VpnCoreService_StopTunnel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnStopTunnelResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{tunnelId}/auto-recovery/disable": {
+      "post": {
+        "operationId": "VpnCoreService_DisableAutoRecovery",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnDisableAutoRecoveryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnelId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{tunnelId}/auto-recovery/enable": {
+      "post": {
+        "operationId": "VpnCoreService_EnableAutoRecovery",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnEnableAutoRecoveryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnelId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{tunnelId}/health": {
+      "get": {
+        "summary": "Новые методы для мониторинга и восстановления",
+        "operationId": "VpnCoreService_HealthCheck",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnHealthCheckResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnelId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{tunnelId}/peers": {
+      "get": {
+        "operationId": "VpnCoreService_ListPeers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnListPeersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnelId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      },
+      "post": {
+        "summary": "Peer management",
+        "operationId": "VpnCoreService_AddPeer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnPeer"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnelId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VpnCoreServiceAddPeerBody"
+            }
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{tunnelId}/peers/{peerId}": {
+      "get": {
+        "operationId": "VpnCoreService_GetPeer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnPeer"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnelId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      },
+      "delete": {
+        "operationId": "VpnCoreService_RemovePeer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnRemovePeerResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnelId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/vpn/tunnels/{tunnelId}/recover": {
+      "post": {
+        "operationId": "VpnCoreService_RecoverTunnel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/vpnRecoverTunnelResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tunnelId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VpnCoreService"
+        ]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "operationId": "NotificationsService_ListNotifications",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsListNotificationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "recipient",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "description": " - NOTIFICATION_TYPE_SYSTEM_ALERT: System notifications\n - NOTIFICATION_TYPE_USER_LOGIN: User notifications\n - NOTIFICATION_TYPE_VPN_CONNECTED: VPN notifications\n - NOTIFICATION_TYPE_METRICS_ALERT: Analytics notifications",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NOTIFICATION_TYPE_UNSPECIFIED",
+              "NOTIFICATION_TYPE_SYSTEM_ALERT",
+              "NOTIFICATION_TYPE_SERVER_DOWN",
+              "NOTIFICATION_TYPE_SERVER_UP",
+              "NOTIFICATION_TYPE_HIGH_LOAD",
+              "NOTIFICATION_TYPE_LOW_DISK_SPACE",
+              "NOTIFICATION_TYPE_BACKUP_FAILED",
+              "NOTIFICATION_TYPE_BACKUP_SUCCESS",
+              "NOTIFICATION_TYPE_UPDATE_FAILED",
+              "NOTIFICATION_TYPE_UPDATE_SUCCESS",
+              "NOTIFICATION_TYPE_USER_LOGIN",
+              "NOTIFICATION_TYPE_USER_LOGOUT",
+              "NOTIFICATION_TYPE_USER_REGISTERED",
+              "NOTIFICATION_TYPE_USER_BLOCKED",
+              "NOTIFICATION_TYPE_USER_UNBLOCKED",
+              "NOTIFICATION_TYPE_PASSWORD_RESET",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED",
+              "NOTIFICATION_TYPE_VPN_CONNECTED",
+              "NOTIFICATION_TYPE_VPN_DISCONNECTED",
+              "NOTIFICATION_TYPE_VPN_ERROR",
+              "NOTIFICATION_TYPE_BYPASS_BLOCKED",
+              "NOTIFICATION_TYPE_BYPASS_SUCCESS",
+              "NOTIFICATION_TYPE_METRICS_ALERT",
+              "NOTIFICATION_TYPE_ANOMALY_DETECTED",
+              "NOTIFICATION_TYPE_THRESHOLD_EXCEEDED"
+            ],
+            "default": "NOTIFICATION_TYPE_UNSPECIFIED"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NOTIFICATION_STATUS_UNSPECIFIED",
+              "NOTIFICATION_STATUS_PENDING",
+              "NOTIFICATION_STATUS_SENDING",
+              "NOTIFICATION_STATUS_SENT",
+              "NOTIFICATION_STATUS_DELIVERED",
+              "NOTIFICATION_STATUS_FAILED",
+              "NOTIFICATION_STATUS_CANCELLED"
+            ],
+            "default": "NOTIFICATION_STATUS_UNSPECIFIED"
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/dispatch": {
+      "post": {
+        "summary": "Notification dispatch",
+        "operationId": "NotificationsService_DispatchNotification",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsDispatchNotificationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/notificationsDispatchNotificationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "NotificationsService_Health",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsHealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/preferences/{user_id}": {
+      "get": {
+        "summary": "User preferences",
+        "operationId": "NotificationsService_GetUserPreferences",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotificationPreference"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "description": " - NOTIFICATION_TYPE_SYSTEM_ALERT: System notifications\n - NOTIFICATION_TYPE_USER_LOGIN: User notifications\n - NOTIFICATION_TYPE_VPN_CONNECTED: VPN notifications\n - NOTIFICATION_TYPE_METRICS_ALERT: Analytics notifications",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NOTIFICATION_TYPE_UNSPECIFIED",
+              "NOTIFICATION_TYPE_SYSTEM_ALERT",
+              "NOTIFICATION_TYPE_SERVER_DOWN",
+              "NOTIFICATION_TYPE_SERVER_UP",
+              "NOTIFICATION_TYPE_HIGH_LOAD",
+              "NOTIFICATION_TYPE_LOW_DISK_SPACE",
+              "NOTIFICATION_TYPE_BACKUP_FAILED",
+              "NOTIFICATION_TYPE_BACKUP_SUCCESS",
+              "NOTIFICATION_TYPE_UPDATE_FAILED",
+              "NOTIFICATION_TYPE_UPDATE_SUCCESS",
+              "NOTIFICATION_TYPE_USER_LOGIN",
+              "NOTIFICATION_TYPE_USER_LOGOUT",
+              "NOTIFICATION_TYPE_USER_REGISTERED",
+              "NOTIFICATION_TYPE_USER_BLOCKED",
+              "NOTIFICATION_TYPE_USER_UNBLOCKED",
+              "NOTIFICATION_TYPE_PASSWORD_RESET",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED",
+              "NOTIFICATION_TYPE_VPN_CONNECTED",
+              "NOTIFICATION_TYPE_VPN_DISCONNECTED",
+              "NOTIFICATION_TYPE_VPN_ERROR",
+              "NOTIFICATION_TYPE_BYPASS_BLOCKED",
+              "NOTIFICATION_TYPE_BYPASS_SUCCESS",
+              "NOTIFICATION_TYPE_METRICS_ALERT",
+              "NOTIFICATION_TYPE_ANOMALY_DETECTED",
+              "NOTIFICATION_TYPE_THRESHOLD_EXCEEDED"
+            ],
+            "default": "NOTIFICATION_TYPE_UNSPECIFIED"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      },
+      "put": {
+        "operationId": "NotificationsService_UpdateUserPreferences",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotificationPreference"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NotificationsServiceUpdateUserPreferencesBody"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/stats": {
+      "get": {
+        "summary": "Statistics",
+        "operationId": "NotificationsService_GetNotificationStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotificationStats"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "description": " - NOTIFICATION_TYPE_SYSTEM_ALERT: System notifications\n - NOTIFICATION_TYPE_USER_LOGIN: User notifications\n - NOTIFICATION_TYPE_VPN_CONNECTED: VPN notifications\n - NOTIFICATION_TYPE_METRICS_ALERT: Analytics notifications",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NOTIFICATION_TYPE_UNSPECIFIED",
+              "NOTIFICATION_TYPE_SYSTEM_ALERT",
+              "NOTIFICATION_TYPE_SERVER_DOWN",
+              "NOTIFICATION_TYPE_SERVER_UP",
+              "NOTIFICATION_TYPE_HIGH_LOAD",
+              "NOTIFICATION_TYPE_LOW_DISK_SPACE",
+              "NOTIFICATION_TYPE_BACKUP_FAILED",
+              "NOTIFICATION_TYPE_BACKUP_SUCCESS",
+              "NOTIFICATION_TYPE_UPDATE_FAILED",
+              "NOTIFICATION_TYPE_UPDATE_SUCCESS",
+              "NOTIFICATION_TYPE_USER_LOGIN",
+              "NOTIFICATION_TYPE_USER_LOGOUT",
+              "NOTIFICATION_TYPE_USER_REGISTERED",
+              "NOTIFICATION_TYPE_USER_BLOCKED",
+              "NOTIFICATION_TYPE_USER_UNBLOCKED",
+              "NOTIFICATION_TYPE_PASSWORD_RESET",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED",
+              "NOTIFICATION_TYPE_VPN_CONNECTED",
+              "NOTIFICATION_TYPE_VPN_DISCONNECTED",
+              "NOTIFICATION_TYPE_VPN_ERROR",
+              "NOTIFICATION_TYPE_BYPASS_BLOCKED",
+              "NOTIFICATION_TYPE_BYPASS_SUCCESS",
+              "NOTIFICATION_TYPE_METRICS_ALERT",
+              "NOTIFICATION_TYPE_ANOMALY_DETECTED",
+              "NOTIFICATION_TYPE_THRESHOLD_EXCEEDED"
+            ],
+            "default": "NOTIFICATION_TYPE_UNSPECIFIED"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/templates": {
+      "get": {
+        "operationId": "NotificationsService_ListTemplates",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsListTemplatesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type",
+            "description": " - NOTIFICATION_TYPE_SYSTEM_ALERT: System notifications\n - NOTIFICATION_TYPE_USER_LOGIN: User notifications\n - NOTIFICATION_TYPE_VPN_CONNECTED: VPN notifications\n - NOTIFICATION_TYPE_METRICS_ALERT: Analytics notifications",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NOTIFICATION_TYPE_UNSPECIFIED",
+              "NOTIFICATION_TYPE_SYSTEM_ALERT",
+              "NOTIFICATION_TYPE_SERVER_DOWN",
+              "NOTIFICATION_TYPE_SERVER_UP",
+              "NOTIFICATION_TYPE_HIGH_LOAD",
+              "NOTIFICATION_TYPE_LOW_DISK_SPACE",
+              "NOTIFICATION_TYPE_BACKUP_FAILED",
+              "NOTIFICATION_TYPE_BACKUP_SUCCESS",
+              "NOTIFICATION_TYPE_UPDATE_FAILED",
+              "NOTIFICATION_TYPE_UPDATE_SUCCESS",
+              "NOTIFICATION_TYPE_USER_LOGIN",
+              "NOTIFICATION_TYPE_USER_LOGOUT",
+              "NOTIFICATION_TYPE_USER_REGISTERED",
+              "NOTIFICATION_TYPE_USER_BLOCKED",
+              "NOTIFICATION_TYPE_USER_UNBLOCKED",
+              "NOTIFICATION_TYPE_PASSWORD_RESET",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED",
+              "NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED",
+              "NOTIFICATION_TYPE_VPN_CONNECTED",
+              "NOTIFICATION_TYPE_VPN_DISCONNECTED",
+              "NOTIFICATION_TYPE_VPN_ERROR",
+              "NOTIFICATION_TYPE_BYPASS_BLOCKED",
+              "NOTIFICATION_TYPE_BYPASS_SUCCESS",
+              "NOTIFICATION_TYPE_METRICS_ALERT",
+              "NOTIFICATION_TYPE_ANOMALY_DETECTED",
+              "NOTIFICATION_TYPE_THRESHOLD_EXCEEDED"
+            ],
+            "default": "NOTIFICATION_TYPE_UNSPECIFIED"
+          },
+          {
+            "name": "enabled",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      },
+      "post": {
+        "summary": "Templates",
+        "operationId": "NotificationsService_CreateTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotificationTemplate"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/notificationsCreateTemplateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/templates/{id}": {
+      "get": {
+        "operationId": "NotificationsService_GetTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotificationTemplate"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      },
+      "delete": {
+        "operationId": "NotificationsService_DeleteTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsDeleteTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      },
+      "put": {
+        "operationId": "NotificationsService_UpdateTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotificationTemplate"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NotificationsServiceUpdateTemplateBody"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/{id}": {
+      "get": {
+        "summary": "Notification management",
+        "operationId": "NotificationsService_GetNotification",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotification"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/api/v1/notifications/{id}/status": {
+      "patch": {
+        "operationId": "NotificationsService_UpdateNotificationStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/notificationsNotification"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NotificationsServiceUpdateNotificationStatusBody"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "AuthServiceBlockUserBody": {
+      "type": "object"
+    },
+    "AuthServiceChangeUserRoleBody": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "$ref": "#/definitions/authUserRole"
+        }
+      }
+    },
+    "AuthServiceUnblockUserBody": {
+      "type": "object"
+    },
+    "AuthServiceUpdateUserBody": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/definitions/authUserRole"
+        },
+        "status": {
+          "$ref": "#/definitions/authUserStatus"
+        }
+      }
+    },
+    "authAuthResponse": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "user": {
+          "$ref": "#/definitions/authUser"
+        }
+      }
+    },
+    "authBlockUserResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "authChangeUserRoleResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "authCreateUserRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/definitions/authUserRole"
+        }
+      },
+      "title": "User management messages"
+    },
+    "authDeleteUserResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "authHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "authListUsersResponse": {
+      "type": "object",
+      "properties": {
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/authUser"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "authLoginRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "title": "Authentication messages"
+    },
+    "authRegisterRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "authUnblockUserResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "authUser": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/definitions/authUserRole"
+        },
+        "status": {
+          "$ref": "#/definitions/authUserStatus"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "User model"
+    },
+    "authUserRole": {
+      "type": "string",
+      "enum": [
+        "USER_ROLE_UNSPECIFIED",
+        "USER_ROLE_USER",
+        "USER_ROLE_MODERATOR",
+        "USER_ROLE_ADMIN"
+      ],
+      "default": "USER_ROLE_UNSPECIFIED",
+      "title": "User roles"
+    },
+    "authUserStatus": {
+      "type": "string",
+      "enum": [
+        "USER_STATUS_UNSPECIFIED",
+        "USER_STATUS_ACTIVE",
+        "USER_STATUS_INACTIVE",
+        "USER_STATUS_BLOCKED"
+      ],
+      "default": "USER_STATUS_UNSPECIFIED",
+      "title": "User status"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "analyticsAlert": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "acknowledged": {
+          "type": "boolean"
+        }
+      }
+    },
+    "analyticsCollectMetricRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "analyticsCollectMetricResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "metric_id": {
+          "type": "string"
+        }
+      }
+    },
+    "analyticsDashboardData": {
+      "type": "object",
+      "properties": {
+        "system_stats": {
+          "$ref": "#/definitions/analyticsSystemStats"
+        },
+        "connections_over_time": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsTimeSeriesPoint"
+          }
+        },
+        "data_transfer_over_time": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsTimeSeriesPoint"
+          }
+        },
+        "server_usage": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsServerUsage"
+          }
+        },
+        "region_stats": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsRegionStats"
+          }
+        },
+        "alerts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsAlert"
+          }
+        }
+      }
+    },
+    "analyticsGetDashboardDataResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/analyticsDashboardData"
+        }
+      }
+    },
+    "analyticsGetMetricsHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "points": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsTimeSeriesPoint"
+          }
+        }
+      }
+    },
+    "analyticsGetMetricsResponse": {
+      "type": "object",
+      "properties": {
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsMetric"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "analyticsGetStatisticsResponse": {
+      "type": "object",
+      "properties": {
+        "statistics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsStatistics"
+          }
+        }
+      }
+    },
+    "analyticsGetSystemStatsResponse": {
+      "type": "object",
+      "properties": {
+        "stats": {
+          "$ref": "#/definitions/analyticsSystemStats"
+        }
+      }
+    },
+    "analyticsGetUserStatsResponse": {
+      "type": "object",
+      "properties": {
+        "stats": {
+          "$ref": "#/definitions/analyticsUserStats"
+        }
+      }
+    },
+    "analyticsHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "analyticsMetric": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Metrics"
+    },
+    "analyticsPredictLoadRequest": {
+      "type": "object",
+      "properties": {
+        "server_id": {
+          "type": "string"
+        },
+        "hours_ahead": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Predictions"
+    },
+    "analyticsPredictLoadResponse": {
+      "type": "object",
+      "properties": {
+        "predictions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsPredictionPoint"
+          }
+        }
+      }
+    },
+    "analyticsPredictTrendRequest": {
+      "type": "object",
+      "properties": {
+        "metric_name": {
+          "type": "string"
+        },
+        "days_ahead": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "analyticsPredictTrendResponse": {
+      "type": "object",
+      "properties": {
+        "predictions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/analyticsPredictionPoint"
+          }
+        }
+      }
+    },
+    "analyticsPredictionPoint": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "predicted_value": {
+          "type": "number",
+          "format": "double"
+        },
+        "confidence": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "analyticsRegionStats": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "type": "string"
+        },
+        "user_count": {
+          "type": "string",
+          "format": "int64"
+        },
+        "connection_count": {
+          "type": "string",
+          "format": "int64"
+        },
+        "data_transferred": {
+          "type": "string",
+          "format": "int64"
+        },
+        "avg_latency": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "analyticsServerUsage": {
+      "type": "object",
+      "properties": {
+        "server_id": {
+          "type": "string"
+        },
+        "server_name": {
+          "type": "string"
+        },
+        "active_connections": {
+          "type": "string",
+          "format": "int64"
+        },
+        "cpu_usage": {
+          "type": "number",
+          "format": "double"
+        },
+        "memory_usage": {
+          "type": "number",
+          "format": "double"
+        },
+        "network_usage": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "analyticsStatistics": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "calculated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "period": {
+          "type": "string"
+        }
+      },
+      "title": "Statistics"
+    },
+    "analyticsSystemStats": {
+      "type": "object",
+      "properties": {
+        "total_users": {
+          "type": "string",
+          "format": "int64"
+        },
+        "active_users": {
+          "type": "string",
+          "format": "int64"
+        },
+        "total_connections": {
+          "type": "string",
+          "format": "int64"
+        },
+        "active_connections": {
+          "type": "string",
+          "format": "int64"
+        },
+        "total_data_transferred": {
+          "type": "string",
+          "format": "int64"
+        },
+        "servers_count": {
+          "type": "string",
+          "format": "int64"
+        },
+        "active_servers": {
+          "type": "string",
+          "format": "int64"
+        },
+        "avg_connection_time": {
+          "type": "number",
+          "format": "double"
+        },
+        "system_load": {
+          "type": "number",
+          "format": "double"
+        },
+        "last_updated": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "analyticsTimeSeriesPoint": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "analyticsUserStats": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        },
+        "total_connections": {
+          "type": "string",
+          "format": "int64"
+        },
+        "total_data_transferred": {
+          "type": "string",
+          "format": "int64"
+        },
+        "total_session_time": {
+          "type": "string",
+          "format": "int64"
+        },
+        "favorite_servers_count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "avg_connection_time": {
+          "type": "number",
+          "format": "double"
+        },
+        "first_connection": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_connection": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "serverCreateBackupResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "backupId": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverDeleteServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "serverGetServersByRegionResponse": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverServer"
+          }
+        }
+      }
+    },
+    "serverGetServersByStatusResponse": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverServer"
+          }
+        }
+      }
+    },
+    "serverGetServersByTypeResponse": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverServer"
+          }
+        }
+      }
+    },
+    "serverHealthCheck": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "responseTime": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "serverHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "serverListServersResponse": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverServer"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "serverRestartServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverRestoreBackupResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverScaleAction": {
+      "type": "string",
+      "enum": [
+        "SCALE_ACTION_UNSPECIFIED",
+        "SCALE_ACTION_UP",
+        "SCALE_ACTION_DOWN",
+        "SCALE_ACTION_AUTO"
+      ],
+      "default": "SCALE_ACTION_UNSPECIFIED"
+    },
+    "serverScaleServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverScaleSpec": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": "number",
+          "format": "double"
+        },
+        "memory": {
+          "type": "number",
+          "format": "double"
+        },
+        "disk": {
+          "type": "number",
+          "format": "double"
+        },
+        "replicas": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "serverServer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/serverServerType"
+        },
+        "status": {
+          "$ref": "#/definitions/serverServerStatus"
+        },
+        "region": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "cpu": {
+          "type": "number",
+          "format": "double"
+        },
+        "memory": {
+          "type": "number",
+          "format": "double"
+        },
+        "disk": {
+          "type": "number",
+          "format": "double"
+        },
+        "network": {
+          "type": "number",
+          "format": "double"
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Server"
+    },
+    "serverServerHealth": {
+      "type": "object",
+      "properties": {
+        "serverId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverHealthCheck"
+          }
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "serverServerMonitorEvent": {
+      "type": "object",
+      "properties": {
+        "serverId": {
+          "type": "string"
+        },
+        "eventType": {
+          "type": "string"
+        },
+        "stats": {
+          "$ref": "#/definitions/serverServerStats"
+        },
+        "health": {
+          "$ref": "#/definitions/serverServerHealth"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "serverServerStats": {
+      "type": "object",
+      "properties": {
+        "serverId": {
+          "type": "string"
+        },
+        "cpuUsage": {
+          "type": "number",
+          "format": "double"
+        },
+        "memoryUsage": {
+          "type": "number",
+          "format": "double"
+        },
+        "diskUsage": {
+          "type": "number",
+          "format": "double"
+        },
+        "networkUsage": {
+          "type": "number",
+          "format": "double"
+        },
+        "connections": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "uptime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Server Monitoring"
+    },
+    "serverServerStatus": {
+      "type": "string",
+      "enum": [
+        "SERVER_STATUS_UNSPECIFIED",
+        "SERVER_STATUS_CREATING",
+        "SERVER_STATUS_RUNNING",
+        "SERVER_STATUS_STOPPED",
+        "SERVER_STATUS_ERROR",
+        "SERVER_STATUS_DELETING"
+      ],
+      "default": "SERVER_STATUS_UNSPECIFIED"
+    },
+    "serverServerType": {
+      "type": "string",
+      "enum": [
+        "SERVER_TYPE_UNSPECIFIED",
+        "SERVER_TYPE_VPN",
+        "SERVER_TYPE_DPI",
+        "SERVER_TYPE_GATEWAY",
+        "SERVER_TYPE_ANALYTICS"
+      ],
+      "default": "SERVER_TYPE_UNSPECIFIED"
+    },
+    "serverStartServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverStopServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverUpdateServerSoftwareResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/serverUpdateStatus"
+        }
+      }
+    },
+    "serverUpdateStatus": {
+      "type": "object",
+      "properties": {
+        "serverId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "progress": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "VpnCoreServiceAddPeerBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "allowedIps": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "keepalive": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "vpnCreateTunnelRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "listenPort": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "mtu": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "autoRecovery": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnDeleteTunnelResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnDisableAutoRecoveryResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnEnableAutoRecoveryResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnHealthCheckResponse": {
+      "type": "object",
+      "properties": {
+        "tunnelId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "lastCheck": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "peersHealth": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/vpnPeerHealth"
+          }
+        },
+        "uptime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "errorCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "vpnHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "vpnListPeersResponse": {
+      "type": "object",
+      "properties": {
+        "peers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/vpnPeer"
+          }
+        }
+      }
+    },
+    "vpnListTunnelsResponse": {
+      "type": "object",
+      "properties": {
+        "tunnels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/vpnTunnel"
+          }
+        }
+      }
+    },
+    "vpnPeer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "tunnelId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "allowedIps": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "keepalive": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "status": {
+          "$ref": "#/definitions/vpnPeerStatus"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastSeen": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Новые поля для мониторинга"
+        },
+        "connectionQuality": {
+          "type": "number",
+          "format": "double"
+        },
+        "latency": {
+          "type": "string",
+          "format": "int64"
+        },
+        "packetLoss": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "title": "Peer"
+    },
+    "vpnPeerHealth": {
+      "type": "object",
+      "properties": {
+        "peerId": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/vpnPeerStatus"
+        },
+        "lastHandshake": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "latency": {
+          "type": "string",
+          "format": "int64"
+        },
+        "packetLoss": {
+          "type": "number",
+          "format": "double"
+        },
+        "connectionQuality": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "vpnPeerStatus": {
+      "type": "string",
+      "enum": [
+        "PEER_STATUS_UNSPECIFIED",
+        "PEER_STATUS_INACTIVE",
+        "PEER_STATUS_ACTIVE",
+        "PEER_STATUS_ERROR",
+        "PEER_STATUS_OFFLINE"
+      ],
+      "default": "PEER_STATUS_UNSPECIFIED"
+    },
+    "vpnRecoverTunnelResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnRemovePeerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnStartTunnelResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnStopTunnelResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "vpnTunnel": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "interface": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/vpnTunnelStatus"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "privateKey": {
+          "type": "string"
+        },
+        "listenPort": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "mtu": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastHealthCheck": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Новые поля для мониторинга"
+        },
+        "healthStatus": {
+          "type": "string"
+        },
+        "autoRecovery": {
+          "type": "boolean"
+        },
+        "recoveryAttempts": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Tunnel"
+    },
+    "vpnTunnelStats": {
+      "type": "object",
+      "properties": {
+        "tunnelId": {
+          "type": "string"
+        },
+        "bytesRx": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bytesTx": {
+          "type": "string",
+          "format": "int64"
+        },
+        "peersCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "activePeers": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "uptime": {
+          "type": "string",
+          "format": "int64",
+          "title": "Новые поля для детальной статистики"
+        },
+        "errorCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "recoveryCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "vpnTunnelStatus": {
+      "type": "string",
+      "enum": [
+        "TUNNEL_STATUS_UNSPECIFIED",
+        "TUNNEL_STATUS_INACTIVE",
+        "TUNNEL_STATUS_ACTIVE",
+        "TUNNEL_STATUS_ERROR",
+        "TUNNEL_STATUS_RECOVERING"
+      ],
+      "default": "TUNNEL_STATUS_UNSPECIFIED"
+    },
+    "dpiBypassConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/dpiBypassType"
+        },
+        "method": {
+          "$ref": "#/definitions/dpiBypassMethod"
+        },
+        "status": {
+          "$ref": "#/definitions/dpiBypassStatus"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/dpiBypassRule"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Bypass Configuration"
+    },
+    "dpiBypassHistoryEntry": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "configId": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "targetHost": {
+          "type": "string"
+        },
+        "targetPort": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "status": {
+          "$ref": "#/definitions/dpiBypassStatus"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "durationSeconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bytesTransferred": {
+          "type": "string",
+          "format": "int64"
+        },
+        "errorMessage": {
+          "type": "string"
+        }
+      }
+    },
+    "dpiBypassMethod": {
+      "type": "string",
+      "enum": [
+        "BYPASS_METHOD_UNSPECIFIED",
+        "BYPASS_METHOD_HTTP_HEADER",
+        "BYPASS_METHOD_TLS_HANDSHAKE",
+        "BYPASS_METHOD_TCP_FRAGMENT",
+        "BYPASS_METHOD_UDP_FRAGMENT",
+        "BYPASS_METHOD_PROXY_CHAIN"
+      ],
+      "default": "BYPASS_METHOD_UNSPECIFIED"
+    },
+    "dpiBypassRule": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "configId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/dpiRuleType"
+        },
+        "action": {
+          "$ref": "#/definitions/dpiRuleAction"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Bypass Rules"
+    },
+    "dpiBypassStats": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "configId": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "bytesSent": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bytesReceived": {
+          "type": "string",
+          "format": "int64"
+        },
+        "packetsSent": {
+          "type": "string",
+          "format": "int64"
+        },
+        "packetsReceived": {
+          "type": "string",
+          "format": "int64"
+        },
+        "connectionsEstablished": {
+          "type": "string",
+          "format": "int64"
+        },
+        "connectionsFailed": {
+          "type": "string",
+          "format": "int64"
+        },
+        "successRate": {
+          "type": "number",
+          "format": "double"
+        },
+        "averageLatency": {
+          "type": "number",
+          "format": "double"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Statistics"
+    },
+    "dpiBypassStatus": {
+      "type": "string",
+      "enum": [
+        "BYPASS_STATUS_UNSPECIFIED",
+        "BYPASS_STATUS_INACTIVE",
+        "BYPASS_STATUS_ACTIVE",
+        "BYPASS_STATUS_ERROR",
+        "BYPASS_STATUS_TESTING"
+      ],
+      "default": "BYPASS_STATUS_UNSPECIFIED"
+    },
+    "dpiBypassType": {
+      "type": "string",
+      "enum": [
+        "BYPASS_TYPE_UNSPECIFIED",
+        "BYPASS_TYPE_DOMAIN_FRONTING",
+        "BYPASS_TYPE_SNI_MASKING",
+        "BYPASS_TYPE_PACKET_FRAGMENTATION",
+        "BYPASS_TYPE_PROTOCOL_OBFUSCATION",
+        "BYPASS_TYPE_TUNNEL_OBFUSCATION"
+      ],
+      "default": "BYPASS_TYPE_UNSPECIFIED"
+    },
+    "dpiDeleteBypassConfigResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "dpiDeleteBypassRuleResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "dpiGetBypassHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/dpiBypassHistoryEntry"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "dpiGetBypassStatusResponse": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/dpiBypassStatus"
+        },
+        "configId": {
+          "type": "string"
+        },
+        "targetHost": {
+          "type": "string"
+        },
+        "targetPort": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "durationSeconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "dpiHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "dpiListBypassConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/dpiBypassConfig"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "dpiListBypassRulesResponse": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/dpiBypassRule"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "dpiRuleAction": {
+      "type": "string",
+      "enum": [
+        "RULE_ACTION_UNSPECIFIED",
+        "RULE_ACTION_ALLOW",
+        "RULE_ACTION_BLOCK",
+        "RULE_ACTION_BYPASS",
+        "RULE_ACTION_FRAGMENT",
+        "RULE_ACTION_OBFUSCATE"
+      ],
+      "default": "RULE_ACTION_UNSPECIFIED"
+    },
+    "dpiRuleType": {
+      "type": "string",
+      "enum": [
+        "RULE_TYPE_UNSPECIFIED",
+        "RULE_TYPE_DOMAIN",
+        "RULE_TYPE_IP",
+        "RULE_TYPE_PORT",
+        "RULE_TYPE_PROTOCOL",
+        "RULE_TYPE_REGEX"
+      ],
+      "default": "RULE_TYPE_UNSPECIFIED"
+    },
+    "dpiStartBypassResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "dpiStopBypassResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "NotificationsServiceUpdateNotificationStatusBody": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/notificationsNotificationStatus"
+        },
+        "error": {
+          "type": "string"
+        },
+        "sent_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "NotificationsServiceUpdateTemplateBody": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "priority": {
+          "$ref": "#/definitions/notificationsNotificationPriority"
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "NotificationsServiceUpdateUserPreferencesBody": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "schedule": {
+          "$ref": "#/definitions/notificationsNotificationSchedule"
+        }
+      }
+    },
+    "notificationsCreateTemplateRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "priority": {
+          "$ref": "#/definitions/notificationsNotificationPriority"
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "notificationsDeleteTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "notificationsDispatchNotificationRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "priority": {
+          "$ref": "#/definitions/notificationsNotificationPriority"
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "recipients": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": "string"
+        },
+        "source_id": {
+          "type": "string"
+        },
+        "max_attempts": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "scheduled_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Request/Response messages"
+    },
+    "notificationsDispatchNotificationResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "notification_id": {
+          "type": "string"
+        }
+      }
+    },
+    "notificationsHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "notificationsListNotificationsResponse": {
+      "type": "object",
+      "properties": {
+        "notifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/notificationsNotification"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "notificationsListTemplatesResponse": {
+      "type": "object",
+      "properties": {
+        "templates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/notificationsNotificationTemplate"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "notificationsNotification": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "priority": {
+          "$ref": "#/definitions/notificationsNotificationPriority"
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "recipients": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": "string"
+        },
+        "source_id": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/notificationsNotificationStatus"
+        },
+        "attempts": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "max_attempts": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "scheduled_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sent_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "title": "Main Notification message"
+    },
+    "notificationsNotificationChannel": {
+      "type": "string",
+      "enum": [
+        "NOTIFICATION_CHANNEL_UNSPECIFIED",
+        "NOTIFICATION_CHANNEL_EMAIL",
+        "NOTIFICATION_CHANNEL_SMS",
+        "NOTIFICATION_CHANNEL_PUSH",
+        "NOTIFICATION_CHANNEL_TELEGRAM",
+        "NOTIFICATION_CHANNEL_WEBHOOK",
+        "NOTIFICATION_CHANNEL_SLACK"
+      ],
+      "default": "NOTIFICATION_CHANNEL_UNSPECIFIED"
+    },
+    "notificationsNotificationPreference": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "schedule": {
+          "$ref": "#/definitions/notificationsNotificationSchedule"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Notification Preference"
+    },
+    "notificationsNotificationPriority": {
+      "type": "string",
+      "enum": [
+        "NOTIFICATION_PRIORITY_UNSPECIFIED",
+        "NOTIFICATION_PRIORITY_LOW",
+        "NOTIFICATION_PRIORITY_NORMAL",
+        "NOTIFICATION_PRIORITY_HIGH",
+        "NOTIFICATION_PRIORITY_URGENT"
+      ],
+      "default": "NOTIFICATION_PRIORITY_UNSPECIFIED"
+    },
+    "notificationsNotificationSchedule": {
+      "type": "object",
+      "properties": {
+        "start_time": {
+          "type": "string",
+          "title": "HH:MM"
+        },
+        "end_time": {
+          "type": "string",
+          "title": "HH:MM"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "days": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "description": "0=Sunday, 1=Monday, etc."
+        }
+      },
+      "title": "Notification Schedule"
+    },
+    "notificationsNotificationStats": {
+      "type": "object",
+      "properties": {
+        "total_sent": {
+          "type": "string",
+          "format": "int64"
+        },
+        "total_failed": {
+          "type": "string",
+          "format": "int64"
+        },
+        "total_pending": {
+          "type": "string",
+          "format": "int64"
+        },
+        "by_type": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "int64"
+          }
+        },
+        "by_channel": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "int64"
+          }
+        },
+        "by_priority": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "int64"
+          }
+        },
+        "success_rate": {
+          "type": "number",
+          "format": "double"
+        },
+        "average_delay": {
+          "type": "number",
+          "format": "double",
+          "title": "in seconds"
+        }
+      },
+      "title": "Notification Stats"
+    },
+    "notificationsNotificationStatus": {
+      "type": "string",
+      "enum": [
+        "NOTIFICATION_STATUS_UNSPECIFIED",
+        "NOTIFICATION_STATUS_PENDING",
+        "NOTIFICATION_STATUS_SENDING",
+        "NOTIFICATION_STATUS_SENT",
+        "NOTIFICATION_STATUS_DELIVERED",
+        "NOTIFICATION_STATUS_FAILED",
+        "NOTIFICATION_STATUS_CANCELLED"
+      ],
+      "default": "NOTIFICATION_STATUS_UNSPECIFIED"
+    },
+    "notificationsNotificationTemplate": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/notificationsNotificationType"
+        },
+        "priority": {
+          "$ref": "#/definitions/notificationsNotificationPriority"
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/notificationsNotificationChannel"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Notification Template"
+    },
+    "notificationsNotificationType": {
+      "type": "string",
+      "enum": [
+        "NOTIFICATION_TYPE_UNSPECIFIED",
+        "NOTIFICATION_TYPE_SYSTEM_ALERT",
+        "NOTIFICATION_TYPE_SERVER_DOWN",
+        "NOTIFICATION_TYPE_SERVER_UP",
+        "NOTIFICATION_TYPE_HIGH_LOAD",
+        "NOTIFICATION_TYPE_LOW_DISK_SPACE",
+        "NOTIFICATION_TYPE_BACKUP_FAILED",
+        "NOTIFICATION_TYPE_BACKUP_SUCCESS",
+        "NOTIFICATION_TYPE_UPDATE_FAILED",
+        "NOTIFICATION_TYPE_UPDATE_SUCCESS",
+        "NOTIFICATION_TYPE_USER_LOGIN",
+        "NOTIFICATION_TYPE_USER_LOGOUT",
+        "NOTIFICATION_TYPE_USER_REGISTERED",
+        "NOTIFICATION_TYPE_USER_BLOCKED",
+        "NOTIFICATION_TYPE_USER_UNBLOCKED",
+        "NOTIFICATION_TYPE_PASSWORD_RESET",
+        "NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED",
+        "NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED",
+        "NOTIFICATION_TYPE_VPN_CONNECTED",
+        "NOTIFICATION_TYPE_VPN_DISCONNECTED",
+        "NOTIFICATION_TYPE_VPN_ERROR",
+        "NOTIFICATION_TYPE_BYPASS_BLOCKED",
+        "NOTIFICATION_TYPE_BYPASS_SUCCESS",
+        "NOTIFICATION_TYPE_METRICS_ALERT",
+        "NOTIFICATION_TYPE_ANOMALY_DETECTED",
+        "NOTIFICATION_TYPE_THRESHOLD_EXCEEDED"
+      ],
+      "default": "NOTIFICATION_TYPE_UNSPECIFIED",
+      "description": "- NOTIFICATION_TYPE_SYSTEM_ALERT: System notifications\n - NOTIFICATION_TYPE_USER_LOGIN: User notifications\n - NOTIFICATION_TYPE_VPN_CONNECTED: VPN notifications\n - NOTIFICATION_TYPE_METRICS_ALERT: Analytics notifications",
+      "title": "Notification Types"
+    }
+  },
+  "tags": [
+    {
+      "name": "AnalyticsService"
+    },
+    {
+      "name": "AuthService"
+    },
+    {
+      "name": "DpiBypassService"
+    },
+    {
+      "name": "NotificationsService"
+    },
+    {
+      "name": "ServerManagerService"
+    },
+    {
+      "name": "VpnCoreService"
+    }
+  ]
+}

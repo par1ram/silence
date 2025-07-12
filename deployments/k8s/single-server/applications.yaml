@@ -1,0 +1,1006 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: auth
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: auth-service
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: auth
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: auth
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "1.0.0"
+        app.kubernetes.io/component: auth-service
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: auth
+        image: silence/auth:IMAGE_TAG
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 9080
+          name: grpc
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: GRPC_PORT
+          value: "9080"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: POSTGRES_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: POSTGRES_PORT
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: POSTGRES_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: POSTGRES_PASSWORD
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: POSTGRES_DB
+        - name: DB_SSLMODE
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DB_SSLMODE
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: REDIS_PORT
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: JWT_SECRET
+        - name: JWT_EXPIRATION
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: JWT_EXPIRATION
+        - name: JWT_REFRESH_EXPIRATION
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: JWT_REFRESH_EXPIRATION
+        - name: INTERNAL_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: INTERNAL_API_TOKEN
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: LOG_LEVEL
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: auth
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: auth-service
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: auth
+    app.kubernetes.io/instance: silence
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: grpc
+    port: 9080
+    targetPort: 9080
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: api-gateway
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gateway
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gateway
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "1.0.0"
+        app.kubernetes.io/component: api-gateway
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: gateway
+        image: silence/gateway:IMAGE_TAG
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: AUTH_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: GATEWAY_AUTH_SERVICE_URL
+        - name: AUTH_GRPC_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: GATEWAY_AUTH_GRPC_SERVICE_URL
+        - name: ANALYTICS_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: GATEWAY_ANALYTICS_SERVICE_URL
+        - name: SERVER_MANAGER_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: GATEWAY_SERVER_MANAGER_SERVICE_URL
+        - name: DPI_BYPASS_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: GATEWAY_DPI_BYPASS_SERVICE_URL
+        - name: VPN_CORE_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: GATEWAY_VPN_CORE_SERVICE_URL
+        - name: NOTIFICATIONS_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: GATEWAY_NOTIFICATIONS_SERVICE_URL
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: JWT_SECRET
+        - name: INTERNAL_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: INTERNAL_API_TOKEN
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: LOG_LEVEL
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: api-gateway
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/instance: silence
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: analytics
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: analytics-service
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: analytics
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: analytics
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "1.0.0"
+        app.kubernetes.io/component: analytics-service
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: analytics
+        image: silence/analytics:IMAGE_TAG
+        ports:
+        - containerPort: 8080
+          name: grpc
+        env:
+        - name: GRPC_PORT
+          value: "8080"
+        - name: REDIS_ADDRESS
+          value: "redis:6379"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: REDIS_PASSWORD
+        - name: REDIS_DB
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: ANALYTICS_REDIS_DB
+        - name: INFLUXDB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: ANALYTICS_INFLUXDB_URL
+        - name: ANALYTICS_INFLUXDB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: ANALYTICS_INFLUXDB_TOKEN
+        - name: ANALYTICS_INFLUXDB_ORG
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: ANALYTICS_INFLUXDB_ORG
+        - name: ANALYTICS_INFLUXDB_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: ANALYTICS_INFLUXDB_BUCKET
+        - name: CLICKHOUSE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: ANALYTICS_CLICKHOUSE_HOST
+        - name: CLICKHOUSE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: ANALYTICS_CLICKHOUSE_PORT
+        - name: CLICKHOUSE_DB
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: ANALYTICS_CLICKHOUSE_DB
+        - name: CLICKHOUSE_USER
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: ANALYTICS_CLICKHOUSE_USER
+        - name: CLICKHOUSE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: CLICKHOUSE_PASSWORD
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: LOG_LEVEL
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "300m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: analytics
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: analytics-service
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: analytics
+    app.kubernetes.io/instance: silence
+  ports:
+  - name: grpc
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server-manager
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: server-manager
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: server-manager-service
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: server-manager
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: server-manager
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "1.0.0"
+        app.kubernetes.io/component: server-manager-service
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: server-manager
+        image: silence/server-manager:IMAGE_TAG
+        ports:
+        - containerPort: 8085
+          name: grpc
+        env:
+        - name: GRPC_PORT
+          value: "8085"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: POSTGRES_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: POSTGRES_PORT
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: POSTGRES_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: POSTGRES_PASSWORD
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: SERVER_MANAGER_DB_NAME
+        - name: DB_SSLMODE
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DB_SSLMODE
+        - name: DOCKER_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: SERVER_MANAGER_DOCKER_HOST
+        - name: DOCKER_API_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: SERVER_MANAGER_DOCKER_API_VERSION
+        - name: DOCKER_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: SERVER_MANAGER_DOCKER_TIMEOUT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: LOG_LEVEL
+        volumeMounts:
+        - name: docker-socket
+          mountPath: /var/run/docker.sock
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8085
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8085
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: docker-socket
+        hostPath:
+          path: /var/run/docker.sock
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-manager
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: server-manager
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: server-manager-service
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: server-manager
+    app.kubernetes.io/instance: silence
+  ports:
+  - name: grpc
+    port: 8085
+    targetPort: 8085
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dpi-bypass
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: dpi-bypass
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: dpi-bypass-service
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dpi-bypass
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dpi-bypass
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "1.0.0"
+        app.kubernetes.io/component: dpi-bypass-service
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: dpi-bypass
+        image: silence/dpi-bypass:IMAGE_TAG
+        ports:
+        - containerPort: 8080
+          name: grpc
+        env:
+        - name: GRPC_PORT
+          value: "8080"
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: REDIS_PORT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: LOG_LEVEL
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dpi-bypass
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: dpi-bypass
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: dpi-bypass-service
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: dpi-bypass
+    app.kubernetes.io/instance: silence
+  ports:
+  - name: grpc
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vpn-core
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: vpn-core
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: vpn-core-service
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vpn-core
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vpn-core
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "1.0.0"
+        app.kubernetes.io/component: vpn-core-service
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: vpn-core
+        image: silence/vpn-core:IMAGE_TAG
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: REDIS_PORT
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: POSTGRES_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: POSTGRES_PORT
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: POSTGRES_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: POSTGRES_PASSWORD
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: VPN_CORE_DB_NAME
+        - name: DB_SSLMODE
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DB_SSLMODE
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: LOG_LEVEL
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+            - SYS_MODULE
+          privileged: true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vpn-core
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: vpn-core
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: vpn-core-service
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: vpn-core
+    app.kubernetes.io/instance: silence
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: notifications
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: notifications-service
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: notifications
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: notifications
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "1.0.0"
+        app.kubernetes.io/component: notifications-service
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: notifications
+        image: silence/notifications:IMAGE_TAG
+        ports:
+        - containerPort: 8080
+          name: grpc
+        env:
+        - name: GRPC_PORT
+          value: "8080"
+        - name: NOTIFICATIONS_RABBITMQ_URL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: NOTIFICATIONS_RABBITMQ_URL
+        - name: NOTIFICATIONS_RABBITMQ_EXCHANGE
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: NOTIFICATIONS_RABBITMQ_EXCHANGE
+        - name: NOTIFICATIONS_RABBITMQ_QUEUE
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: NOTIFICATIONS_RABBITMQ_QUEUE
+        - name: NOTIFICATIONS_RABBITMQ_ROUTING_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: NOTIFICATIONS_RABBITMQ_ROUTING_KEY
+        - name: NOTIFICATIONS_RABBITMQ_CONSUMER_TAG
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: NOTIFICATIONS_RABBITMQ_CONSUMER_TAG
+        - name: NOTIFICATIONS_RABBITMQ_PREFETCH_COUNT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: NOTIFICATIONS_RABBITMQ_PREFETCH_COUNT
+        - name: NOTIFICATIONS_ANALYTICS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: NOTIFICATIONS_ANALYTICS_URL
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: LOG_LEVEL
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notifications
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: notifications
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: notifications-service
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: notifications
+    app.kubernetes.io/instance: silence
+  ports:
+  - name: grpc
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+      app.kubernetes.io/instance: silence
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: frontend
+        app.kubernetes.io/instance: silence
+        app.kubernetes.io/version: "1.0.0"
+        app.kubernetes.io/component: frontend
+        app.kubernetes.io/part-of: silence
+        app.kubernetes.io/managed-by: kubernetes
+    spec:
+      containers:
+      - name: frontend
+        image: silence/frontend:IMAGE_TAG
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: NEXT_PUBLIC_API_URL
+          value: "http://gateway:8080/api/v1"
+        - name: NEXT_PUBLIC_GATEWAY_URL
+          value: "http://gateway:8080"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/instance: silence
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+    protocol: TCP
+  type: ClusterIP

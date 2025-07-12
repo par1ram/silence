@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: silence
+  labels:
+    name: silence
+    app.kubernetes.io/name: silence
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: vpn-platform
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+  annotations:
+    description: "Silence VPN Platform - Single Server Deployment"
+    maintainer: "silence-team"
+    deployment.type: "single-server"

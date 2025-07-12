@@ -1,0 +1,1239 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "server.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "ServerManagerService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/servers": {
+      "get": {
+        "operationId": "ServerManagerService_ListServers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverListServersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "SERVER_TYPE_UNSPECIFIED",
+              "SERVER_TYPE_VPN",
+              "SERVER_TYPE_DPI",
+              "SERVER_TYPE_GATEWAY",
+              "SERVER_TYPE_ANALYTICS"
+            ],
+            "default": "SERVER_TYPE_UNSPECIFIED"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "SERVER_STATUS_UNSPECIFIED",
+              "SERVER_STATUS_CREATING",
+              "SERVER_STATUS_RUNNING",
+              "SERVER_STATUS_STOPPED",
+              "SERVER_STATUS_ERROR",
+              "SERVER_STATUS_DELETING"
+            ],
+            "default": "SERVER_STATUS_UNSPECIFIED"
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      },
+      "post": {
+        "summary": "Server management",
+        "operationId": "ServerManagerService_CreateServer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverServer"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/serverCreateServerRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "ServerManagerService_Health",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverHealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/region/{region}": {
+      "get": {
+        "operationId": "ServerManagerService_GetServersByRegion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverGetServersByRegionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "region",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/status/{status}": {
+      "get": {
+        "operationId": "ServerManagerService_GetServersByStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverGetServersByStatusResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "status",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "SERVER_STATUS_UNSPECIFIED",
+              "SERVER_STATUS_CREATING",
+              "SERVER_STATUS_RUNNING",
+              "SERVER_STATUS_STOPPED",
+              "SERVER_STATUS_ERROR",
+              "SERVER_STATUS_DELETING"
+            ]
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/type/{type}": {
+      "get": {
+        "summary": "Server filtering",
+        "operationId": "ServerManagerService_GetServersByType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverGetServersByTypeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "SERVER_TYPE_UNSPECIFIED",
+              "SERVER_TYPE_VPN",
+              "SERVER_TYPE_DPI",
+              "SERVER_TYPE_GATEWAY",
+              "SERVER_TYPE_ANALYTICS"
+            ]
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/{id}": {
+      "get": {
+        "operationId": "ServerManagerService_GetServer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverServer"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      },
+      "delete": {
+        "operationId": "ServerManagerService_DeleteServer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverDeleteServerResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      },
+      "put": {
+        "operationId": "ServerManagerService_UpdateServer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverServer"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ServerManagerServiceUpdateServerBody"
+            }
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/{id}/health": {
+      "get": {
+        "operationId": "ServerManagerService_GetServerHealth",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverServerHealth"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/{id}/monitor": {
+      "get": {
+        "operationId": "ServerManagerService_MonitorServer",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/serverServerMonitorEvent"
+                },
+                "error": {
+                  "$ref": "#/definitions/rpcStatus"
+                }
+              },
+              "title": "Stream result of serverServerMonitorEvent"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "interval_seconds",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/{id}/restart": {
+      "post": {
+        "operationId": "ServerManagerService_RestartServer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverRestartServerResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ServerManagerServiceRestartServerBody"
+            }
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/{id}/scale": {
+      "post": {
+        "summary": "Scaling and management",
+        "operationId": "ServerManagerService_ScaleServer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverScaleServerResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ServerManagerServiceScaleServerBody"
+            }
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/{id}/start": {
+      "post": {
+        "summary": "Server operations",
+        "operationId": "ServerManagerService_StartServer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverStartServerResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ServerManagerServiceStartServerBody"
+            }
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/{id}/stats": {
+      "get": {
+        "summary": "Server monitoring",
+        "operationId": "ServerManagerService_GetServerStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverServerStats"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/{id}/stop": {
+      "post": {
+        "operationId": "ServerManagerService_StopServer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverStopServerResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ServerManagerServiceStopServerBody"
+            }
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/{server_id}/backups": {
+      "post": {
+        "operationId": "ServerManagerService_CreateBackup",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverCreateBackupResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ServerManagerServiceCreateBackupBody"
+            }
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/{server_id}/backups/{backup_id}/restore": {
+      "post": {
+        "operationId": "ServerManagerService_RestoreBackup",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverRestoreBackupResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "backup_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ServerManagerServiceRestoreBackupBody"
+            }
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    },
+    "/api/v1/servers/{server_id}/update": {
+      "post": {
+        "operationId": "ServerManagerService_UpdateServerSoftware",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/serverUpdateServerSoftwareResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ServerManagerServiceUpdateServerSoftwareBody"
+            }
+          }
+        ],
+        "tags": [
+          "ServerManagerService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "ServerManagerServiceCreateBackupBody": {
+      "type": "object",
+      "properties": {
+        "backup_type": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "ServerManagerServiceRestartServerBody": {
+      "type": "object"
+    },
+    "ServerManagerServiceRestoreBackupBody": {
+      "type": "object"
+    },
+    "ServerManagerServiceScaleServerBody": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "$ref": "#/definitions/serverScaleAction"
+        },
+        "spec": {
+          "$ref": "#/definitions/serverScaleSpec"
+        }
+      },
+      "title": "Scaling and Management"
+    },
+    "ServerManagerServiceStartServerBody": {
+      "type": "object",
+      "title": "Server Operations"
+    },
+    "ServerManagerServiceStopServerBody": {
+      "type": "object"
+    },
+    "ServerManagerServiceUpdateServerBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/serverServerStatus"
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ServerManagerServiceUpdateServerSoftwareBody": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "force": {
+          "type": "boolean"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "serverCreateBackupResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "backup_id": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverCreateServerRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/serverServerType"
+        },
+        "region": {
+          "type": "string"
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "serverDeleteServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "serverGetServersByRegionResponse": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverServer"
+          }
+        }
+      }
+    },
+    "serverGetServersByStatusResponse": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverServer"
+          }
+        }
+      }
+    },
+    "serverGetServersByTypeResponse": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverServer"
+          }
+        }
+      }
+    },
+    "serverHealthCheck": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "response_time": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "serverHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "serverListServersResponse": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverServer"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "serverRestartServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverRestoreBackupResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverScaleAction": {
+      "type": "string",
+      "enum": [
+        "SCALE_ACTION_UNSPECIFIED",
+        "SCALE_ACTION_UP",
+        "SCALE_ACTION_DOWN",
+        "SCALE_ACTION_AUTO"
+      ],
+      "default": "SCALE_ACTION_UNSPECIFIED"
+    },
+    "serverScaleServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverScaleSpec": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": "number",
+          "format": "double"
+        },
+        "memory": {
+          "type": "number",
+          "format": "double"
+        },
+        "disk": {
+          "type": "number",
+          "format": "double"
+        },
+        "replicas": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "serverServer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/serverServerType"
+        },
+        "status": {
+          "$ref": "#/definitions/serverServerStatus"
+        },
+        "region": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "cpu": {
+          "type": "number",
+          "format": "double"
+        },
+        "memory": {
+          "type": "number",
+          "format": "double"
+        },
+        "disk": {
+          "type": "number",
+          "format": "double"
+        },
+        "network": {
+          "type": "number",
+          "format": "double"
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Server"
+    },
+    "serverServerHealth": {
+      "type": "object",
+      "properties": {
+        "server_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/serverHealthCheck"
+          }
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "serverServerMonitorEvent": {
+      "type": "object",
+      "properties": {
+        "server_id": {
+          "type": "string"
+        },
+        "event_type": {
+          "type": "string"
+        },
+        "stats": {
+          "$ref": "#/definitions/serverServerStats"
+        },
+        "health": {
+          "$ref": "#/definitions/serverServerHealth"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "serverServerStats": {
+      "type": "object",
+      "properties": {
+        "server_id": {
+          "type": "string"
+        },
+        "cpu_usage": {
+          "type": "number",
+          "format": "double"
+        },
+        "memory_usage": {
+          "type": "number",
+          "format": "double"
+        },
+        "disk_usage": {
+          "type": "number",
+          "format": "double"
+        },
+        "network_usage": {
+          "type": "number",
+          "format": "double"
+        },
+        "connections": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "uptime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Server Monitoring"
+    },
+    "serverServerStatus": {
+      "type": "string",
+      "enum": [
+        "SERVER_STATUS_UNSPECIFIED",
+        "SERVER_STATUS_CREATING",
+        "SERVER_STATUS_RUNNING",
+        "SERVER_STATUS_STOPPED",
+        "SERVER_STATUS_ERROR",
+        "SERVER_STATUS_DELETING"
+      ],
+      "default": "SERVER_STATUS_UNSPECIFIED"
+    },
+    "serverServerType": {
+      "type": "string",
+      "enum": [
+        "SERVER_TYPE_UNSPECIFIED",
+        "SERVER_TYPE_VPN",
+        "SERVER_TYPE_DPI",
+        "SERVER_TYPE_GATEWAY",
+        "SERVER_TYPE_ANALYTICS"
+      ],
+      "default": "SERVER_TYPE_UNSPECIFIED"
+    },
+    "serverStartServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverStopServerResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "serverUpdateServerSoftwareResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/serverUpdateStatus"
+        }
+      }
+    },
+    "serverUpdateStatus": {
+      "type": "object",
+      "properties": {
+        "server_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "progress": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

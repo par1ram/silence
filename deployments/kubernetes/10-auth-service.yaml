@@ -1,0 +1,192 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: silence
+  labels:
+    app: silence-vpn
+    component: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: silence-vpn
+      component: auth
+  template:
+    metadata:
+      labels:
+        app: silence-vpn
+        component: auth
+    spec:
+      containers:
+      - name: auth
+        image: silence/auth:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 9080
+          name: grpc
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: GRPC_PORT
+          value: "9080"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DB_PORT
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: DB_PASSWORD
+        - name: DB_NAME
+          value: "silence_auth"
+        - name: DB_SSLMODE
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DB_SSLMODE
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: REDIS_PORT
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: JWT_SECRET
+        - name: JWT_EXPIRATION
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: JWT_EXPIRATION
+        - name: JWT_REFRESH_EXPIRATION
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: JWT_REFRESH_EXPIRATION
+        - name: BCRYPT_COST
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: BCRYPT_COST
+        - name: INTERNAL_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: INTERNAL_API_TOKEN
+        - name: RATE_LIMIT_REQUESTS
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: RATE_LIMIT_REQUESTS
+        - name: RATE_LIMIT_WINDOW
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: RATE_LIMIT_WINDOW
+        - name: MIGRATIONS_DIR
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: MIGRATIONS_DIR
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: LOG_LEVEL
+        - name: VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: VERSION
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: docker-registry-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: silence
+  labels:
+    app: silence-vpn
+    component: auth
+spec:
+  selector:
+    app: silence-vpn
+    component: auth
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: grpc
+    port: 9080
+    targetPort: 9080
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service-external
+  namespace: silence
+  labels:
+    app: silence-vpn
+    component: auth
+spec:
+  selector:
+    app: silence-vpn
+    component: auth
+  ports:
+  - name: http
+    port: 8081
+    targetPort: 8080
+    protocol: TCP
+    nodePort: 30081
+  - name: grpc
+    port: 9081
+    targetPort: 9080
+    protocol: TCP
+    nodePort: 30091
+  type: NodePort

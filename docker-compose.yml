@@ -97,19 +97,7 @@ services:
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ./deployments/docker/clickhouse/init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:8123/ping",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+
     networks:
       - silence_network
     restart: unless-stopped
@@ -196,6 +184,9 @@ services:
       - "${ANALYTICS_GRPC_PORT:-8082}:8080"
     environment:
       GRPC_PORT: 8080
+      REDIS_ADDRESS: ${ANALYTICS_REDIS_ADDRESS:-redis:6379}
+      REDIS_PASSWORD: ${ANALYTICS_REDIS_PASSWORD:-}
+      REDIS_DB: ${ANALYTICS_REDIS_DB:-0}
       INFLUXDB_URL: ${ANALYTICS_INFLUXDB_URL:-http://influxdb:8086}
       ANALYTICS_INFLUXDB_TOKEN: ${ANALYTICS_INFLUXDB_TOKEN:-your-influxdb-token}
       ANALYTICS_INFLUXDB_ORG: ${ANALYTICS_INFLUXDB_ORG:-silence}
@@ -208,6 +199,8 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
       influxdb:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - silence_network
@@ -297,18 +290,13 @@ services:
       - "${NOTIFICATIONS_GRPC_PORT:-8087}:8080"
     environment:
       GRPC_PORT: 8080
-      RABBITMQ_URL: ${NOTIFICATIONS_RABBITMQ_URL:-amqp://admin:admin@rabbitmq:5672/}
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USER: admin
-      RABBITMQ_PASSWORD: admin
-      RABBITMQ_VHOST: /
-      RABBITMQ_EXCHANGE: ${NOTIFICATIONS_RABBITMQ_EXCHANGE:-notifications}
-      RABBITMQ_QUEUE: ${NOTIFICATIONS_RABBITMQ_QUEUE:-notifications_queue}
-      RABBITMQ_ROUTING_KEY: ${NOTIFICATIONS_RABBITMQ_ROUTING_KEY:-notifications.*}
-      RABBITMQ_CONSUMER_TAG: ${NOTIFICATIONS_RABBITMQ_CONSUMER_TAG:-notifications_consumer}
-      RABBITMQ_PREFETCH_COUNT: ${NOTIFICATIONS_RABBITMQ_PREFETCH_COUNT:-10}
-      ANALYTICS_URL: ${NOTIFICATIONS_ANALYTICS_URL:-http://analytics:8080}
+      NOTIFICATIONS_RABBITMQ_URL: ${NOTIFICATIONS_RABBITMQ_URL:-amqp://admin:admin@rabbitmq:5672/}
+      NOTIFICATIONS_RABBITMQ_EXCHANGE: ${NOTIFICATIONS_RABBITMQ_EXCHANGE:-notifications}
+      NOTIFICATIONS_RABBITMQ_QUEUE: ${NOTIFICATIONS_RABBITMQ_QUEUE:-notifications_queue}
+      NOTIFICATIONS_RABBITMQ_ROUTING_KEY: ${NOTIFICATIONS_RABBITMQ_ROUTING_KEY:-notifications.*}
+      NOTIFICATIONS_RABBITMQ_CONSUMER_TAG: ${NOTIFICATIONS_RABBITMQ_CONSUMER_TAG:-notifications_consumer}
+      NOTIFICATIONS_RABBITMQ_PREFETCH_COUNT: ${NOTIFICATIONS_RABBITMQ_PREFETCH_COUNT:-10}
+      NOTIFICATIONS_ANALYTICS_URL: ${NOTIFICATIONS_ANALYTICS_URL:-http://analytics:8080}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
       rabbitmq:

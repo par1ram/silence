@@ -83,3 +83,10 @@ Taskfile.yml
 
 # GitHub
 .github/
+
+# Large files and directories
+api/gateway/third_party/
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+frontend/build/

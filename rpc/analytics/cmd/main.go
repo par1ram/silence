@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -41,6 +43,13 @@ func main() {
 		zap.String("environment", cfg.OpenTelemetry.Environment),
 	)
 
+	// Debug: Show all environment variables
+	zapLogger.Info("Environment variables",
+		zap.String("REDIS_ADDRESS", os.Getenv("REDIS_ADDRESS")),
+		zap.String("REDIS_PASSWORD", os.Getenv("REDIS_PASSWORD")),
+		zap.String("REDIS_DB", os.Getenv("REDIS_DB")),
+	)
+
 	// Инициализируем OpenTelemetry
 	telemetryManager, err := telemetry.NewTelemetryManager(cfg.OpenTelemetry, zapLogger)
 	if err != nil {
@@ -69,10 +78,41 @@ func main() {
 		zapLogger,
 	)
 
+	// Отладочный вывод конфигурации Redis ДО парсинга
+	zapLogger.Info("Redis configuration from env",
+		zap.String("address", cfg.Redis.Address),
+		zap.Int("db", cfg.Redis.DB),
+	)
+
+	// Парсим адрес Redis
+	redisHost := "localhost"
+	redisPort := 6379
+	if cfg.Redis.Address != "" {
+		if strings.Contains(cfg.Redis.Address, ":") {
+			parts := strings.Split(cfg.Redis.Address, ":")
+			redisHost = parts[0]
+			if len(parts) > 1 {
+				if port, err := strconv.Atoi(parts[1]); err == nil {
+					redisPort = port
+				}
+			}
+		} else {
+			redisHost = cfg.Redis.Address
+		}
+	}
+
+	// Отладочный вывод конфигурации Redis ПОСЛЕ парсинга
+	zapLogger.Info("Redis configuration after parsing",
+		zap.String("address", cfg.Redis.Address),
+		zap.String("host", redisHost),
+		zap.Int("port", redisPort),
+		zap.Int("db", cfg.Redis.DB),
+	)
+
 	// Инициализируем Redis клиент
 	redisClient, err := redis.NewClient(&redis.Config{
-		Host:     "localhost",
-		Port:     6379,
+		Host:     redisHost,
+		Port:     redisPort,
 		Password: cfg.Redis.Password,
 		DB:       cfg.Redis.DB,
 	}, zapLogger)

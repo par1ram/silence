@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "auth/auth.proto",
+    "title": "auth.proto",
     "version": "version not set"
   },
   "tags": [
@@ -133,7 +133,7 @@
         ]
       }
     },
-    "/api/v1/auth/users": {
+    "/api/v1/users": {
       "get": {
         "operationId": "AuthService_ListUsers",
         "responses": {
@@ -234,7 +234,7 @@
         ]
       }
     },
-    "/api/v1/auth/users/{id}": {
+    "/api/v1/users/{id}": {
       "get": {
         "operationId": "AuthService_GetUser",
         "responses": {
@@ -328,7 +328,7 @@
         ]
       }
     },
-    "/api/v1/auth/users/{id}/block": {
+    "/api/v1/users/{id}/block": {
       "post": {
         "operationId": "AuthService_BlockUser",
         "responses": {
@@ -351,6 +351,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AuthServiceBlockUserBody"
+            }
           }
         ],
         "tags": [
@@ -358,7 +366,7 @@
         ]
       }
     },
-    "/api/v1/auth/users/{id}/role": {
+    "/api/v1/users/{id}/role": {
       "post": {
         "operationId": "AuthService_ChangeUserRole",
         "responses": {
@@ -396,7 +404,7 @@
         ]
       }
     },
-    "/api/v1/auth/users/{id}/unblock": {
+    "/api/v1/users/{id}/unblock": {
       "post": {
         "operationId": "AuthService_UnblockUser",
         "responses": {
@@ -419,6 +427,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AuthServiceUnblockUserBody"
+            }
           }
         ],
         "tags": [
@@ -428,6 +444,9 @@
     }
   },
   "definitions": {
+    "AuthServiceBlockUserBody": {
+      "type": "object"
+    },
     "AuthServiceChangeUserRoleBody": {
       "type": "object",
       "properties": {
@@ -435,6 +454,9 @@
           "$ref": "#/definitions/authUserRole"
         }
       }
+    },
+    "AuthServiceUnblockUserBody": {
+      "type": "object"
     },
     "AuthServiceUpdateUserBody": {
       "type": "object",
@@ -589,11 +611,11 @@
         "status": {
           "$ref": "#/definitions/authUserStatus"
         },
-        "createdAt": {
+        "created_at": {
           "type": "string",
           "format": "date-time"
         },
-        "updatedAt": {
+        "updated_at": {
           "type": "string",
           "format": "date-time"
         }

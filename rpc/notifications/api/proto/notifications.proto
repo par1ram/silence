@@ -5,33 +5,91 @@ package notifications;
 option go_package = "github.com/par1ram/silence/rpc/notifications/api/proto";
 
 import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 // Notifications Service
 service NotificationsService {
   // Health check
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc Health(HealthRequest) returns (HealthResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/notifications/health"
+    };
+  }
 
   // Notification dispatch
-  rpc DispatchNotification(DispatchNotificationRequest) returns (DispatchNotificationResponse);
+  rpc DispatchNotification(DispatchNotificationRequest) returns (DispatchNotificationResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/notifications/dispatch"
+      body: "*"
+    };
+  }
 
   // Notification management
-  rpc GetNotification(GetNotificationRequest) returns (Notification);
-  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse);
-  rpc UpdateNotificationStatus(UpdateNotificationStatusRequest) returns (Notification);
+  rpc GetNotification(GetNotificationRequest) returns (Notification) {
+    option (google.api.http) = {
+      get: "/api/v1/notifications/{id}"
+    };
+  }
+  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/notifications"
+    };
+  }
+  rpc UpdateNotificationStatus(UpdateNotificationStatusRequest) returns (Notification) {
+    option (google.api.http) = {
+      patch: "/api/v1/notifications/{id}/status"
+      body: "*"
+    };
+  }
 
   // Templates
-  rpc CreateTemplate(CreateTemplateRequest) returns (NotificationTemplate);
-  rpc GetTemplate(GetTemplateRequest) returns (NotificationTemplate);
-  rpc ListTemplates(ListTemplatesRequest) returns (ListTemplatesResponse);
-  rpc UpdateTemplate(UpdateTemplateRequest) returns (NotificationTemplate);
-  rpc DeleteTemplate(DeleteTemplateRequest) returns (DeleteTemplateResponse);
+  rpc CreateTemplate(CreateTemplateRequest) returns (NotificationTemplate) {
+    option (google.api.http) = {
+      post: "/api/v1/notifications/templates"
+      body: "*"
+    };
+  }
+  rpc GetTemplate(GetTemplateRequest) returns (NotificationTemplate) {
+    option (google.api.http) = {
+      get: "/api/v1/notifications/templates/{id}"
+    };
+  }
+  rpc ListTemplates(ListTemplatesRequest) returns (ListTemplatesResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/notifications/templates"
+    };
+  }
+  rpc UpdateTemplate(UpdateTemplateRequest) returns (NotificationTemplate) {
+    option (google.api.http) = {
+      put: "/api/v1/notifications/templates/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteTemplate(DeleteTemplateRequest) returns (DeleteTemplateResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/notifications/templates/{id}"
+    };
+  }
 
   // User preferences
-  rpc GetUserPreferences(GetUserPreferencesRequest) returns (NotificationPreference);
-  rpc UpdateUserPreferences(UpdateUserPreferencesRequest) returns (NotificationPreference);
+  rpc GetUserPreferences(GetUserPreferencesRequest) returns (NotificationPreference) {
+    option (google.api.http) = {
+      get: "/api/v1/notifications/preferences/{user_id}"
+    };
+  }
+  rpc UpdateUserPreferences(UpdateUserPreferencesRequest) returns (NotificationPreference) {
+    option (google.api.http) = {
+      put: "/api/v1/notifications/preferences/{user_id}"
+      body: "*"
+    };
+  }
 
   // Statistics
-  rpc GetNotificationStats(GetNotificationStatsRequest) returns (NotificationStats);
+  rpc GetNotificationStats(GetNotificationStatsRequest) returns (NotificationStats) {
+    option (google.api.http) = {
+      get: "/api/v1/notifications/stats"
+    };
+  }
 }
 
 // Health

@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: silence-config
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: silence
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: config
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+data:
+  # Database Configuration
+  POSTGRES_HOST: "postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "silence_auth"
+  POSTGRES_USER: "postgres"
+  DB_SSLMODE: "disable"
+
+  # Redis Configuration
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+
+  # RabbitMQ Configuration
+  RABBITMQ_HOST: "rabbitmq"
+  RABBITMQ_PORT: "5672"
+  RABBITMQ_DEFAULT_USER: "admin"
+  RABBITMQ_EXCHANGE: "notifications"
+  RABBITMQ_QUEUE: "notifications_queue"
+  RABBITMQ_ROUTING_KEY: "notifications.*"
+  RABBITMQ_CONSUMER_TAG: "notifications_consumer"
+  RABBITMQ_PREFETCH_COUNT: "10"
+
+  # InfluxDB Configuration
+  INFLUXDB_HOST: "influxdb"
+  INFLUXDB_PORT: "8086"
+  INFLUXDB_ORG: "silence"
+  INFLUXDB_BUCKET: "analytics"
+
+  # ClickHouse Configuration
+  CLICKHOUSE_HOST: "clickhouse"
+  CLICKHOUSE_PORT: "9000"
+  CLICKHOUSE_HTTP_PORT: "8123"
+  CLICKHOUSE_DB: "silence_analytics"
+  CLICKHOUSE_USER: "admin"
+
+  # Application Configuration
+  LOG_LEVEL: "info"
+  ENVIRONMENT: "production"
+
+  # Auth Service Configuration
+  AUTH_HTTP_PORT: "8080"
+  AUTH_GRPC_PORT: "9080"
+  JWT_EXPIRATION: "24h"
+  JWT_REFRESH_EXPIRATION: "168h"
+  BCRYPT_COST: "12"
+  RATE_LIMIT_REQUESTS: "100"
+  RATE_LIMIT_WINDOW: "1m"
+
+  # Gateway Configuration
+  GATEWAY_HTTP_PORT: "8080"
+  GATEWAY_AUTH_SERVICE_URL: "http://auth:8080"
+  GATEWAY_AUTH_GRPC_SERVICE_URL: "auth:9080"
+  GATEWAY_ANALYTICS_SERVICE_URL: "analytics:8080"
+  GATEWAY_SERVER_MANAGER_SERVICE_URL: "server-manager:8085"
+  GATEWAY_DPI_BYPASS_SERVICE_URL: "dpi-bypass:8080"
+  GATEWAY_VPN_CORE_SERVICE_URL: "http://vpn-core:8080"
+  GATEWAY_NOTIFICATIONS_SERVICE_URL: "notifications:8080"
+
+  # Analytics Service Configuration
+  ANALYTICS_GRPC_PORT: "8080"
+  ANALYTICS_REDIS_ADDRESS: "redis:6379"
+  ANALYTICS_REDIS_PASSWORD: ""
+  ANALYTICS_REDIS_DB: "0"
+  ANALYTICS_INFLUXDB_URL: "http://influxdb:8086"
+  ANALYTICS_INFLUXDB_ORG: "silence"
+  ANALYTICS_INFLUXDB_BUCKET: "analytics"
+  ANALYTICS_CLICKHOUSE_HOST: "clickhouse"
+  ANALYTICS_CLICKHOUSE_PORT: "9000"
+  ANALYTICS_CLICKHOUSE_DB: "silence_analytics"
+  ANALYTICS_CLICKHOUSE_USER: "admin"
+
+  # Server Manager Configuration
+  SERVER_MANAGER_GRPC_PORT: "8085"
+  SERVER_MANAGER_DB_NAME: "silence_server_manager"
+  SERVER_MANAGER_DOCKER_HOST: "unix:///var/run/docker.sock"
+  SERVER_MANAGER_DOCKER_API_VERSION: "1.41"
+  SERVER_MANAGER_DOCKER_TIMEOUT: "30s"
+
+  # DPI Bypass Configuration
+  DPI_BYPASS_GRPC_PORT: "8080"
+
+  # VPN Core Configuration
+  VPN_CORE_HTTP_PORT: "8080"
+  VPN_CORE_DB_NAME: "silence_vpn"
+
+  # Notifications Configuration
+  NOTIFICATIONS_GRPC_PORT: "8080"
+  NOTIFICATIONS_RABBITMQ_URL: "amqp://admin:admin@rabbitmq:5672/"
+  NOTIFICATIONS_RABBITMQ_EXCHANGE: "notifications"
+  NOTIFICATIONS_RABBITMQ_QUEUE: "notifications_queue"
+  NOTIFICATIONS_RABBITMQ_ROUTING_KEY: "notifications.*"
+  NOTIFICATIONS_RABBITMQ_CONSUMER_TAG: "notifications_consumer"
+  NOTIFICATIONS_RABBITMQ_PREFETCH_COUNT: "10"
+  NOTIFICATIONS_ANALYTICS_URL: "http://analytics:8080"
+
+  # Observability Configuration
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+  OTEL_SERVICE_NAME: "silence"
+  OTEL_RESOURCE_ATTRIBUTES: "service.name=silence,service.version=1.0.0,deployment.environment=production"
+
+  # Monitoring Configuration
+  PROMETHEUS_URL: "http://prometheus:9090"
+  GRAFANA_URL: "http://grafana:3000"
+  JAEGER_URL: "http://jaeger:16686"
+  LOKI_URL: "http://loki:3100"

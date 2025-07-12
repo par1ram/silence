@@ -20,9 +20,13 @@ receivers:
           static_configs:
             - targets: ["node-exporter:9100"]
 
-  # Zipkin receiver for Zipkin traces
-  zipkin:
-    endpoint: 0.0.0.0:9411
+  # Jaeger receiver for Jaeger traces
+  jaeger:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:14250
+      thrift_http:
+        endpoint: 0.0.0.0:14268
 
 processors:
   # Batch processor for efficient data sending
@@ -46,14 +50,9 @@ processors:
         action: upsert
 
 exporters:
-  # Zipkin exporter for distributed tracing
-  zipkin:
-    endpoint: "http://zipkin:9411/api/v2/spans"
-    format: json
-
-  # OTLP exporter for Tempo
-  otlp/tempo:
-    endpoint: tempo:4317
+  # Jaeger exporter for distributed tracing
+  jaeger:
+    endpoint: jaeger:14250
     tls:
       insecure: true
 
@@ -81,9 +80,9 @@ service:
   pipelines:
     # Traces pipeline
     traces:
-      receivers: [otlp, zipkin]
+      receivers: [otlp, jaeger]
       processors: [memory_limiter, batch, resource]
-      exporters: [zipkin, otlp/tempo, debug]
+      exporters: [jaeger, debug]
 
     # Metrics pipeline
     metrics:

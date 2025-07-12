@@ -1,0 +1,1139 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "dpi.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "DpiBypassService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/dpi/bypass/start": {
+      "post": {
+        "summary": "Bypass operations",
+        "operationId": "DpiBypassService_StartBypass",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiStartBypassResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/dpiStartBypassRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      }
+    },
+    "/api/v1/dpi/bypass/stop": {
+      "post": {
+        "operationId": "DpiBypassService_StopBypass",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiStopBypassResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/dpiStopBypassRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      }
+    },
+    "/api/v1/dpi/bypass/{session_id}/stats": {
+      "get": {
+        "summary": "Statistics and monitoring",
+        "operationId": "DpiBypassService_GetBypassStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiBypassStats"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "config_id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      }
+    },
+    "/api/v1/dpi/bypass/{session_id}/status": {
+      "get": {
+        "operationId": "DpiBypassService_GetBypassStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiGetBypassStatusResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      }
+    },
+    "/api/v1/dpi/configs": {
+      "get": {
+        "operationId": "DpiBypassService_ListBypassConfigs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiListBypassConfigsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "BYPASS_TYPE_UNSPECIFIED",
+              "BYPASS_TYPE_DOMAIN_FRONTING",
+              "BYPASS_TYPE_SNI_MASKING",
+              "BYPASS_TYPE_PACKET_FRAGMENTATION",
+              "BYPASS_TYPE_PROTOCOL_OBFUSCATION",
+              "BYPASS_TYPE_TUNNEL_OBFUSCATION"
+            ],
+            "default": "BYPASS_TYPE_UNSPECIFIED"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "BYPASS_STATUS_UNSPECIFIED",
+              "BYPASS_STATUS_INACTIVE",
+              "BYPASS_STATUS_ACTIVE",
+              "BYPASS_STATUS_ERROR",
+              "BYPASS_STATUS_TESTING"
+            ],
+            "default": "BYPASS_STATUS_UNSPECIFIED"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      },
+      "post": {
+        "summary": "Bypass configuration management",
+        "operationId": "DpiBypassService_CreateBypassConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiBypassConfig"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/dpiCreateBypassConfigRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      }
+    },
+    "/api/v1/dpi/configs/{config_id}/history": {
+      "get": {
+        "operationId": "DpiBypassService_GetBypassHistory",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiGetBypassHistoryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      }
+    },
+    "/api/v1/dpi/configs/{config_id}/rules": {
+      "get": {
+        "operationId": "DpiBypassService_ListBypassRules",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiListBypassRulesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "RULE_TYPE_UNSPECIFIED",
+              "RULE_TYPE_DOMAIN",
+              "RULE_TYPE_IP",
+              "RULE_TYPE_PORT",
+              "RULE_TYPE_PROTOCOL",
+              "RULE_TYPE_REGEX"
+            ],
+            "default": "RULE_TYPE_UNSPECIFIED"
+          },
+          {
+            "name": "enabled",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      },
+      "post": {
+        "summary": "Rule management",
+        "operationId": "DpiBypassService_AddBypassRule",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiBypassRule"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/DpiBypassServiceAddBypassRuleBody"
+            }
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      }
+    },
+    "/api/v1/dpi/configs/{id}": {
+      "get": {
+        "operationId": "DpiBypassService_GetBypassConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiBypassConfig"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      },
+      "delete": {
+        "operationId": "DpiBypassService_DeleteBypassConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiDeleteBypassConfigResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      },
+      "put": {
+        "operationId": "DpiBypassService_UpdateBypassConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiBypassConfig"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/DpiBypassServiceUpdateBypassConfigBody"
+            }
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      }
+    },
+    "/api/v1/dpi/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "DpiBypassService_Health",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiHealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "DpiBypassService"
+        ]
+      }
+    },
+    "/api/v1/dpi/rules/{id}": {
+      "delete": {
+        "operationId": "DpiBypassService_DeleteBypassRule",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiDeleteBypassRuleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      },
+      "put": {
+        "operationId": "DpiBypassService_UpdateBypassRule",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dpiBypassRule"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/DpiBypassServiceUpdateBypassRuleBody"
+            }
+          }
+        ],
+        "tags": [
+          "DpiBypassService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "DpiBypassServiceAddBypassRuleBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/dpiRuleType"
+        },
+        "action": {
+          "$ref": "#/definitions/dpiRuleAction"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "DpiBypassServiceUpdateBypassConfigBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/dpiBypassType"
+        },
+        "method": {
+          "$ref": "#/definitions/dpiBypassMethod"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "DpiBypassServiceUpdateBypassRuleBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/dpiRuleType"
+        },
+        "action": {
+          "$ref": "#/definitions/dpiRuleAction"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "dpiBypassConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/dpiBypassType"
+        },
+        "method": {
+          "$ref": "#/definitions/dpiBypassMethod"
+        },
+        "status": {
+          "$ref": "#/definitions/dpiBypassStatus"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/dpiBypassRule"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Bypass Configuration"
+    },
+    "dpiBypassHistoryEntry": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "config_id": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "target_host": {
+          "type": "string"
+        },
+        "target_port": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "status": {
+          "$ref": "#/definitions/dpiBypassStatus"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ended_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "duration_seconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bytes_transferred": {
+          "type": "string",
+          "format": "int64"
+        },
+        "error_message": {
+          "type": "string"
+        }
+      }
+    },
+    "dpiBypassMethod": {
+      "type": "string",
+      "enum": [
+        "BYPASS_METHOD_UNSPECIFIED",
+        "BYPASS_METHOD_HTTP_HEADER",
+        "BYPASS_METHOD_TLS_HANDSHAKE",
+        "BYPASS_METHOD_TCP_FRAGMENT",
+        "BYPASS_METHOD_UDP_FRAGMENT",
+        "BYPASS_METHOD_PROXY_CHAIN"
+      ],
+      "default": "BYPASS_METHOD_UNSPECIFIED"
+    },
+    "dpiBypassRule": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "config_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/dpiRuleType"
+        },
+        "action": {
+          "$ref": "#/definitions/dpiRuleAction"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Bypass Rules"
+    },
+    "dpiBypassStats": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "config_id": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "bytes_sent": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bytes_received": {
+          "type": "string",
+          "format": "int64"
+        },
+        "packets_sent": {
+          "type": "string",
+          "format": "int64"
+        },
+        "packets_received": {
+          "type": "string",
+          "format": "int64"
+        },
+        "connections_established": {
+          "type": "string",
+          "format": "int64"
+        },
+        "connections_failed": {
+          "type": "string",
+          "format": "int64"
+        },
+        "success_rate": {
+          "type": "number",
+          "format": "double"
+        },
+        "average_latency": {
+          "type": "number",
+          "format": "double"
+        },
+        "start_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_time": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Statistics"
+    },
+    "dpiBypassStatus": {
+      "type": "string",
+      "enum": [
+        "BYPASS_STATUS_UNSPECIFIED",
+        "BYPASS_STATUS_INACTIVE",
+        "BYPASS_STATUS_ACTIVE",
+        "BYPASS_STATUS_ERROR",
+        "BYPASS_STATUS_TESTING"
+      ],
+      "default": "BYPASS_STATUS_UNSPECIFIED"
+    },
+    "dpiBypassType": {
+      "type": "string",
+      "enum": [
+        "BYPASS_TYPE_UNSPECIFIED",
+        "BYPASS_TYPE_DOMAIN_FRONTING",
+        "BYPASS_TYPE_SNI_MASKING",
+        "BYPASS_TYPE_PACKET_FRAGMENTATION",
+        "BYPASS_TYPE_PROTOCOL_OBFUSCATION",
+        "BYPASS_TYPE_TUNNEL_OBFUSCATION"
+      ],
+      "default": "BYPASS_TYPE_UNSPECIFIED"
+    },
+    "dpiCreateBypassConfigRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/dpiBypassType"
+        },
+        "method": {
+          "$ref": "#/definitions/dpiBypassMethod"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "dpiDeleteBypassConfigResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "dpiDeleteBypassRuleResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "dpiGetBypassHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/dpiBypassHistoryEntry"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "dpiGetBypassStatusResponse": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/dpiBypassStatus"
+        },
+        "config_id": {
+          "type": "string"
+        },
+        "target_host": {
+          "type": "string"
+        },
+        "target_port": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "duration_seconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "dpiHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "dpiListBypassConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/dpiBypassConfig"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "dpiListBypassRulesResponse": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/dpiBypassRule"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "dpiRuleAction": {
+      "type": "string",
+      "enum": [
+        "RULE_ACTION_UNSPECIFIED",
+        "RULE_ACTION_ALLOW",
+        "RULE_ACTION_BLOCK",
+        "RULE_ACTION_BYPASS",
+        "RULE_ACTION_FRAGMENT",
+        "RULE_ACTION_OBFUSCATE"
+      ],
+      "default": "RULE_ACTION_UNSPECIFIED"
+    },
+    "dpiRuleType": {
+      "type": "string",
+      "enum": [
+        "RULE_TYPE_UNSPECIFIED",
+        "RULE_TYPE_DOMAIN",
+        "RULE_TYPE_IP",
+        "RULE_TYPE_PORT",
+        "RULE_TYPE_PROTOCOL",
+        "RULE_TYPE_REGEX"
+      ],
+      "default": "RULE_TYPE_UNSPECIFIED"
+    },
+    "dpiStartBypassRequest": {
+      "type": "object",
+      "properties": {
+        "config_id": {
+          "type": "string"
+        },
+        "target_host": {
+          "type": "string"
+        },
+        "target_port": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Bypass Operations"
+    },
+    "dpiStartBypassResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "dpiStopBypassRequest": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        }
+      }
+    },
+    "dpiStopBypassResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

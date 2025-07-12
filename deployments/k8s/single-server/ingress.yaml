@@ -1,0 +1,398 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: silence-ingress
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: silence-ingress
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization, X-Requested-With"
+    nginx.ingress.kubernetes.io/cors-max-age: "86400"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' wss: https:; frame-ancestors 'none';";
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - silence-vpn.com
+    - www.silence-vpn.com
+    - api.silence-vpn.com
+    secretName: silence-tls-secret
+  rules:
+  # Основной домен - фронтенд
+  - host: silence-vpn.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 3000
+
+  # WWW редирект на основной домен
+  - host: www.silence-vpn.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 3000
+
+  # API поддомен для Gateway
+  - host: api.silence-vpn.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gateway
+            port:
+              number: 8080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: silence-grpc-ingress
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: silence-grpc-ingress
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: grpc-ingress
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/grpc-backend: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - grpc.silence-vpn.com
+    secretName: silence-grpc-tls-secret
+  rules:
+  # gRPC API для внешних клиентов
+  - host: grpc.silence-vpn.com
+    http:
+      paths:
+      # Auth Service
+      - path: /auth.AuthService
+        pathType: Prefix
+        backend:
+          service:
+            name: auth
+            port:
+              number: 9080
+      # Analytics Service
+      - path: /analytics.AnalyticsService
+        pathType: Prefix
+        backend:
+          service:
+            name: analytics
+            port:
+              number: 8080
+      # Server Manager Service
+      - path: /server.ServerManagerService
+        pathType: Prefix
+        backend:
+          service:
+            name: server-manager
+            port:
+              number: 8085
+      # DPI Bypass Service
+      - path: /dpi.DPIBypassService
+        pathType: Prefix
+        backend:
+          service:
+            name: dpi-bypass
+            port:
+              number: 8080
+      # Notifications Service
+      - path: /notifications.NotificationService
+        pathType: Prefix
+        backend:
+          service:
+            name: notifications
+            port:
+              number: 8080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: silence-internal-ingress
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: silence-internal-ingress
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: internal-ingress
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8,192.168.0.0/16,172.16.0.0/12"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: silence-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Silence VPN Internal Services"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - internal.silence-vpn.com
+    secretName: silence-internal-tls-secret
+  rules:
+  # Внутренние сервисы (с базовой авторизацией)
+  - host: internal.silence-vpn.com
+    http:
+      paths:
+      # RabbitMQ Management
+      - path: /rabbitmq
+        pathType: Prefix
+        backend:
+          service:
+            name: rabbitmq
+            port:
+              number: 15672
+      # InfluxDB UI
+      - path: /influxdb
+        pathType: Prefix
+        backend:
+          service:
+            name: influxdb
+            port:
+              number: 8086
+      # ClickHouse HTTP Interface
+      - path: /clickhouse
+        pathType: Prefix
+        backend:
+          service:
+            name: clickhouse
+            port:
+              number: 8123
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: silence-monitoring-ingress
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: silence-monitoring-ingress
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: monitoring-ingress
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8,192.168.0.0/16,172.16.0.0/12"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: silence-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Silence VPN Monitoring"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - monitoring.silence-vpn.com
+    secretName: silence-monitoring-tls-secret
+  rules:
+  # Мониторинг и observability
+  - host: monitoring.silence-vpn.com
+    http:
+      paths:
+      # Grafana
+      - path: /grafana
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              number: 3000
+      # Prometheus
+      - path: /prometheus
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus
+            port:
+              number: 9090
+      # Jaeger
+      - path: /jaeger
+        pathType: Prefix
+        backend:
+          service:
+            name: jaeger
+            port:
+              number: 16686
+      # Loki (для логов)
+      - path: /loki
+        pathType: Prefix
+        backend:
+          service:
+            name: loki
+            port:
+              number: 3100
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: silence-basic-auth
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: silence-basic-auth
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: auth-secret
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+type: Opaque
+data:
+  # admin:$2y$10$2b2cu/B6A1XiS3Qd8hJdOOuaLOmjFzKbZPJgRdcFzVeUJLjXlVH.C
+  # password: admin123
+  auth: YWRtaW46JDJ5JDEwJDJiMmN1L0I2QTFYaVMzUWQ4aEpkT091YUxPbWpGektielBKZ1JkY0Z6VmVVSkxqWGxWSC5D
+
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  labels:
+    app.kubernetes.io/name: letsencrypt-prod
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: cert-issuer
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@silence-vpn.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+    - dns01:
+        cloudflare:
+          apiTokenSecretRef:
+            name: cloudflare-api-token
+            key: api-token
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-api-token
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: cloudflare-api-token
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: dns-secret
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+type: Opaque
+data:
+  # Замените на ваш реальный API токен Cloudflare (base64 encoded)
+  api-token: eW91ci1jbG91ZGZsYXJlLWFwaS10b2tlbg==
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: silence-ingress-policy
+  namespace: silence
+  labels:
+    app.kubernetes.io/name: silence-ingress-policy
+    app.kubernetes.io/instance: silence
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: silence
+    app.kubernetes.io/managed-by: kubernetes
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: silence
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: silence
+  - from: []
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 3000
+    - protocol: TCP
+      port: 9080
+    - protocol: TCP
+      port: 8085
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 443
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: silence

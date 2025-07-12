@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "notifications/notifications.proto",
+    "title": "notifications.proto",
     "version": "version not set"
   },
   "tags": [
@@ -99,14 +99,14 @@
             "type": "string"
           },
           {
-            "name": "startTime",
+            "name": "start_time",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "endTime",
+            "name": "end_time",
             "in": "query",
             "required": false,
             "type": "string",
@@ -188,7 +188,7 @@
         ]
       }
     },
-    "/api/v1/notifications/preferences/{userId}": {
+    "/api/v1/notifications/preferences/{user_id}": {
       "get": {
         "summary": "User preferences",
         "operationId": "NotificationsService_GetUserPreferences",
@@ -208,7 +208,7 @@
         },
         "parameters": [
           {
-            "name": "userId",
+            "name": "user_id",
             "in": "path",
             "required": true,
             "type": "string"
@@ -272,7 +272,7 @@
         },
         "parameters": [
           {
-            "name": "userId",
+            "name": "user_id",
             "in": "path",
             "required": true,
             "type": "string"
@@ -311,14 +311,14 @@
         },
         "parameters": [
           {
-            "name": "startTime",
+            "name": "start_time",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "endTime",
+            "name": "end_time",
             "in": "query",
             "required": false,
             "type": "string",
@@ -609,7 +609,7 @@
       }
     },
     "/api/v1/notifications/{id}/status": {
-      "put": {
+      "patch": {
         "operationId": "NotificationsService_UpdateNotificationStatus",
         "responses": {
           "200": {
@@ -657,7 +657,7 @@
         "error": {
           "type": "string"
         },
-        "sentAt": {
+        "sent_at": {
           "type": "string",
           "format": "date-time"
         }
@@ -782,14 +782,14 @@
         "source": {
           "type": "string"
         },
-        "sourceId": {
+        "source_id": {
           "type": "string"
         },
-        "maxAttempts": {
+        "max_attempts": {
           "type": "integer",
           "format": "int32"
         },
-        "scheduledAt": {
+        "scheduled_at": {
           "type": "string",
           "format": "date-time"
         }
@@ -805,7 +805,7 @@
         "message": {
           "type": "string"
         },
-        "notificationId": {
+        "notification_id": {
           "type": "string"
         }
       }
@@ -896,7 +896,7 @@
         "source": {
           "type": "string"
         },
-        "sourceId": {
+        "source_id": {
           "type": "string"
         },
         "status": {
@@ -906,23 +906,23 @@
           "type": "integer",
           "format": "int32"
         },
-        "maxAttempts": {
+        "max_attempts": {
           "type": "integer",
           "format": "int32"
         },
-        "createdAt": {
+        "created_at": {
           "type": "string",
           "format": "date-time"
         },
-        "updatedAt": {
+        "updated_at": {
           "type": "string",
           "format": "date-time"
         },
-        "scheduledAt": {
+        "scheduled_at": {
           "type": "string",
           "format": "date-time"
         },
-        "sentAt": {
+        "sent_at": {
           "type": "string",
           "format": "date-time"
         },
@@ -948,7 +948,7 @@
     "notificationsNotificationPreference": {
       "type": "object",
       "properties": {
-        "userId": {
+        "user_id": {
           "type": "string"
         },
         "type": {
@@ -966,11 +966,11 @@
         "schedule": {
           "$ref": "#/definitions/notificationsNotificationSchedule"
         },
-        "createdAt": {
+        "created_at": {
           "type": "string",
           "format": "date-time"
         },
-        "updatedAt": {
+        "updated_at": {
           "type": "string",
           "format": "date-time"
         }
@@ -991,11 +991,11 @@
     "notificationsNotificationSchedule": {
       "type": "object",
       "properties": {
-        "startTime": {
+        "start_time": {
           "type": "string",
           "title": "HH:MM"
         },
-        "endTime": {
+        "end_time": {
           "type": "string",
           "title": "HH:MM"
         },
@@ -1016,44 +1016,44 @@
     "notificationsNotificationStats": {
       "type": "object",
       "properties": {
-        "totalSent": {
+        "total_sent": {
           "type": "string",
           "format": "int64"
         },
-        "totalFailed": {
+        "total_failed": {
           "type": "string",
           "format": "int64"
         },
-        "totalPending": {
+        "total_pending": {
           "type": "string",
           "format": "int64"
         },
-        "byType": {
+        "by_type": {
           "type": "object",
           "additionalProperties": {
             "type": "string",
             "format": "int64"
           }
         },
-        "byChannel": {
+        "by_channel": {
           "type": "object",
           "additionalProperties": {
             "type": "string",
             "format": "int64"
           }
         },
-        "byPriority": {
+        "by_priority": {
           "type": "object",
           "additionalProperties": {
             "type": "string",
             "format": "int64"
           }
         },
-        "successRate": {
+        "success_rate": {
           "type": "number",
           "format": "double"
         },
-        "averageDelay": {
+        "average_delay": {
           "type": "number",
           "format": "double",
           "title": "in seconds"
@@ -1101,11 +1101,11 @@
         "enabled": {
           "type": "boolean"
         },
-        "createdAt": {
+        "created_at": {
           "type": "string",
           "format": "date-time"
         },
-        "updatedAt": {
+        "updated_at": {
           "type": "string",
           "format": "date-time"
         }

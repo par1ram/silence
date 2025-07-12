@@ -1,0 +1,153 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server-manager
+  namespace: silence
+  labels:
+    app: silence-vpn
+    component: server-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: silence-vpn
+      component: server-manager
+  template:
+    metadata:
+      labels:
+        app: silence-vpn
+        component: server-manager
+    spec:
+      containers:
+      - name: server-manager
+        image: silence/server-manager:latest
+        ports:
+        - containerPort: 8085
+          name: grpc
+        env:
+        - name: GRPC_PORT
+          value: "8085"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DB_PORT
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: silence-secrets
+              key: DB_PASSWORD
+        - name: DB_NAME
+          value: "silence_server_manager"
+        - name: DB_SSLMODE
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DB_SSLMODE
+        - name: DOCKER_HOST
+          value: "unix:///var/run/docker.sock"
+        - name: DOCKER_API_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DOCKER_API_VERSION
+        - name: DOCKER_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: DOCKER_TIMEOUT
+        - name: MIGRATIONS_DIR
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: MIGRATIONS_DIR
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: silence-config
+              key: LOG_LEVEL
+        volumeMounts:
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "grpc_health_probe -addr=:8085"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "grpc_health_probe -addr=:8085"
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: docker-registry-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-manager-service
+  namespace: silence
+  labels:
+    app: silence-vpn
+    component: server-manager
+spec:
+  selector:
+    app: silence-vpn
+    component: server-manager
+  ports:
+  - name: grpc
+    port: 8085
+    targetPort: 8085
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-manager-external
+  namespace: silence
+  labels:
+    app: silence-vpn
+    component: server-manager
+spec:
+  selector:
+    app: silence-vpn
+    component: server-manager
+  ports:
+  - name: grpc
+    port: 8085
+    targetPort: 8085
+    protocol: TCP
+    nodePort: 30085
+  type: NodePort

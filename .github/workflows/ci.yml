@@ -7,7 +7,8 @@ on:
     branches: [main, develop]
 
 env:
-  GO_VERSION: '1.21'
+  GO_VERSION: "1.21"
+  NODE_VERSION: "18"
   DOCKER_REGISTRY: ghcr.io
   IMAGE_TAG: ${{ github.sha }}
 
@@ -40,10 +41,120 @@ jobs:
           cd ../../rpc/analytics && golangci-lint run
           cd ../../rpc/notifications && golangci-lint run
 
-  # Тестирование
-  test:
-    name: Run Tests
+  # Линтинг фронтенда
+  frontend-lint:
+    name: Frontend Lint
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: cd frontend && npm ci
+
+      - name: Run ESLint
+        run: cd frontend && npm run lint
+
+      - name: Run TypeScript check
+        run: cd frontend && npm run type-check
+
+      - name: Run Prettier check
+        run: cd frontend && npm run format:check
+
+  # Генерация API
+  generate-api:
+    name: Generate API Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install protoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+
+      - name: Install protoc-gen-openapiv2
+        run: go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
+
+      - name: Generate Swagger documentation
+        run: make swagger
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Generate client SDK
+        run: make generate-client-sdk
+
+      - name: Upload API artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-documentation
+          path: |
+            docs/swagger/
+            frontend/src/generated/
+          retention-days: 7
+
+  # Сборка фронтенда
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    needs: [frontend-lint, test-frontend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Download API artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: api-documentation
+          path: .
+
+      - name: Install dependencies
+        run: cd frontend && npm ci
+
+      - name: Build frontend
+        run: cd frontend && npm run build
+
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/.next/
+          retention-days: 7
+
+  # Тестирование бэкенда
+  test-backend:
+    name: Run Backend Tests
+    runs-on: ubuntu-latest
+    needs: [generate-api]
     services:
       postgres:
         image: postgres:15-alpine
@@ -95,26 +206,72 @@ jobs:
       - name: Install dependencies
         run: go work sync
 
+      - name: Download API artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: api-documentation
+          path: .
+
       - name: Run unit tests
         run: |
-          go test ./api/auth/... -v
-          go test ./api/gateway/... -v
-          go test ./rpc/vpn-core/... -v
-          go test ./rpc/dpi-bypass/... -v
-          go test ./rpc/server-manager/... -v
-          go test ./rpc/analytics/... -v
-          go test ./rpc/notifications/... -v
+          go test ./api/auth/... -v -coverprofile=coverage-auth.out
+          go test ./api/gateway/... -v -coverprofile=coverage-gateway.out
+          go test ./rpc/vpn-core/... -v -coverprofile=coverage-vpn-core.out
+          go test ./rpc/dpi-bypass/... -v -coverprofile=coverage-dpi-bypass.out
+          go test ./rpc/server-manager/... -v -coverprofile=coverage-server-manager.out
+          go test ./rpc/analytics/... -v -coverprofile=coverage-analytics.out
+          go test ./rpc/notifications/... -v -coverprofile=coverage-notifications.out
 
       - name: Run integration tests
         run: |
           # Запуск интеграционных тестов с реальными сервисами
-          cd tests && go test -v -tags=integration
+          cd tests && go test -v -tags=integration -coverprofile=coverage-integration.out
 
-  # Сборка
-  build:
-    name: Build Services
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage-*.out
+          fail_ci_if_error: true
+
+  # Тестирование фронтенда
+  test-frontend:
+    name: Run Frontend Tests
     runs-on: ubuntu-latest
-    needs: [lint, test]
+    needs: [generate-api, frontend-lint]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Download API artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: api-documentation
+          path: .
+
+      - name: Install dependencies
+        run: cd frontend && npm ci
+
+      - name: Run unit tests
+        run: cd frontend && npm test
+
+      - name: Run E2E tests
+        run: |
+          cd frontend
+          npm run build
+          npm run test:e2e
+
+  # Сборка бэкенда
+  build-backend:
+    name: Build Backend Services
+    runs-on: ubuntu-latest
+    needs: [lint, test-backend]
     strategy:
       matrix:
         service:
@@ -168,7 +325,7 @@ jobs:
   docker-build:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [build-backend, build-frontend]
     if: github.event_name == 'push'
     permissions:
       contents: read
@@ -200,6 +357,16 @@ jobs:
           file: ./api/auth/Dockerfile
           push: true
           tags: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}/auth:${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}/frontend:${{ env.IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -275,11 +442,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Update image tags
+        run: |
+          sed -i "s/IMAGE_TAG/${{ env.IMAGE_TAG }}/g" deployments/k8s/single-server/*.yaml
+
       - name: Deploy to staging
         run: |
-          echo "Deploying to staging environment..."
-          # Здесь будет логика деплоя в staging
-          # Например, kubectl apply или helm upgrade
+          export KUBECONFIG=kubeconfig
+          kubectl apply -f deployments/k8s/single-server/
+          kubectl rollout status deployment/auth -n silence
+          kubectl rollout status deployment/gateway -n silence
+          kubectl rollout status deployment/vpn-core -n silence
+          kubectl rollout status deployment/dpi-bypass -n silence
+          kubectl rollout status deployment/server-manager -n silence
+          kubectl rollout status deployment/analytics -n silence
+          kubectl rollout status deployment/notifications -n silence
+
+      - name: Run smoke tests
+        run: |
+          export KUBECONFIG=kubeconfig
+          kubectl port-forward svc/gateway 8080:8080 -n silence &
+          sleep 10
+          curl -f http://localhost:8080/health || exit 1
 
   # Деплой в production
   deploy-production:
@@ -293,8 +485,45 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Update image tags
+        run: |
+          sed -i "s/IMAGE_TAG/${{ env.IMAGE_TAG }}/g" deployments/k8s/single-server/*.yaml
+
       - name: Deploy to production
         run: |
-          echo "Deploying to production environment..."
-          # Здесь будет логика деплоя в production
-          # Например, kubectl apply или helm upgrade
+          export KUBECONFIG=kubeconfig
+          kubectl apply -f deployments/k8s/single-server/
+          kubectl rollout status deployment/auth -n silence
+          kubectl rollout status deployment/gateway -n silence
+          kubectl rollout status deployment/vpn-core -n silence
+          kubectl rollout status deployment/dpi-bypass -n silence
+          kubectl rollout status deployment/server-manager -n silence
+          kubectl rollout status deployment/analytics -n silence
+          kubectl rollout status deployment/notifications -n silence
+
+      - name: Run smoke tests
+        run: |
+          export KUBECONFIG=kubeconfig
+          kubectl port-forward svc/gateway 8080:8080 -n silence &
+          sleep 10
+          curl -f http://localhost:8080/health || exit 1
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "Production deployment successful!"
+          # Здесь можно добавить уведомления в Slack/Discord/Email
+
+      - name: Notify deployment failure
+        if: failure()
+        run: |
+          echo "Production deployment failed!"
+          # Здесь можно добавить уведомления об ошибке
